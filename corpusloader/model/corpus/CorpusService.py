@@ -1,8 +1,14 @@
 import os
 from typing import Type
 
+from pandas import DataFrame as PandasDataFrame
+
+from corpusloader.controller.document.CSVLoader import CSVLoader
+from corpusloader.controller.document.CorpusFileLoader import CorpusFileLoader
+from corpusloader.controller.document.DocumentLoader import DocumentLoader
+from corpusloader.controller.document.TextLoader import TextLoader
+from corpusloader.controller.document.ZipLoader import ZipLoader
 from corpusloader.model.corpus import Corpus
-from corpusloader.controller.document import DocumentLoader, TextLoader, CSVLoader, ZipLoader, CorpusFileLoader
 
 
 class CorpusService:
@@ -38,3 +44,6 @@ class CorpusService:
         document_loader: DocumentLoader = CorpusService.FILE_TYPE_MAP[filetype]()
         document_loader.load_document_by_filepath(filepath)
         document_loader.add_to_corpus(self.corpus)
+
+    def get_loaded_corpus_as_dataframe(self) -> PandasDataFrame:
+        return self.corpus.get_all()

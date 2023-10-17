@@ -10,11 +10,11 @@ pn.extension(notifications=True)
 
 
 class ViewWrapper:
-    def __init__(self, controller: Controller):
+    def __init__(self, controller: Controller, base_path: str = "./"):
         self.controller: Controller = controller
 
         self.file_info: FileInfoWidget = FileInfoWidget(self)
-        self.file_loader: FileLoaderWidget = FileLoaderWidget(self)
+        self.file_loader: FileLoaderWidget = FileLoaderWidget(self, base_path)
 
         self.display_widget: DisplayWidget = DisplayWidget(self)
 
@@ -38,12 +38,17 @@ class ViewWrapper:
 
     def clear_loaded_files(self):
         self.file_info.clear_loaded_files()
+        self.update_displays()
 
     def add_loaded_files(self, filepath_ls: list[str]) -> bool:
         success = self.controller.load_files_from_paths(filepath_ls)
 
         if success:
             self.file_info.add_files(filepath_ls)
-            self.file_info.update_displays()
+
+        self.update_displays()
 
         return success
+
+    def get_loaded_corpus_as_dataframe(self) -> PandasDataFrame:
+        return self.controller.get_loaded_corpus_as_dataframe()

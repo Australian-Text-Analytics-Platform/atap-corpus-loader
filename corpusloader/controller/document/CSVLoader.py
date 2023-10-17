@@ -1,9 +1,8 @@
 from typing import Iterable
 
-from corpusloader.controller.document import DocumentLoader
-from corpusloader.model.corpus import Corpus
-
+from corpusloader.controller.document.DocumentLoader import DocumentLoader
 from corpusloader.controller.document.FileLoadError import FileLoadError
+from corpusloader.model.corpus import Corpus
 
 
 class CSVLoader(DocumentLoader):

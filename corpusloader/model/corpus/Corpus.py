@@ -28,7 +28,7 @@ class Corpus:
     def get_column(self, column_name: str) -> DataFrame:
         return self._data[column_name]
 
-    def get_all_data_all_meta_data(self) -> DataFrame:
+    def get_all(self) -> DataFrame:
         return self._data
 
     def get_all_data(self) -> DataFrame:

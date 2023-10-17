@@ -19,7 +19,7 @@ class DisplayWidget(AbstractWidget):
         return self.component
 
     def update_displays(self):
-        pass
+        self.dataframe_viewer.object = self.view_handler.get_loaded_corpus_as_dataframe()
 
     def set_visibility(self, is_visible: bool):
         self.component.visible = is_visible

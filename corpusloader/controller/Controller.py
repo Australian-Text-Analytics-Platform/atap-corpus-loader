@@ -1,3 +1,6 @@
+from pandas import DataFrame as PandasDataFrame
+
+from corpusloader.controller.document import FileLoadError
 from corpusloader.model.corpus import CorpusService
 from corpusloader.view.notifications import NotifierService
 
@@ -17,8 +20,14 @@ class Controller:
         for filepath in filepath_ls:
             try:
                 self.corpus_service.load_file_by_filepath(filepath)
-            except ValueError as e:
+            except FileLoadError as e:
                 self.display_error(str(e))
+                return False
+            except Exception as e:
+                self.display_error(f"Unexpected error while loading: {e.__repr__()}")
                 return False
 
         return True
+
+    def get_loaded_corpus_as_dataframe(self) -> PandasDataFrame:
+        return self.corpus_service.get_loaded_corpus_as_dataframe()
