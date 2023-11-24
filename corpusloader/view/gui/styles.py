@@ -4,3 +4,7 @@ file_info_style = {
 
 file_loader_style = {
 }
+
+oni_loader_style = {
+
+}

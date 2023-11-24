@@ -1,7 +1,8 @@
-from pandas import DataFrame as PandasDataFrame
+from pandas import DataFrame
 
-from corpusloader.controller.document import FileLoadError
-from corpusloader.model.corpus import CorpusService
+from corpusloader.controller.CorpusService import CorpusService
+from corpusloader.controller.document.FileLoadError import FileLoadError
+from corpusloader.view.ViewWrapperWidget import ByteIO
 from corpusloader.view.notifications import NotifierService
 
 
@@ -16,18 +17,23 @@ class Controller:
     def display_success(self, success_msg: str):
         self.notifier_service.notify_success(success_msg)
 
-    def load_files_from_paths(self, filepath_ls: list[str]) -> bool:
-        for filepath in filepath_ls:
-            try:
-                self.corpus_service.load_file_by_filepath(filepath)
-            except FileLoadError as e:
-                self.display_error(str(e))
-                return False
-            except Exception as e:
-                self.display_error(f"Unexpected error while loading: {e.__repr__()}")
-                return False
+    def get_file_loader_info(self) -> list[dict]:
+        return CorpusService.get_file_loader_info()
+
+    def get_loaded_corpus_df(self) -> DataFrame:
+        return self.corpus_service.get_corpus().to_dataframe()
+
+    def load_corpus_from_filepaths(self, filepath_ls: list[str], loader_strategy_name: str) -> bool:
+        try:
+            self.corpus_service.load_corpus_from_filepaths(filepath_ls, loader_strategy_name)
+        except (FileLoadError, ValueError) as e:
+            self.display_error(f"File load error: {str(e)}")
+            return False
+        except Exception as e:
+            self.display_error(f"Unexpected error while loading: {e.__repr__()}")
+            return False
 
         return True
 
-    def get_loaded_corpus_as_dataframe(self) -> PandasDataFrame:
-        return self.corpus_service.get_loaded_corpus_as_dataframe()
+    def load_corpus_from_bytes(self, filebytes_ls: list[ByteIO]) -> bool:
+        pass

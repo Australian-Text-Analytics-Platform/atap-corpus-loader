@@ -1,34 +1,25 @@
-from typing import Iterable
-
 from corpusloader.controller.document.DocumentLoader import DocumentLoader
 from corpusloader.controller.document.FileLoadError import FileLoadError
-from corpusloader.model.corpus import Corpus
 
 
 class CSVLoader(DocumentLoader):
-    def __init__(self):
-        self.content: list[str] = []
-        self.content_header: str = ""
-        self.meta_data: dict[str, Iterable] = {}
-        self.loaded: bool = False
+    USER_FRIENDLY_NAME: str = "CSV Collection"
+    DATA_DESCRIPTION: str = """One or more CSV files encoded in UTF-8 with or without metadata.
+    The column representing the documents must be named 'text'.
+    If more than one CSV file is loaded, each file must have the same column headers, i.e. the same metadata"""
 
-    def load_document_as_bytes(self, content: bytes, content_name: str):
-        if self.loaded:
-            raise FileLoadError(f"Document already loaded: {content_name}")
-        self.loaded = True
+    @staticmethod
+    def get_user_friendly_name():
+        return CSVLoader.USER_FRIENDLY_NAME
 
-    def load_document_by_filepath(self, filepath: str):
-        if self.loaded:
-            raise FileLoadError(f"Document already loaded: {filepath}")
-        self.loaded = True
+    @staticmethod
+    def get_data_description():
+        return CSVLoader.DATA_DESCRIPTION
 
-    def add_to_corpus(self, corpus: Corpus):
-        if not self.loaded:
-            raise FileLoadError("No document loaded")
+    @staticmethod
+    def load_corpus_from_bytes(content: bytes, content_name: str):
+        raise NotImplementedError()
 
-        line_numbers: list[int] = list(range(1, len(self.content) + 1))
-
-        corpus.add_data(self.content_header, self.content, False)
-        corpus.add_data("line", line_numbers, True)
-        for meta_name, meta_data in self.meta_data.items():
-            corpus.add_data(meta_name, meta_data, True)
+    @staticmethod
+    def load_corpus_from_filepath(filepath: str):
+        raise NotImplementedError()

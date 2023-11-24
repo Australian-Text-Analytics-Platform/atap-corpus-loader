@@ -1,2 +1,2 @@
-from .ViewWrapper import ViewWrapper
+from .ViewWrapperWidget import ViewWrapperWidget
 from .notifications.NotifierService import NotifierService
