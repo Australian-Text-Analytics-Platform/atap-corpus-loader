@@ -4,7 +4,6 @@ from panel.pane import DataFrame as PanelDataFrame
 
 from corpusloader.view import ViewWrapperWidget
 from corpusloader.view.gui import AbstractWidget
-from corpusloader.view.gui.styles import file_info_style
 
 
 class CorpusInfoWidget(AbstractWidget):
@@ -14,7 +13,7 @@ class CorpusInfoWidget(AbstractWidget):
 
         self.corpus_df_display: PanelDataFrame = PanelDataFrame()
 
-        self.component = Column(self.corpus_df_display, styles=file_info_style)
+        self.panel = Column(self.corpus_df_display)
 
     def update_display(self):
         pass
