@@ -1,21 +1,29 @@
+from typing import Optional
+
+from atap_corpus.corpus.corpus import DataFrameCorpus
 from pandas import DataFrame
 
-from corpusloader.controller.CorpusService import CorpusService
-from corpusloader.controller.document.FileLoadError import FileLoadError
+from corpusloader.controller.FileLoaderService import FileLoaderService, FileLoadError
+from corpusloader.controller.OniAPIService import OniAPIService
+from corpusloader.controller.data_objects.CorpusHeader import CorpusHeader
+from corpusloader.controller.data_objects.DataType import DataType
 from corpusloader.view.notifications import NotifierService
 
 
 class Controller:
-    def __init__(self, corpus_service: CorpusService, notifier_service: NotifierService):
-        self.corpus_service: CorpusService = corpus_service
+    def __init__(self, notifier_service: NotifierService):
+        self.file_loader_service: FileLoaderService = FileLoaderService()
+        self.oni_api_service: OniAPIService = OniAPIService()
         self.notifier_service: NotifierService = notifier_service
 
-        self.corpus_headers = []
-        self.corpus_datatypes = []
-        self.meta_headers = []
-        self.meta_datatypes = []
+        self.text_header: Optional[CorpusHeader] = None
+        self.corpus_link_header: Optional[CorpusHeader] = None
+        self.meta_link_header: Optional[CorpusHeader] = None
 
-        self.all_datatypes = ['string', 'integer', 'float', 'datetime', 'category']
+        self.corpus_headers: list[CorpusHeader] = []
+        self.meta_headers: list[CorpusHeader] = []
+
+        self.corpus: Optional[DataFrameCorpus] = None
 
     def display_error(self, error_msg: str):
         self.notifier_service.notify_error(error_msg)
@@ -24,52 +32,122 @@ class Controller:
         self.notifier_service.notify_success(success_msg)
 
     def get_loaded_corpus_df(self) -> DataFrame:
-        return self.corpus_service.build_corpus().to_dataframe()
+        if self.corpus is None:
+            return DataFrame()
+        else:
+            return self.corpus.to_dataframe()
 
     def load_corpus_from_filepaths(self, filepath_ls: list[str]) -> bool:
-        # try:
-        #     self.corpus_service.load_corpus_from_filepaths(filepath_ls)
-        # except (FileLoadError, ValueError) as e:
-        #     self.display_error(f"File load error: {str(e)}")
-        #     return False
-        # except Exception as e:
-        #     self.display_error(f"Unexpected error while loading: {e.__repr__()}")
-        #     return False
+        for filepath in filepath_ls:
+            try:
+                self.file_loader_service.add_corpus_filepath(filepath)
+            except FileLoadError as e:
+                self.display_error(str(e))
+                return False
 
-        # Dummy data for now
-        self.corpus_headers = ['document', 'filename', 'directory']
-        self.corpus_datatypes = ['string', 'string', 'category']
+        self.corpus_headers = self.file_loader_service.get_corpus_headers()
+
         return True
 
-    def load_meta_from_filepaths(self, filebytes_ls: list[str]) -> bool:
-        # Dummy data for now
-        self.meta_headers = ['date', 'author', 'file_id', 'source']
-        self.meta_datatypes = ['datetime', 'string', 'string', 'string']
+    def load_meta_from_filepaths(self, filepath_ls: list[str]) -> bool:
+        for filepath in filepath_ls:
+            try:
+                self.file_loader_service.add_meta_filepath(filepath)
+            except FileLoadError as e:
+                self.display_error(str(e))
+                return False
+
+        self.meta_headers = self.file_loader_service.get_meta_headers()
+
         return True
+
+    def build_corpus(self, corpus_name: str):
+        corpus_headers = []
+        if self.corpus_headers is not None:
+            corpus_headers = self.corpus_headers
+        meta_headers = []
+        if self.meta_headers is not None:
+            meta_headers = self.meta_headers
+
+        self.corpus = self.file_loader_service.build_corpus(corpus_name, corpus_headers,
+                                                            meta_headers, self.text_header,
+                                                            self.corpus_link_header, self.meta_link_header)
 
     def unload_all(self):
+        self.file_loader_service.remove_all_files()
+
+        self.text_header = None
         self.corpus_headers = []
-        self.corpus_datatypes = []
         self.meta_headers = []
-        self.meta_datatypes = []
 
-    def get_corpus_headers(self) -> list[str]:
-        return self.corpus_headers
+    def get_corpus_headers(self) -> list[CorpusHeader]:
+        return self.file_loader_service.get_corpus_headers()
 
-    def get_corpus_datatypes(self) -> list[str]:
-        return self.corpus_datatypes
+    def get_meta_headers(self) -> list[CorpusHeader]:
+        return self.file_loader_service.get_meta_headers()
 
-    def get_meta_headers(self) -> list[str]:
-        return self.meta_headers
+    def get_text_header(self) -> Optional[CorpusHeader]:
+        return self.text_header
 
-    def get_meta_datatypes(self) -> list[str]:
-        return self.meta_datatypes
+    def get_corpus_link_header(self) -> Optional[CorpusHeader]:
+        return self.corpus_link_header
+
+    def get_meta_link_header(self) -> Optional[CorpusHeader]:
+        return self.meta_link_header
 
     def get_all_datatypes(self) -> list[str]:
-        return self.all_datatypes
+        return [d.name for d in DataType]
 
     def is_corpus_added(self) -> bool:
-        return len(self.get_corpus_headers()) > 0
+        return len(self.corpus_headers) > 0
 
     def is_meta_added(self) -> bool:
-        return len(self.get_meta_headers()) > 0
+        return len(self.meta_headers) > 0
+
+    def update_corpus_header(self, header: CorpusHeader, include: Optional[bool], datatype_name: Optional[str]):
+        if include is not None:
+            header.include = include
+        if datatype_name is not None:
+            header.datatype = DataType[datatype_name]
+
+        for i, corpus_header in enumerate(self.corpus_headers):
+            if header == corpus_header:
+                self.corpus_headers[i] = header
+
+    def update_meta_header(self, header: CorpusHeader, include: Optional[bool], datatype_name: Optional[str]):
+        if include is not None:
+            header.include = include
+        if datatype_name is not None:
+            header.datatype = DataType[datatype_name]
+
+        for i, meta_header in enumerate(self.meta_headers):
+            if header == meta_header:
+                self.meta_headers[i] = header
+
+    def set_text_header(self, text_header: Optional[str]):
+        if text_header is None:
+            self.text_header = None
+            return
+
+        for header in self.corpus_headers:
+            if header.name == text_header:
+                self.text_header = header
+                header.datatype = DataType['STRING']
+                header.include = True
+                return
+
+    def set_corpus_link_header(self, link_header_name: Optional[str]):
+        for header in self.corpus_headers:
+            if header.name == link_header_name:
+                self.corpus_link_header = header
+                header.include = True
+                return
+        self.corpus_link_header = None
+
+    def set_meta_link_header(self, link_header_name: Optional[str]):
+        for header in self.meta_headers:
+            if header.name == link_header_name:
+                self.meta_link_header = header
+                header.include = True
+                return
+        self.meta_link_header = None

@@ -1,8 +1,11 @@
-from panel import Column, GridBox
-from panel.pane import Markdown
+from typing import Optional
+
+from panel import Column, GridBox, bind, Row, Spacer
+from panel.pane import Markdown, Str
 from panel.widgets import Select, Checkbox
 
 from corpusloader.controller import Controller
+from corpusloader.controller.data_objects.CorpusHeader import CorpusHeader
 from corpusloader.view.gui import AbstractWidget
 
 
@@ -12,96 +15,143 @@ class MetaEditorWidget(AbstractWidget):
         self.view_handler: AbstractWidget = view_handler
         self.controller: Controller = controller
 
-        self.corpus_table_container = GridBox()
-        self.meta_table_container = GridBox()
+        self.corpus_table_container = GridBox(styles={'border': '1px dashed black', 'border-radius': '5px'})
+        self.meta_table_container = GridBox(styles={'border': '1px dashed black', 'border-radius': '5px'})
 
         self.corpus_table_title = Markdown("## Corpus header editor")
         self.meta_table_title = Markdown("## Metadata header editor")
 
         self.text_header_dropdown = Select(name='Select text header', width=200)
+        text_header_fn = bind(self._set_text_header, self.text_header_dropdown)
+
+        self.link_row = Row(visible=False)
+        self.corpus_link_dropdown = Select(name='Select corpus linking header', width=200)
+        corpus_link_fn = bind(self._set_corpus_link_header, self.corpus_link_dropdown)
+        self.meta_link_dropdown = Select(name='Select metadata linking header', width=200)
+        meta_link_fn = bind(self._set_meta_link_header, self.meta_link_dropdown)
+        link_emoji = '\U0001F517'
+        self.link_markdown = Str(link_emoji, styles={"font-size": "2em", "margin": "auto"})
+        self.link_row.objects = [self.corpus_link_dropdown,
+                                 self.link_markdown,
+                                 self.meta_link_dropdown,
+                                 corpus_link_fn,
+                                 meta_link_fn]
 
         self.panel = Column(
             self.corpus_table_title,
-            self.text_header_dropdown,
+            Row(self.text_header_dropdown, text_header_fn),
             self.corpus_table_container,
             self.meta_table_title,
-            self.meta_table_container
+            self.meta_table_container,
+            Spacer(height=20),
+            self.link_row
         )
         self.update_display()
+
+    def update_display(self):
+        self._build_corpus_table()
+        self._build_meta_table()
+        self._update_dropdowns()
+
+    def _set_text_header(self, text_header_name: Optional[str]):
+        self.controller.set_text_header(text_header_name)
+        self.update_display()
+
+    def _set_corpus_link_header(self, header_name: str):
+        self.controller.set_corpus_link_header(header_name)
+        self.update_display()
+
+    def _set_meta_link_header(self, header_name: str):
+        self.controller.set_meta_link_header(header_name)
+        self.update_display()
+
+    def _get_table_cells_list(self, headers: list[CorpusHeader], link_header: CorpusHeader, is_meta_table: bool) -> tuple[int, list]:
+        all_datatypes: list[str] = self.controller.get_all_datatypes()
+        text_header: Optional[CorpusHeader] = self.controller.get_text_header()
+        header_style = {"margin-top": "0", "margin-bottom": "0"}
+
+        table_cells: list = [Markdown('**Header name**', align='start'),
+                             Markdown('**Datatype**', align='start'),
+                             Markdown('**Include**', align='center')]
+        if self.controller.is_meta_added():
+            table_cells.append(Markdown('**Link**', align='center'))
+        ncols: int = len(table_cells)
+
+        for i, header in enumerate(headers):
+            is_text = (header == text_header)
+            is_link = (header == link_header)
+
+            table_cells.append(Markdown(header.name, align='start', styles=header_style))
+
+            datatype_selector = Select(options=all_datatypes, value=header.datatype.name, width=120, disabled=is_text)
+            if is_meta_table:
+                dtype_fn = bind(self.controller.update_meta_header, header=header, datatype_name=datatype_selector, include=None)
+            else:
+                dtype_fn = bind(self.controller.update_corpus_header, header=header, datatype_name=datatype_selector, include=None)
+            table_cells.append(Row(datatype_selector, dtype_fn))
+
+            include_checkbox = Checkbox(value=header.include, align='center', disabled=is_text)
+            if is_meta_table:
+                include_fn = bind(self.controller.update_meta_header, header=header, datatype_name=None, include=include_checkbox)
+            else:
+                include_fn = bind(self.controller.update_corpus_header, header=header, datatype_name=None, include=include_checkbox)
+            table_cells.append(Row(include_checkbox, include_fn))
+
+            if self.controller.is_meta_added():
+                if is_link:
+                    link_identifier = self.link_markdown.clone()
+                else:
+                    link_identifier = ' '
+                table_cells.append(link_identifier)
+
+        return ncols, table_cells
 
     def _build_corpus_table(self):
         is_corpus_added = self.controller.is_corpus_added()
         self.corpus_table_title.visible = is_corpus_added
         self.corpus_table_container.visible = is_corpus_added
-        self.text_header_dropdown.visible = is_corpus_added
 
-        if not is_corpus_added:
-            return
+        corpus_headers: list[CorpusHeader] = self.controller.get_corpus_headers()
+        link_header: Optional[CorpusHeader] = self.controller.get_corpus_link_header()
 
-        corpus_headers: list[str] = self.controller.get_corpus_headers()
-        corpus_datatypes: list[str] = self.controller.get_corpus_datatypes()
-        all_datatypes: list[str] = self.controller.get_all_datatypes()
-
-        corpus_table_cells: list = [Markdown('**Header name**', align='start'),
-                                    Markdown('**Datatype**', align='start'),
-                                    Markdown('**Include**', align='center')]
-        if self.controller.is_meta_added():
-            corpus_table_cells.append(Markdown('**Metadata link**', align='center'))
-        ncols: int = len(corpus_table_cells)
-
-        header_style = {"margin-top": "0", "margin-bottom": "0"}
-        for i, header in enumerate(corpus_headers):
-            corpus_table_cells.append(Markdown(header, align='start', style=header_style))
-
-            datatype_selector = Select(options=all_datatypes, value=corpus_datatypes[i], width=100)
-            corpus_table_cells.append(datatype_selector)
-
-            include_checkbox = Checkbox(value=True, align='center')
-            corpus_table_cells.append(include_checkbox)
-            if self.controller.is_meta_added():
-                link_row = (i == 0)
-                link_checkbox = Checkbox(value=link_row, align='center')
-                corpus_table_cells.append(link_checkbox)
+        ncols, corpus_table_cells = self._get_table_cells_list(corpus_headers, link_header, False)
 
         self.corpus_table_container.objects = corpus_table_cells
         self.corpus_table_container.ncols = ncols
-
-        self.text_header_dropdown.options = self.controller.get_corpus_headers()
 
     def _build_meta_table(self):
         is_meta_added = self.controller.is_meta_added()
         self.meta_table_title.visible = is_meta_added
         self.meta_table_container.visible = is_meta_added
 
-        if not is_meta_added:
-            return
+        meta_headers: list[CorpusHeader] = self.controller.get_meta_headers()
+        link_header: Optional[CorpusHeader] = self.controller.get_meta_link_header()
 
-        meta_headers: list[str] = self.controller.get_meta_headers()
-        meta_datatypes: list[str] = self.controller.get_meta_datatypes()
-        all_datatypes: list[str] = self.controller.get_all_datatypes()
-
-        meta_table_cells: list = [Markdown('**Header name**', align='start'),
-                                    Markdown('**Datatype**', align='start'),
-                                    Markdown('**Include**', align='center'),
-                                    Markdown('**Corpus link**', align='center')]
-        ncols: int = len(meta_table_cells)
-
-        header_style = {"margin-top": "0", "margin-bottom": "0"}
-        for i, header in enumerate(meta_headers):
-            meta_table_cells.append(Markdown(header, style=header_style))
-
-            datatype_selector = Select(options=all_datatypes, value=meta_datatypes[i], width=100)
-            meta_table_cells.append(datatype_selector)
-
-            include_checkbox = Checkbox(value=True, align='center')
-            meta_table_cells.append(include_checkbox)
-
-            link_checkbox = Checkbox(value=False, align='center')
-            meta_table_cells.append(link_checkbox)
+        ncols, meta_table_cells = self._get_table_cells_list(meta_headers, link_header, True)
 
         self.meta_table_container.objects = meta_table_cells
         self.meta_table_container.ncols = ncols
 
-    def update_display(self):
-        self._build_corpus_table()
-        self._build_meta_table()
+    def _update_dropdowns(self):
+        is_meta_added = self.controller.is_meta_added()
+        is_corpus_added = self.controller.is_corpus_added()
+        self.link_row.visible = is_meta_added
+        self.text_header_dropdown.visible = is_corpus_added
+
+        corpus_headers = self.controller.get_corpus_headers()
+        meta_headers = self.controller.get_meta_headers()
+        text_header = self.controller.get_text_header()
+        corpus_link_header = self.controller.get_corpus_link_header()
+        meta_link_header = self.controller.get_meta_link_header()
+
+        self.text_header_dropdown.options = [h.name for h in corpus_headers]
+        if text_header is not None:
+            self.text_header_dropdown.value = text_header.name
+
+        self.corpus_link_dropdown.options = [h.name for h in corpus_headers]
+        if corpus_link_header is not None:
+            self.corpus_link_dropdown.value = corpus_link_header.name
+
+        self.meta_link_dropdown.options = [h.name for h in meta_headers]
+        if meta_link_header is not None:
+            self.meta_link_dropdown.value = meta_link_header.name

@@ -1,9 +1,9 @@
-import os
 import fnmatch
 from glob import glob
+from os.path import isdir, join
 
 import panel
-from panel import Row, Column, HSpacer
+from panel import Row, Column
 from panel.widgets import Button, MultiSelect, TextInput
 
 from corpusloader.controller import Controller
@@ -42,7 +42,7 @@ class FileSelectorWidget(AbstractWidget):
 
         all_paths: list[str] = glob("**", root_dir=self.directory, recursive=True)
         filtered_paths: list[str] = fnmatch.filter(all_paths, filter_str)
-        filtered_files: list[str] = [p for p in filtered_paths if not os.path.isdir(os.path.join(self.directory, p))]
+        filtered_files: list[str] = [p for p in filtered_paths if not isdir(join(self.directory, p))]
 
         old_selected_files: list[str] = self.selector_widget.value.copy()
         filtered_selected_files: list[str] = [f for f in old_selected_files if f in filtered_files]

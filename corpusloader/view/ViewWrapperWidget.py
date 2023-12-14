@@ -1,8 +1,8 @@
 from pandas import DataFrame
-from panel import Tabs
+from panel import Tabs, Column, Row
 
 from corpusloader.controller import Controller
-from corpusloader.view.gui import AbstractWidget, FileLoaderWidget, OniLoaderWidget
+from corpusloader.view.gui import AbstractWidget, FileLoaderWidget, OniLoaderWidget, CorpusInfoWidget
 
 
 class ViewWrapperWidget(AbstractWidget):
@@ -10,17 +10,17 @@ class ViewWrapperWidget(AbstractWidget):
         super().__init__()
         self.controller: Controller = controller
 
-        self.file_loader: FileLoaderWidget = FileLoaderWidget(self, controller, base_path)
-        self.oni_loader: OniLoaderWidget = OniLoaderWidget(controller)
+        self.file_loader: AbstractWidget = FileLoaderWidget(self, controller, base_path)
+        self.oni_loader: AbstractWidget = OniLoaderWidget(controller)
+        self.corpus_display: AbstractWidget = CorpusInfoWidget(controller)
 
-        self.panel = Tabs(("File Loader", self.file_loader), ("Oni Loader", self.oni_loader))
-        self.children = [self.file_loader, self.oni_loader]
+        self.panel = Column(
+            Row(Tabs(("File Loader", self.file_loader), ("Oni Loader", self.oni_loader))),
+            Row(self.corpus_display))
+        self.children = [self.file_loader, self.oni_loader, self.corpus_display]
 
     def update_display(self):
         pass
-
-    def get_loaded_corpus_df(self) -> DataFrame:
-        return self.controller.get_loaded_corpus_df()
 
     def load_corpus_from_filepaths(self, filepath_ls: list[str]) -> bool:
         success = self.controller.load_corpus_from_filepaths(filepath_ls)
