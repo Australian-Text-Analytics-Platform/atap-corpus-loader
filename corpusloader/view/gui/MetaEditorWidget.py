@@ -81,6 +81,9 @@ class MetaEditorWidget(AbstractWidget):
             is_text = (header == text_header)
             is_link = (header == link_header)
 
+            if is_link:
+                header.include = True
+
             table_cells.append(Markdown(header.name, align='start', styles=header_style))
 
             datatype_selector = Select(options=all_datatypes, value=header.datatype.name, width=120, disabled=is_text)
@@ -90,7 +93,7 @@ class MetaEditorWidget(AbstractWidget):
                 dtype_fn = bind(self.controller.update_corpus_header, header, None, datatype_selector)
             table_cells.append(Row(datatype_selector, dtype_fn))
 
-            include_checkbox = Checkbox(value=header.include, align='center', disabled=is_text)
+            include_checkbox = Checkbox(value=header.include, align='center', disabled=(is_text or is_link))
             if is_meta_table:
                 include_fn = bind(self.controller.update_meta_header, header, include_checkbox, None)
             else:
