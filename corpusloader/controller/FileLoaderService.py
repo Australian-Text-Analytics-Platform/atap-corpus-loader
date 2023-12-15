@@ -14,10 +14,16 @@ class FileLoaderService:
         self.meta_filepaths: list[str] = []
 
     def add_corpus_filepath(self, corpus_filepath: str):
+        if corpus_filepath in self.corpus_filepaths:
+            return
+
         FileLoaderService._check_filepath_permissions(corpus_filepath)
         self.corpus_filepaths.append(corpus_filepath)
 
     def add_meta_filepath(self, meta_filepath: str):
+        if meta_filepath in self.meta_filepaths:
+            return
+
         FileLoaderService._check_filepath_permissions(meta_filepath)
         self.meta_filepaths.append(meta_filepath)
 
@@ -36,7 +42,7 @@ class FileLoaderService:
                      meta_headers: list[CorpusHeader],
                      text_header: CorpusHeader,
                      corpus_link_header: Optional[CorpusHeader],
-                     meta_link_header: Optional[CorpusHeader]) -> DataFrameCorpus():
+                     meta_link_header: Optional[CorpusHeader]) -> DataFrameCorpus:
         corpus_df: DataFrame = FileLoaderService._get_concatenated_dataframe(self.corpus_filepaths, corpus_headers)
         meta_df: DataFrame = FileLoaderService._get_concatenated_dataframe(self.meta_filepaths, meta_headers)
 
