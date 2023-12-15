@@ -40,17 +40,20 @@ class FileLoaderService:
         corpus_df: DataFrame = FileLoaderService._get_concatenated_dataframe(self.corpus_filepaths, corpus_headers)
         meta_df: DataFrame = FileLoaderService._get_concatenated_dataframe(self.meta_filepaths, meta_headers)
 
+        load_corpus: bool = len(corpus_headers) > 0
+        load_meta: bool = len(meta_headers) > 0
+
         final_df: DataFrame
-        if (corpus_link_header is not None) and (meta_link_header is not None):
+        if load_corpus and load_meta:
             final_df = merge(left=corpus_df, right=meta_df,
                              left_on=corpus_link_header.name, right_on=meta_link_header.name,
                              how='inner')
-        elif corpus_link_header is not None:
+        elif load_corpus:
             final_df = corpus_df
-        elif meta_link_header is not None:
+        elif load_meta:
             final_df = meta_df
         else:
-            final_df = DataFrame()
+            raise ValueError("No corpus headers or metadata headers provided")
 
         return DataFrameCorpus.from_dataframe(df=final_df, col_doc=text_header.name, name=corpus_name)
 

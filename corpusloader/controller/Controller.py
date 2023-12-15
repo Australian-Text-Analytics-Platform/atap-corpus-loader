@@ -62,20 +62,13 @@ class Controller:
         return True
 
     def build_corpus(self, corpus_name: str):
-        corpus_headers = []
-        if self.corpus_headers is not None:
-            corpus_headers = self.corpus_headers
-        meta_headers = []
-        if self.meta_headers is not None:
-            meta_headers = self.meta_headers
-
-        if (self.corpus_headers is not None) and (self.meta_headers is not None):
+        if self.is_meta_added():
             if (self.corpus_link_header is None) or (self.meta_link_header is None):
                 self.display_error("Cannot build without link headers set. Select a corpus header and a meta header as linking headers in the dropdowns")
                 return
 
-        self.corpus = self.file_loader_service.build_corpus(corpus_name, corpus_headers,
-                                                            meta_headers, self.text_header,
+        self.corpus = self.file_loader_service.build_corpus(corpus_name, self.corpus_headers,
+                                                            self.meta_headers, self.text_header,
                                                             self.corpus_link_header, self.meta_link_header)
 
     def unload_all(self):
