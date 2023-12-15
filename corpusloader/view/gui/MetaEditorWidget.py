@@ -151,10 +151,10 @@ class MetaEditorWidget(AbstractWidget):
         if text_header is not None:
             self.text_header_dropdown.value = text_header.name
 
-        self.corpus_link_dropdown.options = [h.name for h in corpus_headers]
+        self.corpus_link_dropdown.options = [''] + [h.name for h in corpus_headers]
         if corpus_link_header is not None:
             self.corpus_link_dropdown.value = corpus_link_header.name
 
-        self.meta_link_dropdown.options = [h.name for h in meta_headers]
+        self.meta_link_dropdown.options = [''] + [h.name for h in meta_headers]
         if meta_link_header is not None:
             self.meta_link_dropdown.value = meta_link_header.name
