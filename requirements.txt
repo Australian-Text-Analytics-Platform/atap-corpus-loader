@@ -1,4 +1,0 @@
-panel
-pandas
-python-docx
-odfpy

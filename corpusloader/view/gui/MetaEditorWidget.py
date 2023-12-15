@@ -111,7 +111,7 @@ class MetaEditorWidget(AbstractWidget):
         self.corpus_table_title.visible = is_corpus_added
         self.corpus_table_container.visible = is_corpus_added
 
-        corpus_headers: list[CorpusHeader] = self.controller.get_corpus_headers()
+        corpus_headers: list[CorpusHeader] = self.controller.get_inferred_corpus_headers()
         link_header: Optional[CorpusHeader] = self.controller.get_corpus_link_header()
 
         ncols, corpus_table_cells = self._get_table_cells_list(corpus_headers, link_header, False)
@@ -124,7 +124,7 @@ class MetaEditorWidget(AbstractWidget):
         self.meta_table_title.visible = is_meta_added
         self.meta_table_container.visible = is_meta_added
 
-        meta_headers: list[CorpusHeader] = self.controller.get_meta_headers()
+        meta_headers: list[CorpusHeader] = self.controller.get_inferred_meta_headers()
         link_header: Optional[CorpusHeader] = self.controller.get_meta_link_header()
 
         ncols, meta_table_cells = self._get_table_cells_list(meta_headers, link_header, True)

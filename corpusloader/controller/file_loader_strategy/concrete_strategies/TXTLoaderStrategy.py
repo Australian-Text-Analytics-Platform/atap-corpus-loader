@@ -11,7 +11,7 @@ class TXTLoaderStrategy(FileLoaderStrategy):
         headers: list[CorpusHeader] = [
             CorpusHeader("document", DataType.STRING, True),
             CorpusHeader("filename", DataType.STRING, True),
-            CorpusHeader("directory", DataType.CATEGORY, True)
+            CorpusHeader("filepath", DataType.CATEGORY, True)
         ]
 
         return headers
@@ -20,7 +20,7 @@ class TXTLoaderStrategy(FileLoaderStrategy):
         with open(self.filepath) as f:
             document = f.read()
         file_name = basename(self.filepath)
-        file_data = {"document": [document], "filename": [file_name], "directory": [self.filepath]}
+        file_data = {"document": [document], "filename": [file_name], "filepath": [self.filepath]}
 
         df: DataFrame = DataFrame(file_data)
         dtypes_applied_df: DataFrame = FileLoaderStrategy._apply_selected_headers(df, headers)

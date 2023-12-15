@@ -45,7 +45,7 @@ class Controller:
                 self.display_error(str(e))
                 return False
 
-        self.corpus_headers = self.file_loader_service.get_corpus_headers()
+        self.corpus_headers = self.file_loader_service.get_inferred_corpus_headers()
 
         return True
 
@@ -57,7 +57,7 @@ class Controller:
                 self.display_error(str(e))
                 return False
 
-        self.meta_headers = self.file_loader_service.get_meta_headers()
+        self.meta_headers = self.file_loader_service.get_inferred_meta_headers()
 
         return True
 
@@ -81,10 +81,16 @@ class Controller:
         self.meta_headers = []
 
     def get_corpus_headers(self) -> list[CorpusHeader]:
-        return self.file_loader_service.get_corpus_headers()
+        return self.corpus_headers
 
     def get_meta_headers(self) -> list[CorpusHeader]:
-        return self.file_loader_service.get_meta_headers()
+        return self.meta_headers
+
+    def get_inferred_corpus_headers(self) -> list[CorpusHeader]:
+        return self.file_loader_service.get_inferred_corpus_headers()
+
+    def get_inferred_meta_headers(self) -> list[CorpusHeader]:
+        return self.file_loader_service.get_inferred_meta_headers()
 
     def get_text_header(self) -> Optional[CorpusHeader]:
         return self.text_header

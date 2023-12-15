@@ -25,10 +25,10 @@ class FileLoaderService:
         self.corpus_filepaths = []
         self.meta_filepaths = []
 
-    def get_corpus_headers(self) -> list[CorpusHeader]:
+    def get_inferred_corpus_headers(self) -> list[CorpusHeader]:
         return FileLoaderService._get_file_headers(self.corpus_filepaths)
 
-    def get_meta_headers(self) -> list[CorpusHeader]:
+    def get_inferred_meta_headers(self) -> list[CorpusHeader]:
         return FileLoaderService._get_file_headers(self.meta_filepaths)
 
     def build_corpus(self, corpus_name: str,
