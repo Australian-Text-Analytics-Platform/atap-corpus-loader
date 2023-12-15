@@ -31,11 +31,10 @@ class Controller:
     def display_success(self, success_msg: str):
         self.notifier_service.notify_success(success_msg)
 
-    def get_loaded_corpus_df(self) -> DataFrame:
+    def get_loaded_corpus_df(self) -> Optional[DataFrame]:
         if self.corpus is None:
-            return DataFrame()
-        else:
-            return self.corpus.to_dataframe()
+            return None
+        return self.corpus.to_dataframe()
 
     def load_corpus_from_filepaths(self, filepath_ls: list[str]) -> bool:
         for filepath in filepath_ls:
