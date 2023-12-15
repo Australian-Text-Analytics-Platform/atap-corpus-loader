@@ -85,16 +85,16 @@ class MetaEditorWidget(AbstractWidget):
 
             datatype_selector = Select(options=all_datatypes, value=header.datatype.name, width=120, disabled=is_text)
             if is_meta_table:
-                dtype_fn = bind(self.controller.update_meta_header, header=header, datatype_name=datatype_selector, include=None)
+                dtype_fn = bind(self.controller.update_meta_header, header, None, datatype_selector)
             else:
-                dtype_fn = bind(self.controller.update_corpus_header, header=header, datatype_name=datatype_selector, include=None)
+                dtype_fn = bind(self.controller.update_corpus_header, header, None, datatype_selector)
             table_cells.append(Row(datatype_selector, dtype_fn))
 
             include_checkbox = Checkbox(value=header.include, align='center', disabled=is_text)
             if is_meta_table:
-                include_fn = bind(self.controller.update_meta_header, header=header, datatype_name=None, include=include_checkbox)
+                include_fn = bind(self.controller.update_meta_header, header, include_checkbox, None)
             else:
-                include_fn = bind(self.controller.update_corpus_header, header=header, datatype_name=None, include=include_checkbox)
+                include_fn = bind(self.controller.update_corpus_header, header, include_checkbox, None)
             table_cells.append(Row(include_checkbox, include_fn))
 
             if self.controller.is_meta_added():
@@ -111,7 +111,7 @@ class MetaEditorWidget(AbstractWidget):
         self.corpus_table_title.visible = is_corpus_added
         self.corpus_table_container.visible = is_corpus_added
 
-        corpus_headers: list[CorpusHeader] = self.controller.get_inferred_corpus_headers()
+        corpus_headers: list[CorpusHeader] = self.controller.get_corpus_headers()
         link_header: Optional[CorpusHeader] = self.controller.get_corpus_link_header()
 
         ncols, corpus_table_cells = self._get_table_cells_list(corpus_headers, link_header, False)
@@ -124,7 +124,7 @@ class MetaEditorWidget(AbstractWidget):
         self.meta_table_title.visible = is_meta_added
         self.meta_table_container.visible = is_meta_added
 
-        meta_headers: list[CorpusHeader] = self.controller.get_inferred_meta_headers()
+        meta_headers: list[CorpusHeader] = self.controller.get_meta_headers()
         link_header: Optional[CorpusHeader] = self.controller.get_meta_link_header()
 
         ncols, meta_table_cells = self._get_table_cells_list(meta_headers, link_header, True)
