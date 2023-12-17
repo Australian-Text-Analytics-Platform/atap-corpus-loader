@@ -25,7 +25,7 @@ class FileSelectorWidget(AbstractWidget):
                                       sizing_mode='stretch_width')
         self.filter_input.param.watch(self._on_filter_change, ['value_input'])
 
-        self.selector_widget = MultiSelect(size=10, sizing_mode='stretch_width')
+        self.selector_widget = MultiSelect(size=20, sizing_mode='stretch_width')
 
         self.panel = Column(
             Row(self.select_all_button),
@@ -47,7 +47,21 @@ class FileSelectorWidget(AbstractWidget):
         old_selected_files: list[str] = self.selector_widget.value.copy()
         filtered_selected_files: list[str] = [f for f in old_selected_files if f in filtered_files]
 
-        self.selector_widget.options = filtered_files
+        loaded_corpus_files: list[str] = self.controller.get_loaded_corpus_files()
+        loaded_meta_files: list[str] = self.controller.get_loaded_meta_files()
+
+        filtered_files_dict = {}
+        checkmark_symbol = "\U00002714"
+        for file in filtered_files:
+            full_path = join(self.directory, file)
+            file_repr = file
+            if full_path in loaded_corpus_files:
+                file_repr += f" {checkmark_symbol} [corpus]"
+            if full_path in loaded_meta_files:
+                file_repr += f" {checkmark_symbol} [meta]"
+            filtered_files_dict[file_repr] = file
+
+        self.selector_widget.options = filtered_files_dict
         self.selector_widget.value = filtered_selected_files
 
     def _on_filter_change(self, *_):
@@ -55,7 +69,7 @@ class FileSelectorWidget(AbstractWidget):
         self.select_all()
 
     def select_all(self, *_):
-        self.selector_widget.value = self.selector_widget.options
+        self.selector_widget.value = list(self.selector_widget.options.values())
 
     def get_selector_value(self) -> list[str]:
         return self.selector_widget.value

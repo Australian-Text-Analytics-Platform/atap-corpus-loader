@@ -13,6 +13,12 @@ class FileLoaderService:
         self.corpus_filepaths: list[str] = []
         self.meta_filepaths: list[str] = []
 
+    def get_loaded_corpus_files(self) -> list[str]:
+        return self.corpus_filepaths.copy()
+
+    def get_loaded_meta_files(self) -> list[str]:
+        return self.meta_filepaths.copy()
+
     def add_corpus_filepath(self, corpus_filepath: str):
         if corpus_filepath in self.corpus_filepaths:
             return

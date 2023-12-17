@@ -1,4 +1,3 @@
-from pandas import DataFrame
 from panel import Tabs, Column, Row
 
 from corpusloader.controller import Controller

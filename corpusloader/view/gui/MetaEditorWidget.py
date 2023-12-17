@@ -78,7 +78,7 @@ class MetaEditorWidget(AbstractWidget):
         ncols: int = len(table_cells)
 
         for i, header in enumerate(headers):
-            is_text = (header == text_header)
+            is_text = (header == text_header) and (not is_meta_table)
             is_link = (header == link_header)
 
             if is_link:

@@ -77,6 +77,12 @@ class Controller:
         self.corpus_headers = []
         self.meta_headers = []
 
+    def get_loaded_corpus_files(self) -> list[str]:
+        return self.file_loader_service.get_loaded_corpus_files()
+
+    def get_loaded_meta_files(self) -> list[str]:
+        return self.file_loader_service.get_loaded_meta_files()
+
     def get_corpus_headers(self) -> list[CorpusHeader]:
         return self.corpus_headers
 
