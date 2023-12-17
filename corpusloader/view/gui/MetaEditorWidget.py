@@ -10,13 +10,17 @@ from corpusloader.view.gui import AbstractWidget
 
 
 class MetaEditorWidget(AbstractWidget):
+    TABLE_BORDER_STYLE = {'border': '1px dashed black', 'border-radius': '5px'}
+    ERROR_BORDER_STYLE = {'border': '1px solid red', 'border-radius': '5px'}
+    HEADER_STYLE = {"margin-top": "0", "margin-bottom": "0"}
+
     def __init__(self, view_handler: AbstractWidget, controller: Controller):
         super().__init__()
         self.view_handler: AbstractWidget = view_handler
         self.controller: Controller = controller
 
-        self.corpus_table_container = GridBox(styles={'border': '1px dashed black', 'border-radius': '5px'})
-        self.meta_table_container = GridBox(styles={'border': '1px dashed black', 'border-radius': '5px'})
+        self.corpus_table_container = GridBox(styles=MetaEditorWidget.TABLE_BORDER_STYLE)
+        self.meta_table_container = GridBox(styles=MetaEditorWidget.TABLE_BORDER_STYLE)
 
         self.corpus_table_title = Markdown("## Corpus header editor")
         self.meta_table_title = Markdown("## Metadata header editor")
@@ -24,7 +28,7 @@ class MetaEditorWidget(AbstractWidget):
         self.text_header_dropdown = Select(name='Select text header', width=200)
         text_header_fn = bind(self._set_text_header, self.text_header_dropdown)
 
-        self.link_row = Row(visible=False)
+        self.link_row = Row(visible=False, styles=MetaEditorWidget.ERROR_BORDER_STYLE)
         self.corpus_link_dropdown = Select(name='Select corpus linking header', width=200)
         corpus_link_fn = bind(self._set_corpus_link_header, self.corpus_link_dropdown)
         self.meta_link_dropdown = Select(name='Select metadata linking header', width=200)
@@ -34,8 +38,8 @@ class MetaEditorWidget(AbstractWidget):
         self.link_row.objects = [self.corpus_link_dropdown,
                                  self.link_markdown,
                                  self.meta_link_dropdown,
-                                 corpus_link_fn,
-                                 meta_link_fn]
+                                 Column(corpus_link_fn, visible=False),
+                                 Column(meta_link_fn, visible=False)]
 
         self.panel = Column(
             self.corpus_table_title,
@@ -68,7 +72,6 @@ class MetaEditorWidget(AbstractWidget):
     def _get_table_cells_list(self, headers: list[CorpusHeader], link_header: CorpusHeader, is_meta_table: bool) -> tuple[int, list]:
         all_datatypes: list[str] = self.controller.get_all_datatypes()
         text_header: Optional[CorpusHeader] = self.controller.get_text_header()
-        header_style = {"margin-top": "0", "margin-bottom": "0"}
 
         table_cells: list = [Markdown('**Header name**', align='start'),
                              Markdown('**Datatype**', align='start'),
@@ -84,7 +87,7 @@ class MetaEditorWidget(AbstractWidget):
             if is_link:
                 header.include = True
 
-            table_cells.append(Markdown(header.name, align='start', styles=header_style))
+            table_cells.append(Markdown(header.name, align='start', styles=MetaEditorWidget.HEADER_STYLE))
 
             datatype_selector = Select(options=all_datatypes, value=header.datatype.name, width=120, disabled=is_text)
             if is_meta_table:
@@ -158,3 +161,8 @@ class MetaEditorWidget(AbstractWidget):
         self.meta_link_dropdown.options = [''] + [h.name for h in meta_headers]
         if meta_link_header is not None:
             self.meta_link_dropdown.value = meta_link_header.name
+
+        if (meta_link_header is None) or (corpus_link_header is None):
+            self.link_row.styles = MetaEditorWidget.ERROR_BORDER_STYLE
+        else:
+            self.link_row.styles = {}
