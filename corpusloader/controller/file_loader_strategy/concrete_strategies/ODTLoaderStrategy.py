@@ -18,13 +18,13 @@ class ODTLoaderStrategy(FileLoaderStrategy):
 
         return headers
 
-    def get_dataframe(self) -> DataFrame:
+    def get_dataframe(self, headers: list[CorpusHeader]) -> DataFrame:
         odt_doc = load(self.filepath)
         document = ''
         for element in odt_doc.getElementsByType(text.P):
             document += teletype.extractText(element)
 
         file_name = basename(self.filepath)
-        file_data = {"document": document, "filename": file_name, "directory": self.filepath}
+        file_data = {"document": [document], "filename": [file_name], "directory": [self.filepath]}
 
         return DataFrame(file_data)
