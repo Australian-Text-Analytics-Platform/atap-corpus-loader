@@ -17,13 +17,13 @@ class DOCXLoaderStrategy(FileLoaderStrategy):
 
         return headers
 
-    def get_dataframe(self) -> DataFrame:
+    def get_dataframe(self, headers: list[CorpusHeader]) -> DataFrame:
         docx_doc = Document(self.filepath)
         document = ''
         for paragraph in docx_doc.paragraphs:
             document += paragraph.text + '\n'
 
         file_name = basename(self.filepath)
-        file_data = {"document": document, "filename": file_name, "directory": self.filepath}
+        file_data = {"document": [document], "filename": [file_name], "directory": [self.filepath]}
 
         return DataFrame(file_data)
