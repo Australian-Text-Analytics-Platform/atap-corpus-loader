@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Callable
 
 from atap_corpus.corpus.corpus import DataFrameCorpus
 from pandas import DataFrame
@@ -25,11 +25,25 @@ class Controller:
 
         self.corpus: Optional[DataFrameCorpus] = None
 
+        self.build_callback_fn: Optional[Callable] = None
+        self.build_callback_args: list = []
+        self.build_callback_kwargs: dict = {}
+
     def display_error(self, error_msg: str):
         self.notifier_service.notify_error(error_msg)
 
     def display_success(self, success_msg: str):
         self.notifier_service.notify_success(success_msg)
+
+    def set_build_callback(self, callback: Callable, *args, **kwargs):
+        if not callable(callback):
+            raise ValueError("Provided callback function must be a callable")
+        self.build_callback_fn = callback
+        self.build_callback_args = args
+        self.build_callback_kwargs = kwargs
+
+    def get_corpus(self) -> Optional[DataFrameCorpus]:
+        return self.corpus
 
     def get_loaded_corpus_df(self) -> Optional[DataFrame]:
         if self.corpus is None:
@@ -69,6 +83,8 @@ class Controller:
         self.corpus = self.file_loader_service.build_corpus(corpus_name, self.corpus_headers,
                                                             self.meta_headers, self.text_header,
                                                             self.corpus_link_header, self.meta_link_header)
+        if self.build_callback_fn is not None:
+            self.build_callback_fn(*self.build_callback_args, **self.build_callback_kwargs)
 
     def unload_filepaths(self, filepath_ls: list[str]):
         for filepath in filepath_ls:

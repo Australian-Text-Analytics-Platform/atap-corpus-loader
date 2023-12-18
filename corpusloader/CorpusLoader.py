@@ -1,4 +1,7 @@
+from typing import Optional, Callable
+
 import panel
+from atap_corpus.corpus.corpus import DataFrameCorpus
 from panel.viewable import Viewer
 
 from corpusloader.controller import Controller
@@ -15,3 +18,9 @@ class CorpusLoader(Viewer):
 
     def __panel__(self):
         return self.view
+
+    def set_build_callback(self, callback: Callable, *args, **kwargs):
+        self.controller.set_build_callback(callback, *args, **kwargs)
+
+    def get_corpus(self) -> Optional[DataFrameCorpus]:
+        return self.controller.get_corpus()
