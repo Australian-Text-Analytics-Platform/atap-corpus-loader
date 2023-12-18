@@ -70,6 +70,11 @@ class Controller:
                                                             self.meta_headers, self.text_header,
                                                             self.corpus_link_header, self.meta_link_header)
 
+    def unload_filepaths(self, filepath_ls: list[str]):
+        for filepath in filepath_ls:
+            self.file_loader_service.remove_meta_filepath(filepath)
+            self.file_loader_service.remove_corpus_filepath(filepath)
+
     def unload_all(self):
         self.file_loader_service.remove_all_files()
 
