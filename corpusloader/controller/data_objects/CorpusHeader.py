@@ -11,7 +11,7 @@ class CorpusHeader:
         return self.name
 
     def __repr__(self):
-        return f"CorpusHeader object. name: {self.name}, datatype: {self.datatype}, include: {self.include}"
+        return f"CorpusHeader: {self.name} [{self.datatype.value}]"
 
     def __eq__(self, other):
         if type(other) is not CorpusHeader:
