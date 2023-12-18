@@ -33,6 +33,14 @@ class FileLoaderService:
         FileLoaderService._check_filepath_permissions(meta_filepath)
         self.meta_filepaths.append(meta_filepath)
 
+    def remove_corpus_filepath(self, corpus_filepath: str):
+        if corpus_filepath in self.corpus_filepaths:
+            self.corpus_filepaths.remove(corpus_filepath)
+
+    def remove_meta_filepath(self, meta_filepath: str):
+        if meta_filepath in self.meta_filepaths:
+            self.meta_filepaths.remove(meta_filepath)
+
     def remove_all_files(self):
         self.corpus_filepaths = []
         self.meta_filepaths = []
@@ -59,7 +67,7 @@ class FileLoaderService:
         if load_corpus and load_meta:
             final_df = merge(left=corpus_df, right=meta_df,
                              left_on=corpus_link_header.name, right_on=meta_link_header.name,
-                             how='inner')
+                             how='inner', suffixes=(None, '_meta'))
         elif load_corpus:
             final_df = corpus_df
         elif load_meta:
@@ -86,7 +94,7 @@ class FileLoaderService:
             if headers is None:
                 headers = path_headers
             elif set(headers) != set(path_headers):
-                raise FileLoadError(f"Incompatible headers within file: {path}. Expected headers: {headers}, Provided headers: {path_headers}")
+                raise FileLoadError(f"Incompatible headers within loaded files")
 
         if headers is None:
             headers = []
