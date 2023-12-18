@@ -50,7 +50,8 @@ class FileLoaderWidget(AbstractWidget):
         self.children = [self.file_selector, self.meta_editor]
 
     def update_display(self):
-        pass
+        files_added: bool = self.controller.is_meta_added() or self.controller.is_corpus_added()
+        self._set_build_buttons_status(files_added)
 
     def _set_build_buttons_status(self, active: bool, *_):
         if active:
@@ -65,16 +66,12 @@ class FileLoaderWidget(AbstractWidget):
     def load_as_corpus(self, *_):
         file_ls: list[str] = self.file_selector.get_selector_value()
         filepath_ls: list[str] = [join(self.directory, name) for name in file_ls]
-        success = self.view_handler.load_corpus_from_filepaths(filepath_ls)
-        if success:
-            self._set_build_buttons_status(True)
+        self.view_handler.load_corpus_from_filepaths(filepath_ls)
 
     def load_as_meta(self, *_):
         file_ls: list[str] = self.file_selector.get_selector_value()
         filepath_ls: list[str] = [join(self.directory, name) for name in file_ls]
-        success = self.view_handler.load_meta_from_filepaths(filepath_ls)
-        if success:
-            self._set_build_buttons_status(True)
+        self.view_handler.load_meta_from_filepaths(filepath_ls)
 
     def unload_all(self, *_):
         self._set_build_buttons_status(False)

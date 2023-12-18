@@ -144,22 +144,26 @@ class MetaEditorWidget(AbstractWidget):
         self.link_row.visible = is_meta_added
         self.text_header_dropdown.visible = is_corpus_added
 
-        corpus_headers = self.controller.get_corpus_headers()
-        meta_headers = self.controller.get_meta_headers()
-        text_header = self.controller.get_text_header()
-        corpus_link_header = self.controller.get_corpus_link_header()
-        meta_link_header = self.controller.get_meta_link_header()
+        corpus_headers: list[CorpusHeader] = self.controller.get_corpus_headers()
+        meta_headers: list[CorpusHeader] = self.controller.get_meta_headers()
+        text_header: Optional[CorpusHeader] = self.controller.get_text_header()
+        corpus_link_header: Optional[CorpusHeader] = self.controller.get_corpus_link_header()
+        meta_link_header: Optional[CorpusHeader] = self.controller.get_meta_link_header()
 
         self.text_header_dropdown.options = [h.name for h in corpus_headers]
         if text_header is not None:
             self.text_header_dropdown.value = text_header.name
 
         self.corpus_link_dropdown.options = [''] + [h.name for h in corpus_headers]
-        if corpus_link_header is not None:
+        if corpus_link_header is None:
+            self.corpus_link_dropdown.value = ''
+        else:
             self.corpus_link_dropdown.value = corpus_link_header.name
 
         self.meta_link_dropdown.options = [''] + [h.name for h in meta_headers]
-        if meta_link_header is not None:
+        if meta_link_header is None:
+            self.meta_link_dropdown.value = ''
+        else:
             self.meta_link_dropdown.value = meta_link_header.name
 
         if (meta_link_header is None) or (corpus_link_header is None):
