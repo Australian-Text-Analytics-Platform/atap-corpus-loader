@@ -23,6 +23,6 @@ class TSVLoaderStrategy(FileLoaderStrategy):
 
     def get_dataframe(self, headers: list[CorpusHeader]) -> DataFrame:
         df: DataFrame = read_csv(self.filepath, sep='\t', header=0)
-        dtypes_applied_df: DataFrame = FileLoaderStrategy._apply_selected_headers(df, headers)
+        dtypes_applied_df: DataFrame = FileLoaderStrategy._apply_selected_dtypes(df, headers)
 
         return dtypes_applied_df

@@ -10,12 +10,10 @@ class FileLoaderStrategy(ABC):
         self.filepath: str = filepath
 
     @staticmethod
-    def _apply_selected_headers(df: DataFrame, headers: list[CorpusHeader]) -> DataFrame:
-        headers_exclude: list[str] = [h.name for h in headers if not h.include]
-        pruned_df: DataFrame = df.drop(columns=headers_exclude)
+    def _apply_selected_dtypes(df: DataFrame, headers: list[CorpusHeader]) -> DataFrame:
         dtypes = {h.name: h.datatype.value for h in headers if h.include}
 
-        return pruned_df.astype(dtype=dtypes)
+        return df.astype(dtype=dtypes)
 
     @abstractmethod
     def get_inferred_headers(self) -> list[CorpusHeader]:

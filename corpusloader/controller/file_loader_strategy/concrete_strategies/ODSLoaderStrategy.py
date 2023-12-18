@@ -8,5 +8,5 @@ class ODSLoaderStrategy(FileLoaderStrategy):
     def get_inferred_headers(self) -> list[CorpusHeader]:
         pass
 
-    def get_dataframe(self) -> DataFrame:
+    def get_dataframe(self, headers: list[CorpusHeader]) -> DataFrame:
         pass
