@@ -1,9 +1,7 @@
-from os.path import basename
-
 from docx import Document
 from pandas import DataFrame
 
-from corpusloader.controller.data_objects import CorpusHeader, DataType
+from corpusloader.controller.data_objects import CorpusHeader, DataType, FileReference
 from corpusloader.controller.file_loader_strategy.FileLoaderStrategy import FileLoaderStrategy
 
 
@@ -18,8 +16,8 @@ class DOCXLoaderStrategy(FileLoaderStrategy):
         return headers
 
     def get_dataframe(self, headers: list[CorpusHeader]) -> DataFrame:
-        with self.file_ref as f:
-            docx_doc = Document(f)
+        filepath: str = self.file_ref.resolve_real_file_path()
+        docx_doc = Document(filepath)
         document = ''
         for paragraph in docx_doc.paragraphs:
             document += paragraph.text + '\n'

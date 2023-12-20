@@ -1,4 +1,5 @@
 from os.path import join, relpath, dirname, basename
+from tempfile import NamedTemporaryFile
 from zipfile import ZipFile
 
 
@@ -7,8 +8,6 @@ class FileReference:
         self.root_directory: str = root_directory
         self.directory_path: str = directory_path
         self.filename: str = filename
-
-        self.file = None
 
     def __eq__(self, other):
         if not isinstance(other, FileReference):
@@ -24,12 +23,8 @@ class FileReference:
     def __repr__(self):
         return self.get_full_path()
 
-    def __enter__(self):
-        self.file = open(self.get_full_path())
-        return self.file
-
-    def __exit__(self, exc_type, exc_value, traceback):
-        self.file.close()
+    def resolve_real_file_path(self) -> str:
+        return self.get_full_path()
 
     def get_full_path(self) -> str:
         return join(self.directory_path, self.filename)
@@ -88,3 +83,14 @@ class ZipFileReference(FileReference):
 
     def is_zipped(self) -> bool:
         return True
+
+    def resolve_real_file_path(self) -> str:
+        internal_path = join(self.internal_directory, self.filename)
+        zip_file = ZipFile(self.directory_path)
+        with zip_file.open(internal_path, force_zip64=True) as zip_f:
+            file_content = zip_f.read()
+        with NamedTemporaryFile(delete=False) as temp_f:
+            temp_f.write(file_content)
+            filepath = temp_f.name
+
+        return filepath

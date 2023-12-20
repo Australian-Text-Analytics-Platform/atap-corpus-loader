@@ -1,5 +1,3 @@
-from tempfile import NamedTemporaryFile
-
 from pandas import DataFrame, concat
 from pyreadr import list_objects, read_r
 from pyreadr.librdata import PyreadrError, LibrdataError
@@ -11,19 +9,9 @@ from corpusloader.controller.file_loader_strategy.FileLoaderStrategy import File
 
 class RLoaderStrategy(FileLoaderStrategy):
     def get_inferred_headers(self) -> list[CorpusHeader]:
-        file_objects: list[dict]
-        filepath: str
-        if self.file_ref.is_zipped():
-            with self.file_ref as f:
-                file_content = f.read()
-            with NamedTemporaryFile(delete=False) as temp_f:
-                temp_f.write(file_content)
-                filepath = temp_f.name
-        else:
-            filepath = self.file_ref.get_full_path()
-
+        filepath: str = self.file_ref.resolve_real_file_path()
         try:
-            file_objects = list_objects(filepath)
+            file_objects: list[dict] = list_objects(filepath)
         except (PyreadrError, LibrdataError) as e:
             raise FileLoadError(f"Error loading R file: {str(e)}")
 
@@ -43,18 +31,9 @@ class RLoaderStrategy(FileLoaderStrategy):
         return headers
 
     def get_dataframe(self, headers: list[CorpusHeader]) -> DataFrame:
-        filepath: str
-        if self.file_ref.is_zipped():
-            with self.file_ref as f:
-                file_content = f.read()
-            with NamedTemporaryFile(delete=False) as temp_f:
-                temp_f.write(file_content)
-                filepath = temp_f.name
-        else:
-            filepath = self.file_ref.get_full_path()
-
+        filepath: str = self.file_ref.resolve_real_file_path()
         try:
-            object_df_dict = read_r(filepath)
+            object_df_dict: dict = read_r(filepath)
         except (PyreadrError, LibrdataError) as e:
             raise FileLoadError(f"Error loading R file: {str(e)}")
 

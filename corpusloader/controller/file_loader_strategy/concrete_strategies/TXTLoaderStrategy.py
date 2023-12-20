@@ -1,5 +1,3 @@
-from os.path import basename
-
 from pandas import DataFrame
 
 from corpusloader.controller.data_objects import CorpusHeader, DataType
@@ -17,7 +15,8 @@ class TXTLoaderStrategy(FileLoaderStrategy):
         return headers
 
     def get_dataframe(self, headers: list[CorpusHeader]) -> DataFrame:
-        with self.file_ref as f:
+        filepath: str = self.file_ref.resolve_real_file_path()
+        with open(filepath) as f:
             document = f.read()
 
         included_headers: list[str] = [header.name for header in headers if header.include]

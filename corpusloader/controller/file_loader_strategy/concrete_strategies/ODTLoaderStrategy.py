@@ -1,10 +1,8 @@
-from os.path import basename
-
 from odf import text, teletype
 from odf.opendocument import load
 from pandas import DataFrame
 
-from corpusloader.controller.data_objects import CorpusHeader, DataType
+from corpusloader.controller.data_objects import CorpusHeader, DataType, FileReference
 from corpusloader.controller.file_loader_strategy.FileLoaderStrategy import FileLoaderStrategy
 
 
@@ -19,8 +17,8 @@ class ODTLoaderStrategy(FileLoaderStrategy):
         return headers
 
     def get_dataframe(self, headers: list[CorpusHeader]) -> DataFrame:
-        with self.file_ref as f:
-            odt_doc = load(f)
+        filepath: str = self.file_ref.resolve_real_file_path()
+        odt_doc = load(filepath)
         document = ''
         for element in odt_doc.getElementsByType(text.P):
             document += teletype.extractText(element)

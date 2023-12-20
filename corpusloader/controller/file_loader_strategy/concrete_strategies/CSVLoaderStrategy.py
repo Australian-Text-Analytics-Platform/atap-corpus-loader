@@ -1,5 +1,3 @@
-from io import StringIO
-
 from pandas import DataFrame, read_csv
 
 from corpusloader.controller.data_objects import CorpusHeader, DataType
@@ -8,8 +6,8 @@ from corpusloader.controller.file_loader_strategy.FileLoaderStrategy import File
 
 class CSVLoaderStrategy(FileLoaderStrategy):
     def get_inferred_headers(self) -> list[CorpusHeader]:
-        with self.file_ref as f:
-            df: DataFrame = read_csv(f, header=0, nrows=2)
+        filepath: str = self.file_ref.resolve_real_file_path()
+        df: DataFrame = read_csv(filepath, header=0, nrows=2)
         headers: list[CorpusHeader] = []
         for header_name, dtype_obj in df.dtypes.items():
             dtype_str: str = str(dtype_obj).upper()
@@ -24,8 +22,8 @@ class CSVLoaderStrategy(FileLoaderStrategy):
 
     def get_dataframe(self, headers: list[CorpusHeader]) -> DataFrame:
         included_headers: list[str] = [header.name for header in headers if header.include]
-        with self.file_ref as f:
-            df: DataFrame = read_csv(f, header=0, usecols=included_headers)
+        filepath: str = self.file_ref.resolve_real_file_path()
+        df: DataFrame = read_csv(filepath, header=0, usecols=included_headers)
         dtypes_applied_df: DataFrame = FileLoaderStrategy._apply_selected_dtypes(df, headers)
 
         return dtypes_applied_df
