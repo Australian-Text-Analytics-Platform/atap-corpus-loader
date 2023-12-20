@@ -1,5 +1,4 @@
 from enum import Enum
-from os.path import basename
 
 from corpusloader.controller.data_objects import FileReference
 from corpusloader.controller.file_loader_strategy.FileLoadError import FileLoadError
@@ -15,7 +14,9 @@ class FileType(Enum):
     TSV = TSVLoaderStrategy
     XLSX = XLSXLoaderStrategy
     ODS = ODSLoaderStrategy
-    RDS = RDSLoaderStrategy
+    RDS = RLoaderStrategy
+    RDATA = RLoaderStrategy
+    RDA = RLoaderStrategy
 
 
 class FileLoaderFactory:

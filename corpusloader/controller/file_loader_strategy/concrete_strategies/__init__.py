@@ -5,4 +5,4 @@ from .CSVLoaderStrategy import CSVLoaderStrategy
 from .TSVLoaderStrategy import TSVLoaderStrategy
 from .XLSXLoaderStrategy import XLSXLoaderStrategy
 from .ODSLoaderStrategy import ODSLoaderStrategy
-from .RDSLoaderStrategy import RDSLoaderStrategy
+from .RLoaderStrategy import RLoaderStrategy
