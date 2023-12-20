@@ -73,7 +73,7 @@ class ZipFileReference(FileReference):
     def __enter__(self):
         internal_path = join(self.internal_directory, self.filename)
         self.zip_file = ZipFile(self.directory_path)
-        self.file = self.zip_file.open(internal_path)
+        self.file = self.zip_file.open(internal_path, force_zip64=True)
         return self.file
 
     def __exit__(self, exc_type, exc_value, traceback):
