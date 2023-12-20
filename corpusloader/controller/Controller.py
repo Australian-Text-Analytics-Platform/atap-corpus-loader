@@ -1,17 +1,24 @@
+import fnmatch
+from glob import glob
+from os.path import join, isdir, basename, dirname
 from typing import Optional, Callable
+from zipfile import ZipFile
 
 from atap_corpus.corpus.corpus import DataFrameCorpus
 from pandas import DataFrame
 
 from corpusloader.controller.FileLoaderService import FileLoaderService, FileLoadError
 from corpusloader.controller.OniAPIService import OniAPIService
+from corpusloader.controller.data_objects import FileReference, ZipFileReference
 from corpusloader.controller.data_objects.CorpusHeader import CorpusHeader
 from corpusloader.controller.data_objects.DataType import DataType
 from corpusloader.view.notifications import NotifierService
 
 
 class Controller:
-    def __init__(self, notifier_service: NotifierService):
+    def __init__(self, notifier_service: NotifierService, root_directory: str):
+        self.root_directory: str = root_directory
+
         self.file_loader_service: FileLoaderService = FileLoaderService()
         self.oni_api_service: OniAPIService = OniAPIService()
         self.notifier_service: NotifierService = notifier_service
@@ -50,7 +57,7 @@ class Controller:
             return None
         return self.corpus.to_dataframe()
 
-    def load_corpus_from_filepaths(self, filepath_ls: list[str]) -> bool:
+    def load_corpus_from_filepaths(self, filepath_ls: list[FileReference]) -> bool:
         for filepath in filepath_ls:
             try:
                 self.file_loader_service.add_corpus_filepath(filepath)
@@ -62,7 +69,7 @@ class Controller:
 
         return True
 
-    def load_meta_from_filepaths(self, filepath_ls: list[str]) -> bool:
+    def load_meta_from_filepaths(self, filepath_ls: list[FileReference]) -> bool:
         for filepath in filepath_ls:
             try:
                 self.file_loader_service.add_meta_filepath(filepath)
@@ -86,7 +93,7 @@ class Controller:
         if self.build_callback_fn is not None:
             self.build_callback_fn(*self.build_callback_args, **self.build_callback_kwargs)
 
-    def unload_filepaths(self, filepath_ls: list[str]):
+    def unload_filepaths(self, filepath_ls: list[FileReference]):
         for filepath in filepath_ls:
             self.file_loader_service.remove_meta_filepath(filepath)
             self.file_loader_service.remove_corpus_filepath(filepath)
@@ -100,10 +107,10 @@ class Controller:
         self.corpus_link_header = None
         self.meta_link_header = None
 
-    def get_loaded_corpus_files(self) -> list[str]:
+    def get_loaded_corpus_files(self) -> list[FileReference]:
         return self.file_loader_service.get_loaded_corpus_files()
 
-    def get_loaded_meta_files(self) -> list[str]:
+    def get_loaded_meta_files(self) -> list[FileReference]:
         return self.file_loader_service.get_loaded_meta_files()
 
     def get_corpus_headers(self) -> list[CorpusHeader]:
@@ -183,3 +190,24 @@ class Controller:
                 header.include = True
                 return
         self.meta_link_header = None
+
+    def retrieve_all_files(self) -> list[FileReference]:
+        all_relative_paths: list[str] = glob("**", root_dir=self.root_directory, recursive=True)
+        all_full_paths: list[str] = []
+        for path in all_relative_paths:
+            full_path = join(self.root_directory, path)
+            if not isdir(full_path):
+                all_full_paths.append(join(self.root_directory, path))
+
+        all_file_refs: list[FileReference] = []
+        for idx, full_path in enumerate(all_full_paths):
+            if full_path.endswith('.zip'):
+                zip_file_refs: list[FileReference] = ZipFileReference.get_zip_internal_file_refs(self.root_directory, full_path)
+                all_file_refs.extend(zip_file_refs)
+            else:
+                file_ref = FileReference(self.root_directory, dirname(full_path), basename(full_path))
+                all_file_refs.append(file_ref)
+
+        all_file_refs.sort(key=lambda ref: ref.get_full_path())
+
+        return all_file_refs

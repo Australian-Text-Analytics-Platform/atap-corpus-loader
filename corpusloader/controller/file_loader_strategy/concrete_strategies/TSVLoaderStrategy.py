@@ -8,7 +8,8 @@ from corpusloader.controller.file_loader_strategy.FileLoaderStrategy import File
 
 class TSVLoaderStrategy(FileLoaderStrategy):
     def get_inferred_headers(self) -> list[CorpusHeader]:
-        df: DataFrame = read_csv(self.filepath, sep='\t', header=0, nrows=2)
+        with self.file_ref as f:
+            df: DataFrame = read_csv(f, sep='\t', header=0, nrows=2)
         headers: list[CorpusHeader] = []
         for header_name, dtype_obj in df.dtypes.items():
             dtype_str: str = str(dtype_obj).upper()
@@ -22,7 +23,8 @@ class TSVLoaderStrategy(FileLoaderStrategy):
         return headers
 
     def get_dataframe(self, headers: list[CorpusHeader]) -> DataFrame:
-        df: DataFrame = read_csv(self.filepath, sep='\t', header=0)
+        with self.file_ref as f:
+            df: DataFrame = read_csv(f, sep='\t', header=0)
         dtypes_applied_df: DataFrame = FileLoaderStrategy._apply_selected_dtypes(df, headers)
 
         return dtypes_applied_df

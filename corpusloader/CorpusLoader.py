@@ -11,10 +11,10 @@ panel.extension(notifications=True)
 
 
 class CorpusLoader(Viewer):
-    def __init__(self, base_path: str, **params):
+    def __init__(self, root_directory: str, **params):
         super().__init__(**params)
-        self.controller: Controller = Controller(NotifierService())
-        self.view: ViewWrapperWidget = ViewWrapperWidget(self.controller, base_path)
+        self.controller: Controller = Controller(NotifierService(), root_directory)
+        self.view: ViewWrapperWidget = ViewWrapperWidget(self.controller)
 
     def __panel__(self):
         return self.view

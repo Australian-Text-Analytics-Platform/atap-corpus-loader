@@ -17,18 +17,17 @@ class TXTLoaderStrategy(FileLoaderStrategy):
         return headers
 
     def get_dataframe(self, headers: list[CorpusHeader]) -> DataFrame:
-        with open(self.filepath) as f:
+        with self.file_ref as f:
             document = f.read()
-        file_name = basename(self.filepath)
 
         included_headers: list[str] = [header.name for header in headers if header.include]
         file_data = {}
         if 'document' in included_headers:
             file_data['document'] = [document]
         if 'filename' in included_headers:
-            file_data['filename'] = [file_name]
+            file_data['filename'] = [self.file_ref.get_filename()]
         if 'filepath' in included_headers:
-            file_data['filepath'] = [self.filepath]
+            file_data['filepath'] = [self.file_ref.get_full_path()]
 
         df: DataFrame = DataFrame(file_data)
         dtypes_applied_df: DataFrame = FileLoaderStrategy._apply_selected_dtypes(df, headers)

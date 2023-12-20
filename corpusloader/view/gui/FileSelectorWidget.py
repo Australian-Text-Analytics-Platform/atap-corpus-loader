@@ -1,21 +1,19 @@
-import fnmatch
-from glob import glob
-from os.path import isdir, join
+from fnmatch import fnmatch
 
 import panel
 from panel import Row, Column
 from panel.widgets import Button, MultiSelect, TextInput
 
 from corpusloader.controller import Controller
+from corpusloader.controller.data_objects import FileReference
 from corpusloader.view.gui import AbstractWidget
 
 
 class FileSelectorWidget(AbstractWidget):
-    def __init__(self, view_handler: AbstractWidget, controller: Controller, base_path: str):
+    def __init__(self, view_handler: AbstractWidget, controller: Controller):
         super().__init__()
         self.view_handler: AbstractWidget = view_handler
         self.controller: Controller = controller
-        self.directory: str = base_path
 
         self.select_all_button = Button(name="Select all", width=95,
                                         button_style="solid", button_type="primary")
@@ -38,31 +36,31 @@ class FileSelectorWidget(AbstractWidget):
         self.select_all()
 
     def update_display(self):
+        all_file_refs: list[FileReference] = self.controller.retrieve_all_files()
+        loaded_corpus_files: list[FileReference] = self.controller.get_loaded_corpus_files()
+        loaded_meta_files: list[FileReference] = self.controller.get_loaded_meta_files()
+
         filter_str = f"*{self.filter_input.value_input}*"
+        filtered_refs: list[FileReference] = []
+        for ref in all_file_refs:
+            if fnmatch(ref.get_relative_path(), filter_str):
+                filtered_refs.append(ref)
 
-        all_paths: list[str] = glob("**", root_dir=self.directory, recursive=True)
-        filtered_paths: list[str] = fnmatch.filter(all_paths, filter_str)
-        filtered_files: list[str] = [p for p in filtered_paths if not isdir(join(self.directory, p))]
+        old_selected_refs: list[FileReference] = self.selector_widget.value.copy()
+        filtered_selected_refs: list[FileReference] = [f for f in old_selected_refs if f in filtered_refs]
 
-        old_selected_files: list[str] = self.selector_widget.value.copy()
-        filtered_selected_files: list[str] = [f for f in old_selected_files if f in filtered_files]
-
-        loaded_corpus_files: list[str] = self.controller.get_loaded_corpus_files()
-        loaded_meta_files: list[str] = self.controller.get_loaded_meta_files()
-
-        filtered_files_dict = {}
+        filtered_files_dict: dict[str, FileReference] = {}
         checkmark_symbol = "\U00002714"
-        for file in filtered_files:
-            full_path = join(self.directory, file)
-            file_repr = file
-            if full_path in loaded_corpus_files:
+        for ref in filtered_refs:
+            file_repr = ref.get_relative_path()
+            if ref in loaded_corpus_files:
                 file_repr += f" {checkmark_symbol} [corpus]"
-            if full_path in loaded_meta_files:
+            if ref in loaded_meta_files:
                 file_repr += f" {checkmark_symbol} [meta]"
-            filtered_files_dict[file_repr] = file
+            filtered_files_dict[file_repr] = ref
 
         self.selector_widget.options = filtered_files_dict
-        self.selector_widget.value = filtered_selected_files
+        self.selector_widget.value = filtered_selected_refs
 
     def _on_filter_change(self, *_):
         self.update_display()
@@ -71,5 +69,5 @@ class FileSelectorWidget(AbstractWidget):
     def select_all(self, *_):
         self.selector_widget.value = list(self.selector_widget.options.values())
 
-    def get_selector_value(self) -> list[str]:
+    def get_selector_value(self) -> list[FileReference]:
         return self.selector_widget.value

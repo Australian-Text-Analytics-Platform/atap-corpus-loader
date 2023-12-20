@@ -2,12 +2,12 @@ from abc import ABC, abstractmethod
 
 from pandas import DataFrame
 
-from corpusloader.controller.data_objects import CorpusHeader
+from corpusloader.controller.data_objects import CorpusHeader, FileReference
 
 
 class FileLoaderStrategy(ABC):
-    def __init__(self, filepath: str):
-        self.filepath: str = filepath
+    def __init__(self, file_ref: FileReference):
+        self.file_ref: FileReference = file_ref
 
     @staticmethod
     def _apply_selected_dtypes(df: DataFrame, headers: list[CorpusHeader]) -> DataFrame:

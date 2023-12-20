@@ -1,9 +1,8 @@
-from os.path import join
-
 from panel import Row, Spacer, Column, HSpacer
 from panel.widgets import Button, TextInput
 
 from corpusloader.controller import Controller
+from corpusloader.controller.data_objects import FileReference
 from corpusloader.view import ViewWrapperWidget
 from corpusloader.view.gui import AbstractWidget
 from corpusloader.view.gui.FileSelectorWidget import FileSelectorWidget
@@ -11,11 +10,10 @@ from corpusloader.view.gui.MetaEditorWidget import MetaEditorWidget
 
 
 class FileLoaderWidget(AbstractWidget):
-    def __init__(self, view_handler: ViewWrapperWidget, controller: Controller, base_path: str):
+    def __init__(self, view_handler: ViewWrapperWidget, controller: Controller):
         super().__init__()
         self.view_handler: ViewWrapperWidget = view_handler
         self.controller: Controller = controller
-        self.directory: str = base_path
         
         self.load_as_corpus_button: Button = Button(name='Load as corpus', width=130,
                                                     button_style='outline', button_type='success')
@@ -35,7 +33,7 @@ class FileLoaderWidget(AbstractWidget):
         self.build_button = Button(name='Build corpus', button_style='solid', button_type='success', visible=False)
         self.build_button.on_click(self.build_corpus)
 
-        self.file_selector = FileSelectorWidget(view_handler, controller, base_path)
+        self.file_selector = FileSelectorWidget(view_handler, controller)
         self.meta_editor = MetaEditorWidget(view_handler, controller)
 
         self.panel = Row(
@@ -71,19 +69,16 @@ class FileLoaderWidget(AbstractWidget):
             self.unload_selected_button.disabled = True
 
     def load_as_corpus(self, *_):
-        file_ls: list[str] = self.file_selector.get_selector_value()
-        filepath_ls: list[str] = [join(self.directory, name) for name in file_ls]
-        self.view_handler.load_corpus_from_filepaths(filepath_ls)
+        file_ls: list[FileReference] = self.file_selector.get_selector_value()
+        self.view_handler.load_corpus_from_filepaths(file_ls)
 
     def load_as_meta(self, *_):
-        file_ls: list[str] = self.file_selector.get_selector_value()
-        filepath_ls: list[str] = [join(self.directory, name) for name in file_ls]
-        self.view_handler.load_meta_from_filepaths(filepath_ls)
+        file_ls: list[FileReference] = self.file_selector.get_selector_value()
+        self.view_handler.load_meta_from_filepaths(file_ls)
 
     def unload_selected(self, *_):
-        file_ls: list[str] = self.file_selector.get_selector_value()
-        filepath_ls: list[str] = [join(self.directory, name) for name in file_ls]
-        self.controller.unload_filepaths(filepath_ls)
+        file_ls: list[FileReference] = self.file_selector.get_selector_value()
+        self.controller.unload_filepaths(file_ls)
         self.view_handler.update_displays()
 
     def unload_all(self, *_):
