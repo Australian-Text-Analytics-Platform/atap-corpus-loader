@@ -10,46 +10,46 @@ from corpusloader.controller.file_loader_strategy import FileLoaderStrategy, Fil
 
 class FileLoaderService:
     def __init__(self):
-        self.corpus_filepaths: list[FileReference] = []
-        self.meta_filepaths: list[FileReference] = []
+        self.corpus_file_refs: list[FileReference] = []
+        self.meta_file_refs: list[FileReference] = []
 
     def get_loaded_corpus_files(self) -> list[FileReference]:
-        return self.corpus_filepaths.copy()
+        return self.corpus_file_refs.copy()
 
     def get_loaded_meta_files(self) -> list[FileReference]:
-        return self.meta_filepaths.copy()
+        return self.meta_file_refs.copy()
 
     def add_corpus_filepath(self, corpus_filepath: FileReference):
-        if corpus_filepath in self.corpus_filepaths:
+        if corpus_filepath in self.corpus_file_refs:
             return
 
         FileLoaderService._check_filepath_permissions(corpus_filepath)
-        self.corpus_filepaths.append(corpus_filepath)
+        self.corpus_file_refs.append(corpus_filepath)
 
     def add_meta_filepath(self, meta_filepath: FileReference):
-        if meta_filepath in self.meta_filepaths:
+        if meta_filepath in self.meta_file_refs:
             return
 
         FileLoaderService._check_filepath_permissions(meta_filepath)
-        self.meta_filepaths.append(meta_filepath)
+        self.meta_file_refs.append(meta_filepath)
 
     def remove_corpus_filepath(self, corpus_filepath: FileReference):
-        if corpus_filepath in self.corpus_filepaths:
-            self.corpus_filepaths.remove(corpus_filepath)
+        if corpus_filepath in self.corpus_file_refs:
+            self.corpus_file_refs.remove(corpus_filepath)
 
     def remove_meta_filepath(self, meta_filepath: FileReference):
-        if meta_filepath in self.meta_filepaths:
-            self.meta_filepaths.remove(meta_filepath)
+        if meta_filepath in self.meta_file_refs:
+            self.meta_file_refs.remove(meta_filepath)
 
     def remove_all_files(self):
-        self.corpus_filepaths = []
-        self.meta_filepaths = []
+        self.corpus_file_refs = []
+        self.meta_file_refs = []
 
     def get_inferred_corpus_headers(self) -> list[CorpusHeader]:
-        return FileLoaderService._get_file_headers(self.corpus_filepaths)
+        return FileLoaderService._get_file_headers(self.corpus_file_refs)
 
     def get_inferred_meta_headers(self) -> list[CorpusHeader]:
-        return FileLoaderService._get_file_headers(self.meta_filepaths)
+        return FileLoaderService._get_file_headers(self.meta_file_refs)
 
     def build_corpus(self, corpus_name: str,
                      corpus_headers: list[CorpusHeader],
@@ -57,8 +57,8 @@ class FileLoaderService:
                      text_header: CorpusHeader,
                      corpus_link_header: Optional[CorpusHeader],
                      meta_link_header: Optional[CorpusHeader]) -> DataFrameCorpus:
-        corpus_df: DataFrame = FileLoaderService._get_concatenated_dataframe(self.corpus_filepaths, corpus_headers)
-        meta_df: DataFrame = FileLoaderService._get_concatenated_dataframe(self.meta_filepaths, meta_headers)
+        corpus_df: DataFrame = FileLoaderService._get_concatenated_dataframe(self.corpus_file_refs, corpus_headers)
+        meta_df: DataFrame = FileLoaderService._get_concatenated_dataframe(self.meta_file_refs, meta_headers)
 
         load_corpus: bool = len(corpus_headers) > 0
         load_meta: bool = len(meta_headers) > 0
