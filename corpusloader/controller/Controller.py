@@ -87,9 +87,14 @@ class Controller:
                 self.display_error("Cannot build without link headers set. Select a corpus header and a meta header as linking headers in the dropdowns")
                 return
 
-        self.corpus = self.file_loader_service.build_corpus(corpus_name, self.corpus_headers,
-                                                            self.meta_headers, self.text_header,
-                                                            self.corpus_link_header, self.meta_link_header)
+        try:
+            self.corpus = self.file_loader_service.build_corpus(corpus_name, self.corpus_headers,
+                                                                self.meta_headers, self.text_header,
+                                                                self.corpus_link_header, self.meta_link_header)
+        except FileLoadError as e:
+            self.display_error(str(e))
+            return
+
         if self.build_callback_fn is not None:
             self.build_callback_fn(*self.build_callback_args, **self.build_callback_kwargs)
 
@@ -97,6 +102,14 @@ class Controller:
         for filepath in filepath_ls:
             self.file_loader_service.remove_meta_filepath(filepath)
             self.file_loader_service.remove_corpus_filepath(filepath)
+
+        if len(self.file_loader_service.get_loaded_corpus_files()) == 0:
+            self.text_header = None
+            self.corpus_headers = []
+            self.corpus_link_header = None
+        if len(self.file_loader_service.get_loaded_meta_files()) == 0:
+            self.meta_headers = []
+            self.meta_link_header = None
 
     def unload_all(self):
         self.file_loader_service.remove_all_files()
