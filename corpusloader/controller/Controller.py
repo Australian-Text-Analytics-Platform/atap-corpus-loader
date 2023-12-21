@@ -1,8 +1,6 @@
-import fnmatch
 from glob import glob
 from os.path import join, isdir, basename, dirname
 from typing import Optional, Callable
-from zipfile import ZipFile
 
 from atap_corpus.corpus.corpus import DataFrameCorpus
 from pandas import DataFrame
@@ -16,6 +14,11 @@ from corpusloader.view.notifications import NotifierService
 
 
 class Controller:
+    """
+    Provides methods for indirection between the corpus loading logic and the user interface
+    Holds a reference to the corpus once built.
+    The build_callback_fn will be called when the corpus is built (can be set using set_build_callback()).
+    """
     def __init__(self, notifier_service: NotifierService, root_directory: str):
         self.root_directory: str = root_directory
 

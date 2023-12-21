@@ -9,6 +9,11 @@ from corpusloader.controller.file_loader_strategy import FileLoaderStrategy, Fil
 
 
 class FileLoaderService:
+    """
+    Provides methods that handle the logic of loading files and building the DataFrameCorpus object from the loaded
+    files.
+    Maintains a reference to files loaded as corpus files and files loaded as metadata files.
+    """
     def __init__(self):
         self.corpus_file_refs: list[FileReference] = []
         self.meta_file_refs: list[FileReference] = []

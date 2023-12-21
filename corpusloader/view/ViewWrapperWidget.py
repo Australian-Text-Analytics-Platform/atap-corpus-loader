@@ -6,6 +6,9 @@ from corpusloader.view.gui import AbstractWidget, FileLoaderWidget, OniLoaderWid
 
 
 class ViewWrapperWidget(AbstractWidget):
+    """
+    A wrapper class that holds different loading method interfaces within a Tab
+    """
     def __init__(self, controller: Controller):
         super().__init__()
         self.controller: Controller = controller

@@ -2,6 +2,11 @@ from corpusloader.controller.data_objects import DataType
 
 
 class CorpusHeader:
+    """
+    Represents a column before the corpus is built.
+    Holds the name, intended datatype, and whether to include the header.
+    Also behaves as a Value Object, where the unique value is the name for equality checks and hashing.
+    """
     def __init__(self, name: str, datatype: DataType, include: bool):
         self.name: str = name
         self.datatype: DataType = datatype

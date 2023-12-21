@@ -7,6 +7,10 @@ from panel.widgets import Button
 
 
 class AbstractWidget(ABC):
+    """
+    An abstract class for Panel GUI widgets. Provides methods to set widget visibility and update the display of all
+    child widgets.
+    """
     def __init__(self):
         self.panel: Panel = Row()
         self.children: list[AbstractWidget] = []
