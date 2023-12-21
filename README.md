@@ -26,8 +26,8 @@ Run the following commands in a terminal or any Bash environment.
 Clone the repository and navigate into the newly created directory:
 
 ```shell
-git clone https://github.com/Sydney-Informatics-Hub/LLM-LCT-sequencing.git
-cd LLM-LCT-sequencing
+git clone https://github.com/Australian-Text-Analytics-Platform/atap_corpus_loader.git
+cd atap_corpus_loader
 ```
 
 To install dependencies, ensure you have Python 3.10 and pip installed, then run the following command:
