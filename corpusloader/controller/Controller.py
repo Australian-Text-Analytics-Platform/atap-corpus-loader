@@ -70,6 +70,7 @@ class Controller:
                 self.display_error(str(e))
                 return False
 
+        self.display_success("Corpus files loaded successfully")
         return True
 
     def load_meta_from_filepaths(self, filepath_ls: list[FileReference]) -> bool:
@@ -82,6 +83,7 @@ class Controller:
                 self.display_error(str(e))
                 return False
 
+        self.display_success("Metadata files loaded successfully")
         return True
 
     def build_corpus(self, corpus_name: str):
@@ -97,6 +99,8 @@ class Controller:
         except FileLoadError as e:
             self.display_error(str(e))
             return
+
+        self.display_success("Corpus built successfully")
 
         if self.build_callback_fn is not None:
             self.build_callback_fn(*self.build_callback_args, **self.build_callback_kwargs)
