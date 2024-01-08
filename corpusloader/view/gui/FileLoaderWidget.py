@@ -86,5 +86,4 @@ class FileLoaderWidget(AbstractWidget):
         self.view_handler.update_displays()
 
     def build_corpus(self, *_):
-        self.controller.build_corpus(self.corpus_name_input.value)
-        self.view_handler.update_displays()
+        self.view_handler.build_corpus(self.corpus_name_input.value)

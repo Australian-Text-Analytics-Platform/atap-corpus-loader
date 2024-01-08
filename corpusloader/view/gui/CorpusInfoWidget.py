@@ -8,14 +8,11 @@ from corpusloader.view.gui import AbstractWidget
 
 
 class CorpusInfoWidget(AbstractWidget):
-    CONTAINER_STYLE = {'border': '1px dashed black', 'border-radius': '5px', 'min-width': '700px'}
-
     def __init__(self, controller: Controller):
         super().__init__()
         self.controller: Controller = controller
 
-        self.panel = Column(styles=CorpusInfoWidget.CONTAINER_STYLE)
-        self.panel.visible = False
+        self.panel = Column(Markdown("**No corpus loaded**"))
 
     @staticmethod
     def _build_header_markdown_table(headers: list[str], dtypes: list[str]) -> Markdown:
@@ -33,8 +30,7 @@ class CorpusInfoWidget(AbstractWidget):
     def update_display(self):
         corpus_info: Optional[dict] = self.controller.get_corpus_info()
         if corpus_info is None:
-            self.panel.objects = []
-            self.panel.visible = False
+            self.panel.objects = [Markdown("**No corpus loaded**")]
             return
 
         name: str = corpus_info.get('name')
@@ -50,4 +46,3 @@ class CorpusInfoWidget(AbstractWidget):
                                 header_table]
 
         self.panel.objects = corpus_info_ls
-        self.panel.visible = True

@@ -16,10 +16,11 @@ class ViewWrapperWidget(AbstractWidget):
         self.file_loader: AbstractWidget = FileLoaderWidget(self, controller)
         self.oni_loader: AbstractWidget = OniLoaderWidget(controller)
         self.corpus_display: AbstractWidget = CorpusInfoWidget(controller)
+        self.display_idx: int = 2
 
-        self.panel = Column(
-            Row(Tabs(("File Loader", self.file_loader), ("Oni Loader", self.oni_loader))),
-            Row(self.corpus_display))
+        self.panel = Tabs(("File Loader", self.file_loader),
+                          ("Oni Loader", self.oni_loader),
+                          ("Corpus Overview", self.corpus_display))
         self.children = [self.file_loader, self.oni_loader, self.corpus_display]
 
     def update_display(self):
@@ -34,3 +35,8 @@ class ViewWrapperWidget(AbstractWidget):
         success = self.controller.load_meta_from_filepaths(filepath_ls)
         self.update_displays()
         return success
+
+    def build_corpus(self, corpus_name: str):
+        self.controller.build_corpus(corpus_name)
+        self.panel.active = self.display_idx
+        self.update_displays()
