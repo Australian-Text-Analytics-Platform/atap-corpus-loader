@@ -12,7 +12,7 @@ from corpusloader.view.gui import AbstractWidget
 class MetaEditorWidget(AbstractWidget):
     TABLE_BORDER_STYLE = {'border': '1px dashed black', 'border-radius': '5px'}
     ERROR_BORDER_STYLE = {'border': '1px solid red', 'border-radius': '5px'}
-    HEADER_STYLE = {"margin-top": "0", "margin-bottom": "0"}
+    HEADER_STYLE = {'margin-top': '0', 'margin-bottom': '0'}
 
     def __init__(self, view_handler: AbstractWidget, controller: Controller):
         super().__init__()
@@ -25,7 +25,7 @@ class MetaEditorWidget(AbstractWidget):
         self.corpus_table_title = Markdown("## Corpus header editor")
         self.meta_table_title = Markdown("## Metadata header editor")
 
-        self.text_header_dropdown = Select(name='Select text header', width=200)
+        self.text_header_dropdown = Select(name='Select document header', width=200)
         text_header_fn = bind(self._set_text_header, self.text_header_dropdown)
 
         self.link_row = Row(visible=False, styles=MetaEditorWidget.ERROR_BORDER_STYLE)

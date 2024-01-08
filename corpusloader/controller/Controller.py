@@ -34,6 +34,7 @@ class Controller:
         self.meta_headers: list[CorpusHeader] = []
 
         self.corpus: Optional[DataFrameCorpus] = None
+        self.corpus_info: Optional[dict] = None
 
         self.build_callback_fn: Optional[Callable] = None
         self.build_callback_args: list = []
@@ -100,34 +101,40 @@ class Controller:
             self.display_error(str(e))
             return
 
+        self.set_corpus_info()
         self.display_success("Corpus built successfully")
 
         if self.build_callback_fn is not None:
             self.build_callback_fn(*self.build_callback_args, **self.build_callback_kwargs)
 
-    def get_corpus_info(self) -> Optional[dict[str, str]]:
+    def set_corpus_info(self):
         if self.corpus is None:
-            return None
+            self.corpus_info = None
+            return
 
-        corpus_info: dict[str, str] = {}
+        corpus_info: dict = {}
         corpus_as_df: DataFrame = self.corpus.to_dataframe()
 
-        corpus_info["Name"] = self.corpus.name
-        corpus_info["Row count"] = str(corpus_as_df.shape[0])
+        corpus_info["name"] = self.corpus.name
+        corpus_info["rows"] = str(corpus_as_df.shape[0])
 
         corpus_file_set = set(self.file_loader_service.get_loaded_corpus_files())
         meta_file_set = set(self.file_loader_service.get_loaded_meta_files())
         file_set = corpus_file_set | meta_file_set
-        corpus_info["File count"] = str(len(file_set))
+        corpus_info["files"] = str(len(file_set))
 
-        meta_types = []
+        headers = []
+        dtypes = []
         for header_name, dtype_obj in corpus_as_df.dtypes.items():
-            dtype_str: str = str(dtype_obj).upper()
-            meta_types.append(f"{header_name} [{dtype_str}]")
-        corpus_info["Headers"] = ', '.join(meta_types)
+            dtypes.append(str(dtype_obj).upper())
+            headers.append(header_name)
+        corpus_info["headers"] = headers
+        corpus_info["dtypes"] = dtypes
 
-        return corpus_info
+        self.corpus_info = corpus_info
 
+    def get_corpus_info(self) -> Optional[dict[str, str]]:
+        return self.corpus_info
 
     def unload_filepaths(self, filepath_ls: list[FileReference]):
         for filepath in filepath_ls:
