@@ -119,10 +119,7 @@ class Controller:
         corpus_info["name"] = self.corpus.name
         corpus_info["rows"] = str(corpus_as_df.shape[0])
 
-        corpus_file_set = set(self.file_loader_service.get_loaded_corpus_files())
-        meta_file_set = set(self.file_loader_service.get_loaded_meta_files())
-        file_set = corpus_file_set | meta_file_set
-        corpus_info["files"] = str(len(file_set))
+        corpus_info["files"] = str(self.get_loaded_file_count())
 
         headers = []
         dtypes = []
@@ -197,6 +194,13 @@ class Controller:
 
     def is_meta_added(self) -> bool:
         return len(self.meta_headers) > 0
+
+    def get_loaded_file_count(self) -> int:
+        corpus_file_set = set(self.file_loader_service.get_loaded_corpus_files())
+        meta_file_set = set(self.file_loader_service.get_loaded_meta_files())
+        file_set = corpus_file_set | meta_file_set
+
+        return len(file_set)
 
     def update_corpus_header(self, header: CorpusHeader, include: Optional[bool], datatype_name: Optional[str]):
         if include is not None:

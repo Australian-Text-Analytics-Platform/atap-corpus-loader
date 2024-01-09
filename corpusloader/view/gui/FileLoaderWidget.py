@@ -1,4 +1,5 @@
 from panel import Row, Spacer, Column, HSpacer
+from panel.pane import Markdown
 from panel.widgets import Button, TextInput
 
 from corpusloader.controller import Controller
@@ -28,6 +29,8 @@ class FileLoaderWidget(AbstractWidget):
         self.unload_selected_button: Button = Button(name="Unload selected", width=100, button_style='outline',
                                                      button_type='danger', disabled=True)
         self.unload_selected_button.on_click(self.unload_selected)
+
+        self.loaded_file_info = Markdown()
         
         self.corpus_name_input = TextInput(placeholder='Corpus name', width=150, visible=False)
         self.build_button = Button(name='Build corpus', button_style='solid', button_type='success', visible=False)
@@ -41,6 +44,7 @@ class FileLoaderWidget(AbstractWidget):
                 self.file_selector,
                 Row(self.load_as_corpus_button,
                     self.load_as_meta_button,
+                    self.loaded_file_info,
                     HSpacer(),
                     self.unload_selected_button,
                     self.unload_all_button,
@@ -51,10 +55,13 @@ class FileLoaderWidget(AbstractWidget):
             Spacer(width=50),
             self.meta_editor)
         self.children = [self.file_selector, self.meta_editor]
+        self.update_display()
 
     def update_display(self):
         files_added: bool = self.controller.is_meta_added() or self.controller.is_corpus_added()
         self._set_build_buttons_status(files_added)
+        loaded_files_count: int = self.controller.get_loaded_file_count()
+        self.loaded_file_info.object = f"Files loaded: {loaded_files_count}"
 
     def _set_build_buttons_status(self, active: bool, *_):
         if active:
