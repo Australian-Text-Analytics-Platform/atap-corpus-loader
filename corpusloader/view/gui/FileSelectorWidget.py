@@ -2,7 +2,7 @@ from fnmatch import fnmatch
 
 import panel
 from panel import Row, Column
-from panel.widgets import Button, MultiSelect, TextInput
+from panel.widgets import Button, MultiSelect, TextInput, Select
 
 from corpusloader.controller import Controller
 from corpusloader.controller.data_objects import FileReference
@@ -23,11 +23,16 @@ class FileSelectorWidget(AbstractWidget):
                                       sizing_mode='stretch_width')
         self.filter_input.param.watch(self._on_filter_change, ['value_input'])
 
+        self.file_type_filter = Select(width=150)
+        self.file_type_filter.options = ['All valid filetypes'] + self.controller.get_valid_filetypes()
+        self.file_type_filter.param.watch(self._on_filter_change, ['value'])
+
         self.selector_widget = MultiSelect(size=20, sizing_mode='stretch_width')
 
         self.panel = Column(
             Row(self.select_all_button),
-            Row(self.filter_input),
+            Row(self.filter_input,
+                self.file_type_filter),
             Row(self.selector_widget),
             width=700)
 
@@ -40,10 +45,18 @@ class FileSelectorWidget(AbstractWidget):
         loaded_corpus_files: list[FileReference] = self.controller.get_loaded_corpus_files()
         loaded_meta_files: list[FileReference] = self.controller.get_loaded_meta_files()
 
+        valid_file_types: list[str] = self.controller.get_valid_filetypes()
+        selected_file_types: list[str]
+        if self.file_type_filter.value in valid_file_types:
+            selected_file_types = [self.file_type_filter.value.upper()]
+        else:
+            selected_file_types = [ft.upper() for ft in valid_file_types]
+
         filter_str = f"*{self.filter_input.value_input}*"
         filtered_refs: list[FileReference] = []
         for ref in all_file_refs:
-            if fnmatch(ref.get_relative_path(), filter_str):
+            extension: str = ref.get_extension().upper()
+            if fnmatch(ref.get_relative_path(), filter_str) and (extension in selected_file_types):
                 filtered_refs.append(ref)
 
         old_selected_refs: list[FileReference] = self.selector_widget.value.copy()

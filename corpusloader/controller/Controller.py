@@ -10,6 +10,7 @@ from corpusloader.controller.OniAPIService import OniAPIService
 from corpusloader.controller.data_objects import FileReference, ZipFileReference
 from corpusloader.controller.data_objects.CorpusHeader import CorpusHeader
 from corpusloader.controller.data_objects.DataType import DataType
+from corpusloader.controller.file_loader_strategy.FileLoaderFactory import ValidFileType
 from corpusloader.view.notifications import NotifierService
 
 
@@ -187,6 +188,9 @@ class Controller:
 
     def get_all_datatypes(self) -> list[str]:
         return [d.name for d in DataType]
+
+    def get_valid_filetypes(self) -> list[str]:
+        return [ft.name for ft in ValidFileType]
 
     def is_corpus_added(self) -> bool:
         return len(self.corpus_headers) > 0

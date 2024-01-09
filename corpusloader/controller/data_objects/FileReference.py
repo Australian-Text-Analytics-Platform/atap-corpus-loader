@@ -52,6 +52,11 @@ class FileReference:
     def get_filename(self) -> str:
         return self.filename
 
+    def get_extension(self) -> str:
+        if '.' not in self.filename:
+            return ''
+        return self.filename.split('.')[-1]
+
     def get_relative_path(self):
         """
         :return: the full path of the file relative to the root_directory
