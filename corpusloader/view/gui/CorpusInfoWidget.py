@@ -39,10 +39,17 @@ class CorpusInfoWidget(AbstractWidget):
         headers: list[str] = corpus_info.get('headers')
         dtypes: list[str] = corpus_info.get('dtypes')
 
+        row_info: str = f"**{num_rows}** document row"
+        if num_rows != '1':
+            row_info += 's'
+        file_info: str = f"**{num_files}** source file"
+        if num_rows != '1':
+            file_info += 's'
+
         header_table = CorpusInfoWidget._build_header_markdown_table(headers, dtypes)
         corpus_info_ls: list = [Markdown(f"## {name} Overview"),
-                                Row(Markdown(f"**{num_rows}** document row(s)"),
-                                    Markdown(f"**{num_files}** source file(s)")),
+                                Row(Markdown(row_info),
+                                    Markdown(file_info)),
                                 header_table]
 
         self.panel.objects = corpus_info_ls
