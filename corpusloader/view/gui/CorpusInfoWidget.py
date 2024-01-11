@@ -43,7 +43,7 @@ class CorpusInfoWidget(AbstractWidget):
         if num_rows != '1':
             row_info += 's'
         file_info: str = f"**{num_files}** source file"
-        if num_rows != '1':
+        if num_files != '1':
             file_info += 's'
 
         header_table = CorpusInfoWidget._build_header_markdown_table(headers, dtypes)
