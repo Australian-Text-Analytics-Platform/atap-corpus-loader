@@ -42,15 +42,17 @@ class FileLoaderWidget(AbstractWidget):
         self.panel = Row(
             Column(
                 self.file_selector,
-                Row(self.load_as_corpus_button,
-                    self.load_as_meta_button,
+                Row(Column(
+                    Row(self.load_as_corpus_button,
+                        self.load_as_meta_button),
+                    Row(self.corpus_name_input,
+                        self.build_button)
+                ),
                     self.loaded_file_info,
                     HSpacer(),
                     self.unload_selected_button,
                     self.unload_all_button,
-                    width=700),
-                Row(self.corpus_name_input,
-                    self.build_button)
+                    width=700)
             ),
             Spacer(width=50),
             self.meta_editor)
@@ -60,8 +62,15 @@ class FileLoaderWidget(AbstractWidget):
     def update_display(self):
         files_added: bool = self.controller.is_meta_added() or self.controller.is_corpus_added()
         self._set_build_buttons_status(files_added)
-        loaded_files_count: int = self.controller.get_loaded_file_count()
-        self.loaded_file_info.object = f"Files loaded: {loaded_files_count}"
+        self.loaded_file_info.object = self.get_loaded_file_info()
+
+    def get_loaded_file_info(self) -> str:
+        file_counts: dict[str, int] = self.controller.get_loaded_file_counts()
+        count_str: str = ""
+        for filetype in file_counts:
+            count_str += f"{filetype}: {file_counts[filetype]}\n"
+
+        return count_str
 
     def _set_build_buttons_status(self, active: bool, *_):
         if active:

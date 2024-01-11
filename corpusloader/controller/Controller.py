@@ -134,6 +134,21 @@ class Controller:
     def get_corpus_info(self) -> Optional[dict[str, str]]:
         return self.corpus_info
 
+    def get_loaded_file_counts(self) -> dict[str, int]:
+        corpus_file_set = set(self.file_loader_service.get_loaded_corpus_files())
+        meta_file_set = set(self.file_loader_service.get_loaded_meta_files())
+        file_set = corpus_file_set | meta_file_set
+
+        file_counts: dict[str, int] = {"Total files": len(file_set)}
+        for file_ref in file_set:
+            extension = file_ref.get_extension().upper()
+            if file_counts.get(extension) is None:
+                file_counts[extension] = 1
+            else:
+                file_counts[extension] += 1
+
+        return file_counts
+
     def unload_filepaths(self, filepath_ls: list[FileReference]):
         for filepath in filepath_ls:
             self.file_loader_service.remove_meta_filepath(filepath)
