@@ -37,6 +37,7 @@ class ViewWrapperWidget(AbstractWidget):
         return success
 
     def build_corpus(self, corpus_name: str):
-        self.controller.build_corpus(corpus_name)
-        self.panel.active = self.display_idx
-        self.update_displays()
+        success: bool = self.controller.build_corpus(corpus_name)
+        if success:
+            self.panel.active = self.display_idx
+            self.update_displays()

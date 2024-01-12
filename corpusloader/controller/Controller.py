@@ -88,11 +88,11 @@ class Controller:
         self.display_success("Metadata files loaded successfully")
         return True
 
-    def build_corpus(self, corpus_name: str):
+    def build_corpus(self, corpus_name: str) -> bool:
         if self.is_meta_added():
             if (self.corpus_link_header is None) or (self.meta_link_header is None):
                 self.display_error("Cannot build without link headers set. Select a corpus header and a meta header as linking headers in the dropdowns")
-                return
+                return False
 
         try:
             self.corpus = self.file_loader_service.build_corpus(corpus_name, self.corpus_headers,
@@ -100,13 +100,15 @@ class Controller:
                                                                 self.corpus_link_header, self.meta_link_header)
         except FileLoadError as e:
             self.display_error(str(e))
-            return
+            return False
 
         self.set_corpus_info()
         self.display_success("Corpus built successfully")
 
         if self.build_callback_fn is not None:
             self.build_callback_fn(*self.build_callback_args, **self.build_callback_kwargs)
+
+        return True
 
     def set_corpus_info(self):
         if self.corpus is None:
@@ -117,7 +119,7 @@ class Controller:
         corpus_as_df: DataFrame = self.corpus.to_dataframe()
 
         corpus_info["name"] = self.corpus.name
-        corpus_info["rows"] = str(corpus_as_df.shape[0])
+        corpus_info["rows"] = len(self.corpus)
 
         corpus_info["files"] = str(self.get_loaded_file_count())
 
