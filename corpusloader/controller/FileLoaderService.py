@@ -99,7 +99,12 @@ class FileLoaderService:
         headers: Optional[list[CorpusHeader]] = None
         for ref in file_refs:
             file_loader: FileLoaderStrategy = FileLoaderFactory.get_file_loader(ref)
-            path_headers: list[CorpusHeader] = file_loader.get_inferred_headers()
+            try:
+                path_headers: list[CorpusHeader] = file_loader.get_inferred_headers()
+            except UnicodeDecodeError:
+                raise FileLoadError(f"Error loading file at {ref.get_relative_path()}: file is not UTF-8 encoded")
+            except Exception as e:
+                raise FileLoadError(f"Error loading file at {ref.get_relative_path()}: {e}")
 
             if headers is None:
                 headers = path_headers
@@ -120,8 +125,10 @@ class FileLoaderService:
             file_loader: FileLoaderStrategy = FileLoaderFactory.get_file_loader(ref)
             try:
                 path_df: DataFrame = file_loader.get_dataframe(headers)
+            except UnicodeDecodeError:
+                raise FileLoadError(f"Error loading file at {ref.get_relative_path()}: file is not UTF-8 encoded")
             except Exception as e:
-                raise FileLoadError(e)
+                raise FileLoadError(f"Error loading file at {ref.get_relative_path()}: {e}")
 
             df_list.append(path_df)
 
