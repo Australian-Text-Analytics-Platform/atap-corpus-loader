@@ -47,7 +47,8 @@ class CorpusInfoWidget(AbstractWidget):
             file_info += 's'
 
         header_table = CorpusInfoWidget._build_header_markdown_table(headers, dtypes)
-        corpus_info_ls: list = [Row(Markdown(row_info),
+        corpus_info_ls: list = [Markdown(f"## {name} Overview"),
+                                Row(Markdown(row_info),
                                     Markdown(file_info)),
                                 header_table]
 
