@@ -15,34 +15,18 @@ The loader currently supports loading a corpus from the following file types:
 - rds
 - RData/RDa
 
-## Setup
+## Installation
+
+
 
 ### Prerequisites
 
 - [Python 3.10](https://www.python.org/)
-
-Run the following commands in a terminal or any Bash environment.
-
-Clone the repository and navigate into the newly created directory:
+- [Poetry](https://python-poetry.org)
 
 ```shell
-git clone https://github.com/Australian-Text-Analytics-Platform/atap_corpus_loader.git
-cd atap_corpus_loader
+pip install atap-corpus-loader
 ```
-
-To install dependencies, ensure you have Python 3.10 and pip installed, then run the following command:
-
-```shell
-python -m pip install -r requirements.txt
-```
-
-Serve the application locally using the following command:
-
-```shell
-panel serve corpusloader.ipynb
-```
-
-The application will be usable in a browser at the link provided (http://localhost:5006/corpusloader)
 
 ## Versioning
 
