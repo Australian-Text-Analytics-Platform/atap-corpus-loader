@@ -2,12 +2,12 @@ from panel import Row, Spacer, Column, HSpacer
 from panel.pane import Markdown
 from panel.widgets import Button, TextInput
 
-from corpusloader.controller import Controller
-from corpusloader.controller.data_objects import FileReference
-from corpusloader.view import ViewWrapperWidget
-from corpusloader.view.gui import AbstractWidget
-from corpusloader.view.gui.FileSelectorWidget import FileSelectorWidget
-from corpusloader.view.gui.MetaEditorWidget import MetaEditorWidget
+from atap_corpus_loader.controller import Controller
+from atap_corpus_loader.controller.data_objects import FileReference
+from atap_corpus_loader.view import ViewWrapperWidget
+from atap_corpus_loader.view.gui import AbstractWidget
+from atap_corpus_loader.view.gui.FileSelectorWidget import FileSelectorWidget
+from atap_corpus_loader.view.gui.MetaEditorWidget import MetaEditorWidget
 
 
 class FileLoaderWidget(AbstractWidget):

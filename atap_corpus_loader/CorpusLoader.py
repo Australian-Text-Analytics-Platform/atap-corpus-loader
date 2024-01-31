@@ -4,8 +4,8 @@ import panel
 from atap_corpus.corpus.corpus import DataFrameCorpus
 from panel.viewable import Viewer
 
-from corpusloader.controller import Controller
-from corpusloader.view import ViewWrapperWidget, NotifierService
+from atap_corpus_loader.controller import Controller
+from atap_corpus_loader.view import ViewWrapperWidget, NotifierService
 
 panel.extension(notifications=True)
 

@@ -1,12 +1,11 @@
-from odf import text, teletype
-from odf.opendocument import load
+from docx import Document
 from pandas import DataFrame
 
-from corpusloader.controller.data_objects import CorpusHeader, DataType, FileReference
-from corpusloader.controller.file_loader_strategy.FileLoaderStrategy import FileLoaderStrategy
+from atap_corpus_loader.controller.data_objects import CorpusHeader, DataType, FileReference
+from atap_corpus_loader.controller.file_loader_strategy.FileLoaderStrategy import FileLoaderStrategy
 
 
-class ODTLoaderStrategy(FileLoaderStrategy):
+class DOCXLoaderStrategy(FileLoaderStrategy):
     def get_inferred_headers(self) -> list[CorpusHeader]:
         headers: list[CorpusHeader] = [
             CorpusHeader('document', DataType.STRING, True),
@@ -18,10 +17,10 @@ class ODTLoaderStrategy(FileLoaderStrategy):
 
     def get_dataframe(self, headers: list[CorpusHeader]) -> DataFrame:
         filepath: str = self.file_ref.resolve_real_file_path()
-        odt_doc = load(filepath)
+        docx_doc = Document(filepath)
         document = ''
-        for element in odt_doc.getElementsByType(text.P):
-            document += teletype.extractText(element)
+        for paragraph in docx_doc.paragraphs:
+            document += paragraph.text + '\n'
 
         included_headers: list[str] = [header.name for header in headers if header.include]
         file_data = {}

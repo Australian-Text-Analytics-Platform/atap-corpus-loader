@@ -3,8 +3,8 @@ from typing import Optional
 from panel import Column, Row
 from panel.pane import Markdown
 
-from corpusloader.controller import Controller
-from corpusloader.view.gui import AbstractWidget
+from atap_corpus_loader.controller import Controller
+from atap_corpus_loader.view.gui import AbstractWidget
 
 
 class CorpusInfoWidget(AbstractWidget):

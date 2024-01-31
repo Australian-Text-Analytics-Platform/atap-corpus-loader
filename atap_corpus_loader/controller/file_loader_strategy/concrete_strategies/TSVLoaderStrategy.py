@@ -1,7 +1,7 @@
 from pandas import DataFrame, read_csv
 
-from corpusloader.controller.data_objects import CorpusHeader, DataType
-from corpusloader.controller.file_loader_strategy.FileLoaderStrategy import FileLoaderStrategy
+from atap_corpus_loader.controller.data_objects import CorpusHeader, DataType
+from atap_corpus_loader.controller.file_loader_strategy.FileLoaderStrategy import FileLoaderStrategy
 
 
 class TSVLoaderStrategy(FileLoaderStrategy):

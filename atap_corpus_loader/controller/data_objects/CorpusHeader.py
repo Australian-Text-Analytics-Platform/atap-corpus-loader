@@ -1,4 +1,4 @@
-from corpusloader.controller.data_objects import DataType
+from atap_corpus_loader.controller.data_objects import DataType
 
 
 class CorpusHeader:

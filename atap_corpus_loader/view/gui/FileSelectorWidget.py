@@ -4,9 +4,9 @@ import panel
 from panel import Row, Column
 from panel.widgets import Button, MultiSelect, TextInput, Select, Checkbox
 
-from corpusloader.controller import Controller
-from corpusloader.controller.data_objects import FileReference
-from corpusloader.view.gui import AbstractWidget
+from atap_corpus_loader.controller import Controller
+from atap_corpus_loader.controller.data_objects import FileReference
+from atap_corpus_loader.view.gui import AbstractWidget
 
 
 class FileSelectorWidget(AbstractWidget):

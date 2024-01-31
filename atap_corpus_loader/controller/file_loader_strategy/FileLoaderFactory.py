@@ -1,9 +1,9 @@
 from enum import Enum, auto
 
-from corpusloader.controller.data_objects import FileReference
-from corpusloader.controller.file_loader_strategy.FileLoadError import FileLoadError
-from corpusloader.controller.file_loader_strategy.concrete_strategies import *
-from corpusloader.controller.file_loader_strategy.FileLoaderStrategy import FileLoaderStrategy
+from atap_corpus_loader.controller.data_objects import FileReference
+from atap_corpus_loader.controller.file_loader_strategy.FileLoadError import FileLoadError
+from atap_corpus_loader.controller.file_loader_strategy.concrete_strategies import *
+from atap_corpus_loader.controller.file_loader_strategy.FileLoaderStrategy import FileLoaderStrategy
 
 
 class ValidFileType(Enum):

@@ -5,13 +5,13 @@ from typing import Optional, Callable
 from atap_corpus.corpus.corpus import DataFrameCorpus
 from pandas import DataFrame
 
-from corpusloader.controller.FileLoaderService import FileLoaderService, FileLoadError
-from corpusloader.controller.OniAPIService import OniAPIService
-from corpusloader.controller.data_objects import FileReference, ZipFileReference
-from corpusloader.controller.data_objects.CorpusHeader import CorpusHeader
-from corpusloader.controller.data_objects.DataType import DataType
-from corpusloader.controller.file_loader_strategy.FileLoaderFactory import ValidFileType
-from corpusloader.view.notifications import NotifierService
+from atap_corpus_loader.controller.FileLoaderService import FileLoaderService, FileLoadError
+from atap_corpus_loader.controller.OniAPIService import OniAPIService
+from atap_corpus_loader.controller.data_objects import FileReference, ZipFileReference
+from atap_corpus_loader.controller.data_objects.CorpusHeader import CorpusHeader
+from atap_corpus_loader.controller.data_objects.DataType import DataType
+from atap_corpus_loader.controller.file_loader_strategy.FileLoaderFactory import ValidFileType
+from atap_corpus_loader.view.notifications import NotifierService
 
 
 class Controller:

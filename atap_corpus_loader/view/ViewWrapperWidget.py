@@ -1,8 +1,8 @@
 from panel import Tabs, Column, Row
 
-from corpusloader.controller import Controller
-from corpusloader.controller.data_objects import FileReference
-from corpusloader.view.gui import AbstractWidget, FileLoaderWidget, OniLoaderWidget, CorpusInfoWidget
+from atap_corpus_loader.controller import Controller
+from atap_corpus_loader.controller.data_objects import FileReference
+from atap_corpus_loader.view.gui import AbstractWidget, FileLoaderWidget, OniLoaderWidget, CorpusInfoWidget
 
 
 class ViewWrapperWidget(AbstractWidget):

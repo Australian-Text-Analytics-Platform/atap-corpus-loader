@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 
 from pandas import DataFrame
 
-from corpusloader.controller.data_objects import CorpusHeader, FileReference
+from atap_corpus_loader.controller.data_objects import CorpusHeader, FileReference
 
 
 class FileLoaderStrategy(ABC):
