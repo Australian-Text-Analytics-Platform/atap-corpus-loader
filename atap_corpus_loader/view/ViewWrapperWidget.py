@@ -1,4 +1,4 @@
-from panel import Tabs, Column, Row
+from panel import Tabs
 
 from atap_corpus_loader.controller import Controller
 from atap_corpus_loader.controller.data_objects import FileReference
@@ -13,9 +13,9 @@ class ViewWrapperWidget(AbstractWidget):
         super().__init__()
         self.controller: Controller = controller
 
-        self.file_loader: AbstractWidget = FileLoaderWidget(self, controller)
-        self.oni_loader: AbstractWidget = OniLoaderWidget(controller)
-        self.corpus_display: AbstractWidget = CorpusInfoWidget(controller)
+        self.file_loader: FileLoaderWidget = FileLoaderWidget(self, controller)
+        self.oni_loader: OniLoaderWidget = OniLoaderWidget(controller)
+        self.corpus_display: CorpusInfoWidget = CorpusInfoWidget(controller)
         self.display_idx: int = 2
 
         self.panel = Tabs(("File Loader", self.file_loader),
@@ -39,5 +39,6 @@ class ViewWrapperWidget(AbstractWidget):
     def build_corpus(self, corpus_name: str):
         success: bool = self.controller.build_corpus(corpus_name)
         if success:
-            self.panel.active = self.display_idx
             self.update_displays()
+            self.panel.active = self.display_idx
+            self.file_loader.unload_all()

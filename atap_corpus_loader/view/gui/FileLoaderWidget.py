@@ -103,3 +103,4 @@ class FileLoaderWidget(AbstractWidget):
 
     def build_corpus(self, *_):
         self.view_handler.build_corpus(self.corpus_name_input.value)
+        self.corpus_name_input.value = ""
