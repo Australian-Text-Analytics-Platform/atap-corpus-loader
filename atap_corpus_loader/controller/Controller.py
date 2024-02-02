@@ -2,12 +2,13 @@ from glob import glob
 from os.path import join, isdir, basename, dirname
 from typing import Optional, Callable
 
+from atap_corpus.corpus.corpora import UniqueCorpora
 from atap_corpus.corpus.corpus import DataFrameCorpus
 from pandas import DataFrame
 
 from atap_corpus_loader.controller.FileLoaderService import FileLoaderService, FileLoadError
 from atap_corpus_loader.controller.OniAPIService import OniAPIService
-from atap_corpus_loader.controller.data_objects import FileReference, ZipFileReference
+from atap_corpus_loader.controller.data_objects import FileReference, ZipFileReference, ViewCorpusInfo
 from atap_corpus_loader.controller.data_objects.CorpusHeader import CorpusHeader
 from atap_corpus_loader.controller.data_objects.DataType import DataType
 from atap_corpus_loader.controller.file_loader_strategy.FileLoaderFactory import ValidFileType
@@ -17,8 +18,8 @@ from atap_corpus_loader.view.notifications import NotifierService
 class Controller:
     """
     Provides methods for indirection between the corpus loading logic and the user interface
-    Holds a reference to the corpus once built.
-    The build_callback_fn will be called when the corpus is built (can be set using set_build_callback()).
+    Holds a reference to the latest corpus built.
+    The build_callback_fn will be called when a corpus is built (can be set using set_build_callback()).
     """
     def __init__(self, notifier_service: NotifierService, root_directory: str):
         self.root_directory: str = root_directory
@@ -34,8 +35,8 @@ class Controller:
         self.corpus_headers: list[CorpusHeader] = []
         self.meta_headers: list[CorpusHeader] = []
 
-        self.corpus: Optional[DataFrameCorpus] = None
-        self.corpus_info: Optional[dict] = None
+        self.corpora: UniqueCorpora = UniqueCorpora()
+        self.latest_corpus: Optional[DataFrameCorpus] = None
 
         self.build_callback_fn: Optional[Callable] = None
         self.build_callback_args: list = []
@@ -54,13 +55,16 @@ class Controller:
         self.build_callback_args = args
         self.build_callback_kwargs = kwargs
 
-    def get_corpus(self) -> Optional[DataFrameCorpus]:
-        return self.corpus
+    def get_corpora(self) -> list[DataFrameCorpus]:
+        return self.corpora.items()
+
+    def get_latest_corpus(self) -> Optional[DataFrameCorpus]:
+        return self.latest_corpus
 
     def get_loaded_corpus_df(self) -> Optional[DataFrame]:
-        if self.corpus is None:
+        if self.latest_corpus is None:
             return None
-        return self.corpus.to_dataframe()
+        return self.latest_corpus.to_dataframe()
 
     def load_corpus_from_filepaths(self, filepath_ls: list[FileReference]) -> bool:
         for filepath in filepath_ls:
@@ -95,46 +99,64 @@ class Controller:
                 return False
 
         try:
-            self.corpus = self.file_loader_service.build_corpus(corpus_name, self.corpus_headers,
-                                                                self.meta_headers, self.text_header,
-                                                                self.corpus_link_header, self.meta_link_header)
+            self.latest_corpus = self.file_loader_service.build_corpus(corpus_name, self.corpus_headers,
+                                                                       self.meta_headers, self.text_header,
+                                                                       self.corpus_link_header, self.meta_link_header)
         except FileLoadError as e:
             self.display_error(str(e))
             return False
+        except Exception as e:
+            self.display_error(f"Unexpected error building corpus: {e}")
+            return False
 
-        self.set_corpus_info()
-        self.display_success("Corpus built successfully")
+        try:
+            if self.build_callback_fn is not None:
+                self.build_callback_fn(*self.build_callback_args, **self.build_callback_kwargs)
+        except Exception as e:
+            self.display_error(f"Build callback error: {e}")
+            return False
 
-        if self.build_callback_fn is not None:
-            self.build_callback_fn(*self.build_callback_args, **self.build_callback_kwargs)
+        self.display_success(f"Corpus {self.latest_corpus.name} built successfully")
+        self.corpora.add(self.latest_corpus)
 
         return True
 
-    def set_corpus_info(self):
-        if self.corpus is None:
-            self.corpus_info = None
+    def get_corpora_info(self) -> list[ViewCorpusInfo]:
+        corpora_info: list[ViewCorpusInfo] = []
+
+        for corpus in self.corpora.items():
+            corpus_as_df: DataFrame = corpus.to_dataframe()
+
+            corpus_id: str = str(corpus.id)
+            name: Optional[str] = corpus.name
+            num_rows: int = len(corpus)
+            headers: list[str] = []
+            dtypes: list[str] = []
+            for header_name, dtype_obj in corpus_as_df.dtypes.items():
+                dtypes.append(str(dtype_obj).upper())
+                headers.append(str(header_name))
+
+            corpora_info.append(ViewCorpusInfo(corpus_id, name, num_rows, headers, dtypes))
+
+        corpora_info.reverse()
+
+        return corpora_info
+
+    def delete_corpus(self, corpus_id: str):
+        self.corpora.remove(corpus_id)
+
+    def rename_corpus(self, corpus_id: str, new_name: str):
+        corpus: Optional[DataFrameCorpus] = self.corpora.get(corpus_id)
+        if corpus is None:
+            self.display_error(f"No corpus with id {corpus_id} found")
+            return
+        if corpus.name == new_name:
             return
 
-        corpus_info: dict = {}
-        corpus_as_df: DataFrame = self.corpus.to_dataframe()
-
-        corpus_info["name"] = self.corpus.name
-        corpus_info["rows"] = len(self.corpus)
-
-        corpus_info["files"] = str(self.get_loaded_file_count())
-
-        headers = []
-        dtypes = []
-        for header_name, dtype_obj in corpus_as_df.dtypes.items():
-            dtypes.append(str(dtype_obj).upper())
-            headers.append(header_name)
-        corpus_info["headers"] = headers
-        corpus_info["dtypes"] = dtypes
-
-        self.corpus_info = corpus_info
-
-    def get_corpus_info(self) -> Optional[dict[str, str]]:
-        return self.corpus_info
+        try:
+            corpus.name = new_name
+        except ValueError as e:
+            self.display_error(str(e))
 
     def get_loaded_file_counts(self) -> dict[str, int]:
         corpus_file_set = set(self.file_loader_service.get_loaded_corpus_files())
