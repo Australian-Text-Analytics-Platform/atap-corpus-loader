@@ -40,7 +40,7 @@ class FileSelectorWidget(AbstractWidget):
             Row(self.selector_widget),
             width=700)
 
-        panel.state.add_periodic_callback(self.update_display, period=2000)
+        panel.state.add_periodic_callback(self.update_display, period=1000)
         self.update_display()
         self.select_all()
 
