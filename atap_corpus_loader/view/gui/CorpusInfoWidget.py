@@ -30,7 +30,7 @@ class CorpusInfoWidget(AbstractWidget):
         if corpus_info.num_rows != 1:
             row_info += 's'
 
-        return f"{name} -- {row_info}"
+        return f"{name} - {row_info}"
 
     @staticmethod
     def _build_header_markdown_table(corpus_info: ViewCorpusInfo) -> str:
