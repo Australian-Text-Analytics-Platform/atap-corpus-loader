@@ -4,7 +4,7 @@ from typing import Optional
 from atap_corpus.corpus.corpus import DataFrameCorpus
 from pandas import DataFrame, merge, concat
 
-from atap_corpus_loader.controller.data_objects import FileReference, CorpusHeader, ZipFileReference
+from atap_corpus_loader.controller.data_objects import FileReference, CorpusHeader
 from atap_corpus_loader.controller.file_loader_strategy import FileLoaderStrategy, FileLoaderFactory, FileLoadError
 
 

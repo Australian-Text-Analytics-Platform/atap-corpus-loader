@@ -10,7 +10,7 @@ class DOCXLoaderStrategy(FileLoaderStrategy):
         headers: list[CorpusHeader] = [
             CorpusHeader('document', DataType.STRING, True),
             CorpusHeader('filename', DataType.STRING, True),
-            CorpusHeader('filepath', DataType.CATEGORY, True)
+            CorpusHeader('filepath', DataType.STRING, True)
         ]
 
         return headers
@@ -31,4 +31,7 @@ class DOCXLoaderStrategy(FileLoaderStrategy):
         if 'filepath' in included_headers:
             file_data['filepath'] = [self.file_ref.get_full_path()]
 
-        return DataFrame(file_data)
+        df: DataFrame = DataFrame(file_data)
+        dtypes_applied_df: DataFrame = FileLoaderStrategy._apply_selected_dtypes(df, headers)
+
+        return dtypes_applied_df

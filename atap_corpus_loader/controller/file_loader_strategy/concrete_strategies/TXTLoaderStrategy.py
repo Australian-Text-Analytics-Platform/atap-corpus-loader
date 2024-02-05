@@ -9,7 +9,7 @@ class TXTLoaderStrategy(FileLoaderStrategy):
         headers: list[CorpusHeader] = [
             CorpusHeader('document', DataType.STRING, True),
             CorpusHeader('filename', DataType.STRING, True),
-            CorpusHeader('filepath', DataType.CATEGORY, True)
+            CorpusHeader('filepath', DataType.STRING, True)
         ]
 
         return headers
