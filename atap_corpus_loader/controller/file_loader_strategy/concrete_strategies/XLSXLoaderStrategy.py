@@ -10,11 +10,10 @@ class XLSXLoaderStrategy(FileLoaderStrategy):
         df: DataFrame = read_excel(filepath, nrows=2)
         headers: list[CorpusHeader] = []
         for header_name, dtype_obj in df.dtypes.items():
-            dtype_str: str = str(dtype_obj).upper()
             dtype: DataType
             try:
-                dtype = DataType[dtype_str]
-            except KeyError:
+                dtype = DataType(str(dtype_obj))
+            except ValueError:
                 dtype = DataType['STRING']
             headers.append(CorpusHeader(str(header_name), dtype, True))
 
