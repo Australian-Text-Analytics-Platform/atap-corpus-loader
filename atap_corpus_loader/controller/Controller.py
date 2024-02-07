@@ -138,8 +138,6 @@ class Controller:
 
             corpora_info.append(ViewCorpusInfo(corpus_id, name, num_rows, headers, dtypes))
 
-        corpora_info.reverse()
-
         return corpora_info
 
     def delete_corpus(self, corpus_id: str):

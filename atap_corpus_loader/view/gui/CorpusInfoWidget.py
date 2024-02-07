@@ -65,9 +65,9 @@ class CorpusInfoWidget(AbstractWidget):
             info_markdown: Markdown = Markdown(header_markdown_table)
 
             rename_field: TextInput = TextInput(name="Rename corpus", value=corpus_info.name, align='center')
-            rename_field.param.watch(lambda event: self.rename_corpus(corpus_info.corpus_id, event.new), 'value')
+            rename_field.param.watch(lambda event, corpus_id=corpus_info.corpus_id: self.rename_corpus(corpus_id, event.new), ['value'])
             delete_button: Button = Button(name="Delete corpus", button_type="danger", align='center')
-            delete_button.on_click(lambda x: self.delete_corpus(corpus_info.corpus_id))
+            delete_button.on_click(lambda event, corpus_id=corpus_info.corpus_id: self.delete_corpus(corpus_id))
 
             accordion_objs.append(Row(info_markdown, HSpacer(), rename_field, delete_button, name=label))
 
