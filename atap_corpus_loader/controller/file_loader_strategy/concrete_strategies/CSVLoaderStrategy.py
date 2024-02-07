@@ -14,7 +14,7 @@ class CSVLoaderStrategy(FileLoaderStrategy):
             try:
                 dtype = DataType(str(dtype_obj))
             except ValueError:
-                dtype = DataType['STRING']
+                dtype = DataType.TEXT
             headers.append(CorpusHeader(str(header_name), dtype, True))
 
         return headers

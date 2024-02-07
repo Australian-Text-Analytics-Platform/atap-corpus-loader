@@ -132,8 +132,13 @@ class Controller:
             num_rows: int = len(corpus)
             headers: list[str] = []
             dtypes: list[str] = []
+            dtype: str
             for header_name, dtype_obj in corpus_as_df.dtypes.items():
-                dtypes.append(str(dtype_obj).upper())
+                try:
+                    dtype = DataType(str(dtype_obj).lower()).name
+                except KeyError:
+                    dtype = str(dtype_obj).upper()
+                dtypes.append(dtype)
                 headers.append(str(header_name))
 
             corpora_info.append(ViewCorpusInfo(corpus_id, name, num_rows, headers, dtypes))
@@ -267,7 +272,7 @@ class Controller:
         for header in self.corpus_headers:
             if header.name == text_header:
                 self.text_header = header
-                header.datatype = DataType['STRING']
+                header.datatype = DataType.TEXT
                 header.include = True
                 return
 

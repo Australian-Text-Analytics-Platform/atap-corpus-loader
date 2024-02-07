@@ -7,9 +7,9 @@ from atap_corpus_loader.controller.file_loader_strategy.FileLoaderStrategy impor
 class TXTLoaderStrategy(FileLoaderStrategy):
     def get_inferred_headers(self) -> list[CorpusHeader]:
         headers: list[CorpusHeader] = [
-            CorpusHeader('document', DataType.STRING, True),
-            CorpusHeader('filename', DataType.STRING, True),
-            CorpusHeader('filepath', DataType.STRING, True)
+            CorpusHeader('document', DataType.TEXT, True),
+            CorpusHeader('filename', DataType.TEXT, True),
+            CorpusHeader('filepath', DataType.TEXT, True)
         ]
 
         return headers

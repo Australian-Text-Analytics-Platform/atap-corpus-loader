@@ -24,7 +24,7 @@ class RLoaderStrategy(FileLoaderStrategy):
                 raise FileLoadError(f"Incompatible headers within loaded RData objects")
 
         headers: list[CorpusHeader] = []
-        dtype: DataType = DataType['STRING']
+        dtype: DataType = DataType.TEXT
         for col_name in columns:
             headers.append(CorpusHeader(col_name, dtype, True))
 
