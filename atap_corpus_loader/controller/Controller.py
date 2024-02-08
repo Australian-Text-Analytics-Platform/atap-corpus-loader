@@ -1,4 +1,5 @@
 from glob import glob
+from io import BytesIO
 from os.path import join, isdir, basename, dirname
 from typing import Optional, Callable
 
@@ -6,6 +7,7 @@ from atap_corpus.corpus.corpora import UniqueCorpora
 from atap_corpus.corpus.corpus import DataFrameCorpus
 from pandas import DataFrame
 
+from atap_corpus_loader.controller.CorpusExportService import CorpusExportService
 from atap_corpus_loader.controller.FileLoaderService import FileLoaderService, FileLoadError
 from atap_corpus_loader.controller.OniAPIService import OniAPIService
 from atap_corpus_loader.controller.data_objects import FileReference, ZipFileReference, ViewCorpusInfo
@@ -26,6 +28,7 @@ class Controller:
 
         self.file_loader_service: FileLoaderService = FileLoaderService()
         self.oni_api_service: OniAPIService = OniAPIService()
+        self.corpus_export_service: CorpusExportService = CorpusExportService()
         self.notifier_service: NotifierService = notifier_service
 
         self.text_header: Optional[CorpusHeader] = None
@@ -312,3 +315,17 @@ class Controller:
         all_file_refs.sort(key=lambda ref: ref.get_full_path())
 
         return all_file_refs
+
+    def get_export_types(self) -> list[str]:
+        return self.corpus_export_service.get_filetypes()
+
+    def export_corpus(self, corpus_id: str, filetype: str) -> Optional[BytesIO]:
+        corpus: Optional[DataFrameCorpus] = self.corpora.get(corpus_id)
+        if corpus is None:
+            self.display_error(f"No corpus with id {corpus_id} found")
+            return None
+
+        try:
+            return self.corpus_export_service.export(corpus.to_dataframe(), filetype)
+        except ValueError as e:
+            self.display_error(str(e))
