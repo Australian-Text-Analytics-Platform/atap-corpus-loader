@@ -4,9 +4,9 @@ from panel import Column, GridBox, bind, Row, Spacer
 from panel.pane import Markdown, Str
 from panel.widgets import Select, Checkbox
 
-from corpusloader.controller import Controller
-from corpusloader.controller.data_objects.CorpusHeader import CorpusHeader
-from corpusloader.view.gui import AbstractWidget
+from atap_corpus_loader.controller import Controller
+from atap_corpus_loader.controller.data_objects.CorpusHeader import CorpusHeader
+from atap_corpus_loader.view.gui import AbstractWidget
 
 
 class MetaEditorWidget(AbstractWidget):

@@ -1,26 +1,23 @@
-from docx import Document
 from pandas import DataFrame
 
-from corpusloader.controller.data_objects import CorpusHeader, DataType, FileReference
-from corpusloader.controller.file_loader_strategy.FileLoaderStrategy import FileLoaderStrategy
+from atap_corpus_loader.controller.data_objects import CorpusHeader, DataType
+from atap_corpus_loader.controller.file_loader_strategy.FileLoaderStrategy import FileLoaderStrategy
 
 
-class DOCXLoaderStrategy(FileLoaderStrategy):
+class TXTLoaderStrategy(FileLoaderStrategy):
     def get_inferred_headers(self) -> list[CorpusHeader]:
         headers: list[CorpusHeader] = [
-            CorpusHeader('document', DataType.STRING, True),
-            CorpusHeader('filename', DataType.STRING, True),
-            CorpusHeader('filepath', DataType.CATEGORY, True)
+            CorpusHeader('document', DataType.TEXT, True),
+            CorpusHeader('filename', DataType.TEXT, True),
+            CorpusHeader('filepath', DataType.TEXT, True)
         ]
 
         return headers
 
     def get_dataframe(self, headers: list[CorpusHeader]) -> DataFrame:
         filepath: str = self.file_ref.resolve_real_file_path()
-        docx_doc = Document(filepath)
-        document = ''
-        for paragraph in docx_doc.paragraphs:
-            document += paragraph.text + '\n'
+        with open(filepath) as f:
+            document = f.read()
 
         included_headers: list[str] = [header.name for header in headers if header.include]
         file_data = {}
@@ -31,4 +28,7 @@ class DOCXLoaderStrategy(FileLoaderStrategy):
         if 'filepath' in included_headers:
             file_data['filepath'] = [self.file_ref.get_full_path()]
 
-        return DataFrame(file_data)
+        df: DataFrame = DataFrame(file_data)
+        dtypes_applied_df: DataFrame = FileLoaderStrategy._apply_selected_dtypes(df, headers)
+
+        return dtypes_applied_df

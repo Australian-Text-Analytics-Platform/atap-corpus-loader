@@ -5,9 +5,9 @@ class DataType(Enum):
     """
     Maps readable data type names to the pandas data types
     """
-    STRING = 'string'
-    INTEGER = 'Int64'
-    FLOAT = 'Float64'
+    TEXT = 'string'
+    INTEGER = 'int64'
+    DECIMAL = 'float64'
     BOOLEAN = 'boolean'
     DATETIME = 'datetime64[ns]'
     CATEGORY = 'category'

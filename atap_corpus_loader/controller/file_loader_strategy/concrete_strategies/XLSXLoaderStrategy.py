@@ -1,7 +1,7 @@
 from pandas import DataFrame, read_excel
 
-from corpusloader.controller.data_objects import CorpusHeader, DataType
-from corpusloader.controller.file_loader_strategy.FileLoaderStrategy import FileLoaderStrategy
+from atap_corpus_loader.controller.data_objects import CorpusHeader, DataType
+from atap_corpus_loader.controller.file_loader_strategy.FileLoaderStrategy import FileLoaderStrategy
 
 
 class XLSXLoaderStrategy(FileLoaderStrategy):
@@ -10,12 +10,11 @@ class XLSXLoaderStrategy(FileLoaderStrategy):
         df: DataFrame = read_excel(filepath, nrows=2)
         headers: list[CorpusHeader] = []
         for header_name, dtype_obj in df.dtypes.items():
-            dtype_str: str = str(dtype_obj).upper()
             dtype: DataType
             try:
-                dtype = DataType[dtype_str]
-            except KeyError:
-                dtype = DataType['STRING']
+                dtype = DataType(str(dtype_obj))
+            except ValueError:
+                dtype = DataType.TEXT
             headers.append(CorpusHeader(str(header_name), dtype, True))
 
         return headers

@@ -17,20 +17,27 @@ The loader currently supports loading a corpus from the following file types:
 
 ## Installation
 
-
+```shell
+python3 -m pip install atap-corpus-loader
+```
 
 ### Prerequisites
 
 - [Python 3.10](https://www.python.org/)
-- [Poetry](https://python-poetry.org)
+
+## Contributing
+
+The package for this project is hosted on PyPi: https://pypi.org/project/atap-corpus-loader/
+
+Dependencies, publishing, and version numbering is handled by [Poetry](https://python-poetry.org)
+
+To publish a new version:
 
 ```shell
-pip install atap-corpus-loader
+poetry config pypi-token.pypi <TOKEN>
+poetry version minor
+poetry publish
 ```
-
-## Versioning
-
-We use [Semantic Versioning](http://semver.org/) for versioning. For the versions available, see the [tags on this repository](https://github.com/Australian-Text-Analytics-Platform/atap_corpus_loader/tags).
 
 ## Authors
 
@@ -38,5 +45,4 @@ We use [Semantic Versioning](http://semver.org/) for versioning. For the version
 
 ## License
 
-This project is licensed under the [The MIT License](LICENSE)
-The MIT License - see the [LICENSE](LICENSE) file for details
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details

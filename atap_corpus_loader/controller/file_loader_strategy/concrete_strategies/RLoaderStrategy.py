@@ -2,9 +2,9 @@ from pandas import DataFrame, concat
 from pyreadr import list_objects, read_r
 from pyreadr.librdata import PyreadrError, LibrdataError
 
-from corpusloader.controller.data_objects import CorpusHeader, DataType
-from corpusloader.controller.file_loader_strategy.FileLoadError import FileLoadError
-from corpusloader.controller.file_loader_strategy.FileLoaderStrategy import FileLoaderStrategy
+from atap_corpus_loader.controller.data_objects import CorpusHeader, DataType
+from atap_corpus_loader.controller.file_loader_strategy.FileLoadError import FileLoadError
+from atap_corpus_loader.controller.file_loader_strategy.FileLoaderStrategy import FileLoaderStrategy
 
 
 class RLoaderStrategy(FileLoaderStrategy):
@@ -24,7 +24,7 @@ class RLoaderStrategy(FileLoaderStrategy):
                 raise FileLoadError(f"Incompatible headers within loaded RData objects")
 
         headers: list[CorpusHeader] = []
-        dtype: DataType = DataType['STRING']
+        dtype: DataType = DataType.TEXT
         for col_name in columns:
             headers.append(CorpusHeader(col_name, dtype, True))
 
