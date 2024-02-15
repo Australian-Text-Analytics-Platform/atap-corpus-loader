@@ -1,6 +1,6 @@
 from glob import glob
 from io import BytesIO
-from os.path import join, isdir, basename, dirname
+from os.path import isdir
 from typing import Optional, Callable
 
 from atap_corpus.corpus.corpora import UniqueCorpora
@@ -10,9 +10,8 @@ from pandas import DataFrame
 from atap_corpus_loader.controller.CorpusExportService import CorpusExportService
 from atap_corpus_loader.controller.FileLoaderService import FileLoaderService, FileLoadError
 from atap_corpus_loader.controller.OniAPIService import OniAPIService
-from atap_corpus_loader.controller.data_objects import FileReference, ZipFileReference, ViewCorpusInfo
-from atap_corpus_loader.controller.data_objects.CorpusHeader import CorpusHeader
-from atap_corpus_loader.controller.data_objects.DataType import DataType
+from atap_corpus_loader.controller.data_objects import (FileReference, FileReferenceCache,
+                                                        ViewCorpusInfo, CorpusHeader, DataType)
 from atap_corpus_loader.controller.file_loader_strategy.FileLoaderFactory import ValidFileType
 from atap_corpus_loader.view.notifications import NotifierService
 
@@ -30,6 +29,10 @@ class Controller:
         self.oni_api_service: OniAPIService = OniAPIService()
         self.corpus_export_service: CorpusExportService = CorpusExportService()
         self.notifier_service: NotifierService = notifier_service
+
+        # Stores a cache of all FileReference objects that have been created during runtime.
+        # Utilise FileReferenceCache.clear_cache() if memory overhead is raised as an issue.
+        self.file_ref_cache: FileReferenceCache = FileReferenceCache()
 
         self.text_header: Optional[CorpusHeader] = None
         self.corpus_link_header: Optional[CorpusHeader] = None
@@ -296,23 +299,20 @@ class Controller:
         self.meta_link_header = None
 
     def retrieve_all_files(self) -> list[FileReference]:
-        all_relative_paths: list[str] = glob("**", root_dir=self.root_directory, recursive=True)
-        all_full_paths: list[str] = []
-        for path in all_relative_paths:
-            full_path = join(self.root_directory, path)
-            if not isdir(full_path):
-                all_full_paths.append(join(self.root_directory, path))
-
+        all_relative_paths: list[str] = glob(f"{self.root_directory}**", recursive=True)
         all_file_refs: list[FileReference] = []
-        for idx, full_path in enumerate(all_full_paths):
-            if full_path.endswith('.zip'):
-                zip_file_refs: list[FileReference] = ZipFileReference.get_zip_internal_file_refs(self.root_directory, full_path)
+        for path in all_relative_paths:
+            if isdir(path):
+                continue
+
+            if path.endswith('.zip'):
+                zip_file_refs: list[FileReference] = self.file_ref_cache.get_zip_file_refs(path)
                 all_file_refs.extend(zip_file_refs)
             else:
-                file_ref = FileReference(self.root_directory, dirname(full_path), basename(full_path))
+                file_ref = self.file_ref_cache.get_file_ref(path)
                 all_file_refs.append(file_ref)
 
-        all_file_refs.sort(key=lambda ref: ref.get_full_path())
+        all_file_refs.sort(key=lambda ref: ref.get_path())
 
         return all_file_refs
 
