@@ -1,6 +1,6 @@
 from glob import glob
 from io import BytesIO
-from os.path import isdir
+from os.path import isdir, normpath, sep
 from typing import Optional, Callable
 
 from atap_corpus.corpus.corpora import UniqueCorpora
@@ -23,7 +23,7 @@ class Controller:
     The build_callback_fn will be called when a corpus is built (can be set using set_build_callback()).
     """
     def __init__(self, notifier_service: NotifierService, root_directory: str):
-        self.root_directory: str = root_directory
+        self.root_directory: str = self._sanitise_root_dir(root_directory)
 
         self.file_loader_service: FileLoaderService = FileLoaderService()
         self.oni_api_service: OniAPIService = OniAPIService()
@@ -47,6 +47,17 @@ class Controller:
         self.build_callback_fn: Optional[Callable] = None
         self.build_callback_args: list = []
         self.build_callback_kwargs: dict = {}
+
+    @staticmethod
+    def _sanitise_root_dir(root_directory: str) -> str:
+        if type(root_directory) is not str:
+            raise TypeError(f"root_directory argument: expected string, got {type(root_directory)}")
+        sanitised_directory = normpath(root_directory)
+
+        if not sanitised_directory.endswith(sep):
+            sanitised_directory += sep
+
+        return sanitised_directory
 
     def display_error(self, error_msg: str):
         self.notifier_service.notify_error(error_msg)

@@ -18,6 +18,14 @@ class CorpusLoader(Viewer):
     """
 
     def __init__(self, root_directory: str, **params):
+        """
+
+        :param root_directory: The root directory that the file selector will search for files to load.
+        The argument must be a string. The directory may be non-existent at initialisation time,
+        but no files will be displayed until it exists.
+        :type root_directory: str
+        :param params: passed onto the panel.viewable.Viewer super-class
+        """
         super().__init__(**params)
         self.controller: Controller = Controller(NotifierService(), root_directory)
         self.view: ViewWrapperWidget = ViewWrapperWidget(self.controller)
