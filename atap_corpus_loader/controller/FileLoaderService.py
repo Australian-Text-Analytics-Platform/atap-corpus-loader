@@ -15,46 +15,46 @@ class FileLoaderService:
     Maintains a reference to files loaded as corpus files and files loaded as metadata files.
     """
     def __init__(self):
-        self.corpus_file_refs: list[FileReference] = []
-        self.meta_file_refs: list[FileReference] = []
+        self.loaded_corpus_files: set[FileReference] = set()
+        self.loaded_meta_files: set[FileReference] = set()
 
     def get_loaded_corpus_files(self) -> list[FileReference]:
-        return self.corpus_file_refs.copy()
+        return list(self.loaded_corpus_files)
 
     def get_loaded_meta_files(self) -> list[FileReference]:
-        return self.meta_file_refs.copy()
+        return list(self.loaded_meta_files)
 
     def add_corpus_filepath(self, corpus_filepath: FileReference):
-        if corpus_filepath in self.corpus_file_refs:
+        if corpus_filepath in self.loaded_corpus_files:
             return
 
         FileLoaderService._check_filepath_permissions(corpus_filepath)
-        self.corpus_file_refs.append(corpus_filepath)
+        self.loaded_corpus_files.add(corpus_filepath)
 
     def add_meta_filepath(self, meta_filepath: FileReference):
-        if meta_filepath in self.meta_file_refs:
+        if meta_filepath in self.loaded_meta_files:
             return
 
         FileLoaderService._check_filepath_permissions(meta_filepath)
-        self.meta_file_refs.append(meta_filepath)
+        self.loaded_meta_files.add(meta_filepath)
 
     def remove_corpus_filepath(self, corpus_filepath: FileReference):
-        if corpus_filepath in self.corpus_file_refs:
-            self.corpus_file_refs.remove(corpus_filepath)
+        if corpus_filepath in self.loaded_corpus_files:
+            self.loaded_corpus_files.remove(corpus_filepath)
 
     def remove_meta_filepath(self, meta_filepath: FileReference):
-        if meta_filepath in self.meta_file_refs:
-            self.meta_file_refs.remove(meta_filepath)
+        if meta_filepath in self.loaded_meta_files:
+            self.loaded_meta_files.remove(meta_filepath)
 
     def remove_all_files(self):
-        self.corpus_file_refs = []
-        self.meta_file_refs = []
+        self.loaded_corpus_files = set()
+        self.loaded_meta_files = set()
 
     def get_inferred_corpus_headers(self) -> list[CorpusHeader]:
-        return FileLoaderService._get_file_headers(self.corpus_file_refs)
+        return FileLoaderService._get_file_headers(self.get_loaded_corpus_files())
 
     def get_inferred_meta_headers(self) -> list[CorpusHeader]:
-        return FileLoaderService._get_file_headers(self.meta_file_refs)
+        return FileLoaderService._get_file_headers(self.get_loaded_meta_files())
 
     def build_corpus(self, corpus_name: str,
                      corpus_headers: list[CorpusHeader],
@@ -62,8 +62,8 @@ class FileLoaderService:
                      text_header: CorpusHeader,
                      corpus_link_header: Optional[CorpusHeader],
                      meta_link_header: Optional[CorpusHeader]) -> DataFrameCorpus:
-        corpus_df: DataFrame = FileLoaderService._get_concatenated_dataframe(self.corpus_file_refs, corpus_headers)
-        meta_df: DataFrame = FileLoaderService._get_concatenated_dataframe(self.meta_file_refs, meta_headers)
+        corpus_df: DataFrame = FileLoaderService._get_concatenated_dataframe(self.get_loaded_corpus_files(), corpus_headers)
+        meta_df: DataFrame = FileLoaderService._get_concatenated_dataframe(self.get_loaded_meta_files(), meta_headers)
 
         load_corpus: bool = len(corpus_headers) > 0
         load_meta: bool = len(meta_headers) > 0
@@ -88,7 +88,7 @@ class FileLoaderService:
         if file_ref.is_zipped():
             filepath = file_ref.get_directory_path()
         else:
-            filepath = file_ref.get_full_path()
+            filepath = file_ref.get_path()
         if not os.path.exists(filepath):
             raise FileLoadError(f"No file found at: {filepath}")
         if not os.access(filepath, os.R_OK):
@@ -102,9 +102,9 @@ class FileLoaderService:
             try:
                 path_headers: list[CorpusHeader] = file_loader.get_inferred_headers()
             except UnicodeDecodeError:
-                raise FileLoadError(f"Error loading file at {ref.get_relative_path()}: file is not UTF-8 encoded")
+                raise FileLoadError(f"Error loading file at {ref.get_path()}: file is not UTF-8 encoded")
             except Exception as e:
-                raise FileLoadError(f"Error loading file at {ref.get_relative_path()}: {e}")
+                raise FileLoadError(f"Error loading file at {ref.get_path()}: {e}")
 
             if headers is None:
                 headers = path_headers
@@ -126,9 +126,9 @@ class FileLoaderService:
             try:
                 path_df: DataFrame = file_loader.get_dataframe(headers)
             except UnicodeDecodeError:
-                raise FileLoadError(f"Error loading file at {ref.get_relative_path()}: file is not UTF-8 encoded")
+                raise FileLoadError(f"Error loading file at {ref.get_path()}: file is not UTF-8 encoded")
             except Exception as e:
-                raise FileLoadError(f"Error loading file at {ref.get_relative_path()}: {e}")
+                raise FileLoadError(f"Error loading file at {ref.get_path()}: {e}")
 
             df_list.append(path_df)
 
