@@ -40,7 +40,7 @@ class FileSelectorWidget(AbstractWidget):
             Row(self.selector_widget),
             width=700)
 
-        panel.state.add_periodic_callback(self.update_display, period=1000)
+        panel.state.add_periodic_callback(self.update_display, period=2000)
         self.update_display()
         self.select_all()
 
@@ -48,16 +48,16 @@ class FileSelectorWidget(AbstractWidget):
         loaded_corpus_files: list[FileReference] = self.controller.get_loaded_corpus_files()
         loaded_meta_files: list[FileReference] = self.controller.get_loaded_meta_files()
 
-        all_file_refs: list[FileReference] = self.controller.retrieve_all_files()
-        filtered_refs: list[FileReference] = self._filter_file_refs(all_file_refs)
+        filtered_refs: list[FileReference] = self._get_filtered_file_refs()
+        old_selected_refs: set[FileReference] = set(self.selector_widget.value)
 
-        old_selected_refs: list[FileReference] = self.selector_widget.value.copy()
-        filtered_selected_refs: list[FileReference] = [f for f in old_selected_refs if f in filtered_refs]
+        # Lists are cast to sets for performance during the union check
+        filtered_selected_refs: list[FileReference] = list(old_selected_refs.union(set(filtered_refs)))
 
         filtered_files_dict: dict[str, FileReference] = {}
         checkmark_symbol = "\U00002714"
         for ref in filtered_refs:
-            file_repr = ref.get_relative_path()
+            file_repr = ref.get_path()
             if ref in loaded_corpus_files:
                 file_repr += f" {checkmark_symbol} [corpus]"
             if ref in loaded_meta_files:
@@ -67,9 +67,7 @@ class FileSelectorWidget(AbstractWidget):
         self.selector_widget.options = filtered_files_dict
         self.selector_widget.value = filtered_selected_refs
 
-    def _filter_file_refs(self, file_refs: list[FileReference]) -> list[FileReference]:
-        filtered_refs: list[FileReference] = []
-
+    def _get_filtered_file_refs(self) -> list[FileReference]:
         valid_file_types: list[str] = self.controller.get_valid_filetypes()
         selected_file_types: list[str]
         if self.file_type_filter.value in valid_file_types:
@@ -77,14 +75,17 @@ class FileSelectorWidget(AbstractWidget):
         else:
             selected_file_types = [ft.upper() for ft in valid_file_types]
 
+        file_refs: list[FileReference] = self.controller.retrieve_all_files()
+
+        filtered_refs: list[FileReference] = []
         filter_str = f"*{self.filter_input.value_input}*"
+        skip_hidden: bool = not self.show_hidden_files_checkbox.value
         for ref in file_refs:
-            if not fnmatch(ref.get_relative_path(), filter_str):
+            if not fnmatch(ref.get_path(), filter_str):
+                continue
+            if skip_hidden and ref.is_hidden():
                 continue
             if ref.get_extension().upper() not in selected_file_types:
-                continue
-            is_hidden_file: bool = ref.get_filename().startswith('.')
-            if is_hidden_file and not self.show_hidden_files_checkbox.value:
                 continue
 
             filtered_refs.append(ref)
