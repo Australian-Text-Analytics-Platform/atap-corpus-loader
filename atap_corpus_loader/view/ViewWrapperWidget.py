@@ -26,12 +26,12 @@ class ViewWrapperWidget(AbstractWidget):
     def update_display(self):
         pass
 
-    def load_corpus_from_filepaths(self, filepath_ls: list[FileReference]) -> bool:
+    def load_corpus_from_filepaths(self, filepath_ls: list[str]) -> bool:
         success = self.controller.load_corpus_from_filepaths(filepath_ls)
         self.update_displays()
         return success
 
-    def load_meta_from_filepaths(self, filepath_ls: list[FileReference]) -> bool:
+    def load_meta_from_filepaths(self, filepath_ls: list[str]) -> bool:
         success = self.controller.load_meta_from_filepaths(filepath_ls)
         self.update_displays()
         return success

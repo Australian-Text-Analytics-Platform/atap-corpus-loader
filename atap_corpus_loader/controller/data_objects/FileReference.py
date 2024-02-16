@@ -1,4 +1,4 @@
-from os.path import join, relpath, dirname, basename
+from os.path import join, dirname, basename
 from tempfile import NamedTemporaryFile
 from typing import Optional
 from zipfile import ZipFile
@@ -14,6 +14,7 @@ class FileReference:
         :param path: the path to the file. This can be absolute or relative to the root_directory specified in CorpusLoader
         """
         self.path: str = path
+        self.path_hash: int = hash(self.path)
         self.directory_path: str = dirname(path)
         self.filename: str = basename(path)
 
@@ -26,10 +27,10 @@ class FileReference:
     def __eq__(self, other):
         if not isinstance(other, FileReference):
             return False
-        return self.get_path() == other.get_path()
+        return self.path_hash == other.path_hash
 
     def __hash__(self):
-        return hash(self.get_path())
+        return self.path_hash
 
     def __str__(self):
         return self.get_path()
@@ -93,6 +94,7 @@ class ZipFileReference(FileReference):
         :param internal_path: the path within the zip file to this zipped file
         """
         self.path: str = join(zip_file_path, internal_path)
+        self.path_hash: int = hash(self.path)
         self.directory_path: str = zip_file_path
         self.internal_directory: str = dirname(internal_path)
         self.filename: str = basename(internal_path)
@@ -137,12 +139,12 @@ class ZipFileReference(FileReference):
         return real_path
 
 
-class FileReferenceCache:
+class FileReferenceFactory:
     """
-    An add-only cache for FileReference objects. The cache maintains a dictionary which maps full_path strings
+    Implements the Flyweight pattern to mitigate the overhead of re-creating FileReference objects, as the files within
+    the file system are expected to change far less frequently than FileReference objects are referred to.
+    An add-only cache for FileReference objects is maintained in the form of a dictionary which maps full_path strings
     to the corresponding FileReference object.
-    The cache is intended to mitigate the overhead of re-creating FileReference objects, as the files within the file
-    system are expected to change far less frequently than FileReference objects are referred to.
     """
     def __init__(self):
         self.file_ref_cache: dict[str, FileReference] = {}
@@ -152,6 +154,15 @@ class FileReferenceCache:
         Resets the cache to an empty dictionary
         """
         self.file_ref_cache = {}
+
+    def get_file_refs_from_path(self, path: str) -> list[FileReference]:
+        file_refs: list[FileReference]
+        if path.endswith('.zip'):
+            file_refs = self.get_zip_file_refs(path)
+        else:
+            file_refs = [self.get_file_ref(path)]
+
+        return file_refs
 
     def get_file_ref(self, path: str) -> FileReference:
         cached_ref: Optional[FileReference] = self.file_ref_cache.get(path)

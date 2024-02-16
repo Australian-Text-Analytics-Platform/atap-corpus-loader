@@ -1,6 +1,4 @@
-from glob import glob
 from io import BytesIO
-from os.path import isdir, normpath, sep
 from typing import Optional, Callable
 
 from atap_corpus.corpus.corpora import UniqueCorpora
@@ -10,8 +8,7 @@ from pandas import DataFrame
 from atap_corpus_loader.controller.CorpusExportService import CorpusExportService
 from atap_corpus_loader.controller.FileLoaderService import FileLoaderService, FileLoadError
 from atap_corpus_loader.controller.OniAPIService import OniAPIService
-from atap_corpus_loader.controller.data_objects import (FileReference, FileReferenceCache,
-                                                        ViewCorpusInfo, CorpusHeader, DataType)
+from atap_corpus_loader.controller.data_objects import FileReference, ViewCorpusInfo, CorpusHeader, DataType
 from atap_corpus_loader.controller.file_loader_strategy.FileLoaderFactory import ValidFileType
 from atap_corpus_loader.view.notifications import NotifierService
 
@@ -23,16 +20,10 @@ class Controller:
     The build_callback_fn will be called when a corpus is built (can be set using set_build_callback()).
     """
     def __init__(self, notifier_service: NotifierService, root_directory: str):
-        self.root_directory: str = self._sanitise_root_dir(root_directory)
-
-        self.file_loader_service: FileLoaderService = FileLoaderService()
+        self.file_loader_service: FileLoaderService = FileLoaderService(root_directory)
         self.oni_api_service: OniAPIService = OniAPIService()
         self.corpus_export_service: CorpusExportService = CorpusExportService()
         self.notifier_service: NotifierService = notifier_service
-
-        # Stores a cache of all FileReference objects that have been created during runtime.
-        # Utilise FileReferenceCache.clear_cache() if memory overhead is raised as an issue.
-        self.file_ref_cache: FileReferenceCache = FileReferenceCache()
 
         self.text_header: Optional[CorpusHeader] = None
         self.corpus_link_header: Optional[CorpusHeader] = None
@@ -47,17 +38,6 @@ class Controller:
         self.build_callback_fn: Optional[Callable] = None
         self.build_callback_args: list = []
         self.build_callback_kwargs: dict = {}
-
-    @staticmethod
-    def _sanitise_root_dir(root_directory: str) -> str:
-        if type(root_directory) is not str:
-            raise TypeError(f"root_directory argument: expected string, got {type(root_directory)}")
-        sanitised_directory = normpath(root_directory)
-
-        if not sanitised_directory.endswith(sep):
-            sanitised_directory += sep
-
-        return sanitised_directory
 
     def display_error(self, error_msg: str):
         self.notifier_service.notify_error(error_msg)
@@ -83,10 +63,10 @@ class Controller:
             return None
         return self.latest_corpus.to_dataframe()
 
-    def load_corpus_from_filepaths(self, filepath_ls: list[FileReference]) -> bool:
+    def load_corpus_from_filepaths(self, filepath_ls: list[str]) -> bool:
         for filepath in filepath_ls:
             try:
-                self.file_loader_service.add_corpus_filepath(filepath)
+                self.file_loader_service.add_corpus_file(filepath)
                 self.corpus_headers = self.file_loader_service.get_inferred_corpus_headers()
             except FileLoadError as e:
                 self.file_loader_service.remove_corpus_filepath(filepath)
@@ -96,10 +76,10 @@ class Controller:
         self.display_success("Corpus files loaded successfully")
         return True
 
-    def load_meta_from_filepaths(self, filepath_ls: list[FileReference]) -> bool:
+    def load_meta_from_filepaths(self, filepath_ls: list[str]) -> bool:
         for filepath in filepath_ls:
             try:
-                self.file_loader_service.add_meta_filepath(filepath)
+                self.file_loader_service.add_meta_file(filepath)
                 self.meta_headers = self.file_loader_service.get_inferred_meta_headers()
             except FileLoadError as e:
                 self.file_loader_service.remove_meta_filepath(filepath)
@@ -193,7 +173,7 @@ class Controller:
 
         return file_counts
 
-    def unload_filepaths(self, filepath_ls: list[FileReference]):
+    def unload_filepaths(self, filepath_ls: list[str]):
         for filepath in filepath_ls:
             self.file_loader_service.remove_meta_filepath(filepath)
             self.file_loader_service.remove_corpus_filepath(filepath)
@@ -310,22 +290,7 @@ class Controller:
         self.meta_link_header = None
 
     def retrieve_all_files(self) -> list[FileReference]:
-        all_relative_paths: list[str] = glob(f"{self.root_directory}**", recursive=True)
-        all_file_refs: list[FileReference] = []
-        for path in all_relative_paths:
-            if isdir(path):
-                continue
-
-            if path.endswith('.zip'):
-                zip_file_refs: list[FileReference] = self.file_ref_cache.get_zip_file_refs(path)
-                all_file_refs.extend(zip_file_refs)
-            else:
-                file_ref = self.file_ref_cache.get_file_ref(path)
-                all_file_refs.append(file_ref)
-
-        all_file_refs.sort(key=lambda ref: ref.get_path())
-
-        return all_file_refs
+        return self.file_loader_service.get_all_files()
 
     def get_export_types(self) -> list[str]:
         return self.corpus_export_service.get_filetypes()

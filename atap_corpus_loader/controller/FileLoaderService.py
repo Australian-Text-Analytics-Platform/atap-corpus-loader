@@ -1,10 +1,12 @@
-import os
+from glob import glob
+from os import R_OK, access
+from os.path import normpath, sep, isdir, exists
 from typing import Optional
 
 from atap_corpus.corpus.corpus import DataFrameCorpus
 from pandas import DataFrame, merge, concat
 
-from atap_corpus_loader.controller.data_objects import FileReference, CorpusHeader
+from atap_corpus_loader.controller.data_objects import FileReference, CorpusHeader, FileReferenceFactory
 from atap_corpus_loader.controller.file_loader_strategy import FileLoaderStrategy, FileLoaderFactory, FileLoadError
 
 
@@ -14,9 +16,32 @@ class FileLoaderService:
     files.
     Maintains a reference to files loaded as corpus files and files loaded as metadata files.
     """
-    def __init__(self):
+    def __init__(self, root_directory: str):
+        self.root_directory: str = self._sanitise_root_dir(root_directory)
         self.loaded_corpus_files: set[FileReference] = set()
         self.loaded_meta_files: set[FileReference] = set()
+        # Utilise FileReferenceFactory.clear_cache() if memory overhead is raised as an issue.
+        self.file_ref_factory: FileReferenceFactory = FileReferenceFactory()
+
+        self.all_files_cache: list[FileReference] = []
+        self.all_files_count: int = 0
+
+    def _retrieve_all_files(self) -> list[FileReference]:
+        all_relative_paths: list[str] = glob(f"{self.root_directory}**", recursive=True)
+        all_file_refs: list[FileReference] = []
+        for path in all_relative_paths:
+            if isdir(path):
+                continue
+
+            file_refs: list[FileReference] = self.file_ref_factory.get_file_refs_from_path(path)
+            all_file_refs.extend(file_refs)
+
+        all_file_refs.sort(key=lambda ref: ref.get_path())
+
+        return all_file_refs
+
+    def get_all_files(self) -> list[FileReference]:
+        return self._retrieve_all_files()
 
     def get_loaded_corpus_files(self) -> list[FileReference]:
         return list(self.loaded_corpus_files)
@@ -24,27 +49,31 @@ class FileLoaderService:
     def get_loaded_meta_files(self) -> list[FileReference]:
         return list(self.loaded_meta_files)
 
-    def add_corpus_filepath(self, corpus_filepath: FileReference):
-        if corpus_filepath in self.loaded_corpus_files:
+    def add_corpus_file(self, corpus_filepath: str):
+        file_ref: FileReference = self.file_ref_factory.get_file_ref(corpus_filepath)
+        if file_ref in self.loaded_corpus_files:
             return
 
-        FileLoaderService._check_filepath_permissions(corpus_filepath)
-        self.loaded_corpus_files.add(corpus_filepath)
+        FileLoaderService._check_filepath_permissions(file_ref)
+        self.loaded_corpus_files.add(file_ref)
 
-    def add_meta_filepath(self, meta_filepath: FileReference):
-        if meta_filepath in self.loaded_meta_files:
+    def add_meta_file(self, meta_filepath: str):
+        file_ref: FileReference = self.file_ref_factory.get_file_ref(meta_filepath)
+        if file_ref in self.loaded_meta_files:
             return
 
-        FileLoaderService._check_filepath_permissions(meta_filepath)
-        self.loaded_meta_files.add(meta_filepath)
+        FileLoaderService._check_filepath_permissions(file_ref)
+        self.loaded_meta_files.add(file_ref)
 
-    def remove_corpus_filepath(self, corpus_filepath: FileReference):
-        if corpus_filepath in self.loaded_corpus_files:
-            self.loaded_corpus_files.remove(corpus_filepath)
+    def remove_corpus_filepath(self, corpus_filepath: str):
+        file_ref: FileReference = self.file_ref_factory.get_file_ref(corpus_filepath)
+        if file_ref in self.loaded_corpus_files:
+            self.loaded_corpus_files.remove(file_ref)
 
-    def remove_meta_filepath(self, meta_filepath: FileReference):
-        if meta_filepath in self.loaded_meta_files:
-            self.loaded_meta_files.remove(meta_filepath)
+    def remove_meta_filepath(self, meta_filepath: str):
+        file_ref: FileReference = self.file_ref_factory.get_file_ref(meta_filepath)
+        if file_ref in self.loaded_meta_files:
+            self.loaded_meta_files.remove(file_ref)
 
     def remove_all_files(self):
         self.loaded_corpus_files = set()
@@ -83,15 +112,26 @@ class FileLoaderService:
         return DataFrameCorpus.from_dataframe(df=final_df, col_doc=text_header.name, name=corpus_name)
 
     @staticmethod
+    def _sanitise_root_dir(root_directory: str) -> str:
+        if type(root_directory) is not str:
+            raise TypeError(f"root_directory argument: expected string, got {type(root_directory)}")
+        sanitised_directory = normpath(root_directory)
+
+        if not sanitised_directory.endswith(sep):
+            sanitised_directory += sep
+
+        return sanitised_directory
+
+    @staticmethod
     def _check_filepath_permissions(file_ref: FileReference):
         filepath: str
         if file_ref.is_zipped():
             filepath = file_ref.get_directory_path()
         else:
             filepath = file_ref.get_path()
-        if not os.path.exists(filepath):
+        if not exists(filepath):
             raise FileLoadError(f"No file found at: {filepath}")
-        if not os.access(filepath, os.R_OK):
+        if not access(filepath, R_OK):
             raise FileLoadError(f"No permissions to read the file at: {filepath}")
 
     @staticmethod
