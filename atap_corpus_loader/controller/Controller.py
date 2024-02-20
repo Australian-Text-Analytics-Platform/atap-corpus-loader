@@ -133,8 +133,8 @@ class Controller:
             for header_name, dtype_obj in corpus_as_df.dtypes.items():
                 try:
                     dtype = DataType(str(dtype_obj).lower()).name
-                except KeyError:
-                    dtype = str(dtype_obj).upper()
+                except ValueError:
+                    dtype = DataType.TEXT.name
                 dtypes.append(dtype)
                 headers.append(str(header_name))
 
