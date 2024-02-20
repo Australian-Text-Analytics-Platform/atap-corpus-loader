@@ -32,4 +32,6 @@ class ODTLoaderStrategy(FileLoaderStrategy):
         if 'filepath' in included_headers:
             file_data['filepath'] = [self.file_ref.get_path()]
 
-        return DataFrame(file_data)
+        df: DataFrame = DataFrame(file_data, dtype=str)
+
+        return df

@@ -20,8 +20,9 @@ class TSVLoaderStrategy(FileLoaderStrategy):
         return headers
 
     def get_dataframe(self, headers: list[CorpusHeader]) -> DataFrame:
+        included_headers: list[str] = [header.name for header in headers if header.include]
         filepath: str = self.file_ref.resolve_real_file_path()
-        df: DataFrame = read_csv(filepath, sep='\t', header=0)
+        df: DataFrame = read_csv(filepath, sep='\t', header=0, usecols=included_headers)
         dtypes_applied_df: DataFrame = FileLoaderStrategy._apply_selected_dtypes(df, headers)
 
         return dtypes_applied_df

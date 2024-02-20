@@ -28,7 +28,6 @@ class TXTLoaderStrategy(FileLoaderStrategy):
         if 'filepath' in included_headers:
             file_data['filepath'] = [self.file_ref.get_path()]
 
-        df: DataFrame = DataFrame(file_data)
-        dtypes_applied_df: DataFrame = FileLoaderStrategy._apply_selected_dtypes(df, headers)
+        df: DataFrame = DataFrame(file_data, dtype=str)
 
-        return dtypes_applied_df
+        return df
