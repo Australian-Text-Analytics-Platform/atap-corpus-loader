@@ -45,8 +45,8 @@ class FileSelectorWidget(AbstractWidget):
         self.select_all()
 
     def update_display(self):
-        loaded_corpus_files: list[FileReference] = self.controller.get_loaded_corpus_files()
-        loaded_meta_files: list[FileReference] = self.controller.get_loaded_meta_files()
+        loaded_corpus_files: set[FileReference] = self.controller.get_loaded_corpus_files()
+        loaded_meta_files: set[FileReference] = self.controller.get_loaded_meta_files()
 
         filtered_refs: list[FileReference] = self._get_filtered_file_refs()
 
@@ -89,7 +89,6 @@ class FileSelectorWidget(AbstractWidget):
 
     def _on_filter_change(self, *_):
         self.update_display()
-        self.select_all()
 
     def select_all(self, *_):
         self.selector_widget.value = list(self.selector_widget.options.values())

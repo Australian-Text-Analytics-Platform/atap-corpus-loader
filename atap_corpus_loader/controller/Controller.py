@@ -67,11 +67,11 @@ class Controller:
         for filepath in filepath_ls:
             try:
                 self.file_loader_service.add_corpus_file(filepath)
-                self.corpus_headers = self.file_loader_service.get_inferred_corpus_headers()
             except FileLoadError as e:
                 self.file_loader_service.remove_corpus_filepath(filepath)
                 self.display_error(str(e))
                 return False
+        self.corpus_headers = self.file_loader_service.get_inferred_corpus_headers()
 
         self.display_success("Corpus files loaded successfully")
         return True
@@ -80,11 +80,11 @@ class Controller:
         for filepath in filepath_ls:
             try:
                 self.file_loader_service.add_meta_file(filepath)
-                self.meta_headers = self.file_loader_service.get_inferred_meta_headers()
             except FileLoadError as e:
                 self.file_loader_service.remove_meta_filepath(filepath)
                 self.display_error(str(e))
                 return False
+        self.meta_headers = self.file_loader_service.get_inferred_meta_headers()
 
         self.display_success("Metadata files loaded successfully")
         return True
@@ -195,11 +195,11 @@ class Controller:
         self.corpus_link_header = None
         self.meta_link_header = None
 
-    def get_loaded_corpus_files(self) -> list[FileReference]:
-        return self.file_loader_service.get_loaded_corpus_files()
+    def get_loaded_corpus_files(self) -> set[FileReference]:
+        return self.file_loader_service.get_loaded_corpus_files_set()
 
-    def get_loaded_meta_files(self) -> list[FileReference]:
-        return self.file_loader_service.get_loaded_meta_files()
+    def get_loaded_meta_files(self) -> set[FileReference]:
+        return self.file_loader_service.get_loaded_meta_files_set()
 
     def get_corpus_headers(self) -> list[CorpusHeader]:
         return self.corpus_headers

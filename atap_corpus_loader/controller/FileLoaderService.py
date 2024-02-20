@@ -1,7 +1,7 @@
-from glob import glob
+from glob import iglob
 from os import R_OK, access
 from os.path import normpath, sep, isdir, exists
-from typing import Optional
+from typing import Optional, Iterator
 
 from atap_corpus.corpus.corpus import DataFrameCorpus
 from pandas import DataFrame, merge, concat
@@ -27,9 +27,9 @@ class FileLoaderService:
         self.all_files_count: int = 0
 
     def _retrieve_all_files(self) -> list[FileReference]:
-        all_relative_paths: list[str] = glob(f"{self.root_directory}**", recursive=True)
+        path_iter: Iterator = iglob(f"{self.root_directory}**", recursive=True)
         all_file_refs: list[FileReference] = []
-        for path in all_relative_paths:
+        for path in path_iter:
             if isdir(path):
                 continue
 
@@ -43,11 +43,17 @@ class FileLoaderService:
     def get_all_files(self) -> list[FileReference]:
         return self._retrieve_all_files()
 
+    def get_loaded_corpus_files_set(self) -> set[FileReference]:
+        return self.loaded_corpus_files
+
     def get_loaded_corpus_files(self) -> list[FileReference]:
         return list(self.loaded_corpus_files)
 
     def get_loaded_meta_files(self) -> list[FileReference]:
         return list(self.loaded_meta_files)
+
+    def get_loaded_meta_files_set(self) -> set[FileReference]:
+        return self.loaded_meta_files
 
     def add_corpus_file(self, corpus_filepath: str):
         file_ref: FileReference = self.file_ref_factory.get_file_ref(corpus_filepath)
