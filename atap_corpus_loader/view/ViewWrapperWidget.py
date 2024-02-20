@@ -1,8 +1,7 @@
 from panel import Tabs
 
 from atap_corpus_loader.controller import Controller
-from atap_corpus_loader.controller.data_objects import FileReference
-from atap_corpus_loader.view.gui import AbstractWidget, FileLoaderWidget, OniLoaderWidget, CorpusInfoWidget
+from atap_corpus_loader.view.gui import AbstractWidget, FileLoaderWidget, CorpusInfoWidget
 
 
 class ViewWrapperWidget(AbstractWidget):
@@ -14,14 +13,12 @@ class ViewWrapperWidget(AbstractWidget):
         self.controller: Controller = controller
 
         self.file_loader: FileLoaderWidget = FileLoaderWidget(self, controller)
-        self.oni_loader: OniLoaderWidget = OniLoaderWidget(controller)
         self.corpus_display: CorpusInfoWidget = CorpusInfoWidget(controller)
         self.display_idx: int = 2
 
         self.panel = Tabs(("File Loader", self.file_loader),
-                          ("Oni Loader", self.oni_loader),
                           ("Corpus Overview", self.corpus_display))
-        self.children = [self.file_loader, self.oni_loader, self.corpus_display]
+        self.children = [self.file_loader, self.corpus_display]
 
     def update_display(self):
         pass
