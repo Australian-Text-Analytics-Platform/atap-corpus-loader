@@ -29,6 +29,5 @@ class TXTLoaderStrategy(FileLoaderStrategy):
             file_data['filepath'] = [self.file_ref.get_path()]
 
         df: DataFrame = DataFrame(file_data, dtype='string')
-        print(df.dtypes)
 
         return df
