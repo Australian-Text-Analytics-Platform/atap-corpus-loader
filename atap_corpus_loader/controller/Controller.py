@@ -19,11 +19,11 @@ class Controller:
     Holds a reference to the latest corpus built.
     The build_callback_fn will be called when a corpus is built (can be set using set_build_callback()).
     """
-    def __init__(self, notifier_service: NotifierService, root_directory: str):
+    def __init__(self, root_directory: str):
         self.file_loader_service: FileLoaderService = FileLoaderService(root_directory)
         self.oni_api_service: OniAPIService = OniAPIService()
         self.corpus_export_service: CorpusExportService = CorpusExportService()
-        self.notifier_service: NotifierService = notifier_service
+        self.notifier_service: NotifierService = NotifierService()
 
         self.text_header: Optional[CorpusHeader] = None
         self.corpus_link_header: Optional[CorpusHeader] = None
@@ -113,8 +113,8 @@ class Controller:
             self.display_error(f"Build callback error: {e}")
             return False
 
-        self.display_success(f"Corpus {self.latest_corpus.name} built successfully")
         self.corpora.add(self.latest_corpus)
+        self.display_success(f"Corpus {self.latest_corpus.name} built successfully")
 
         return True
 

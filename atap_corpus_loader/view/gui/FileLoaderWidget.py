@@ -3,7 +3,6 @@ from panel.pane import Markdown
 from panel.widgets import Button, TextInput
 
 from atap_corpus_loader.controller import Controller
-from atap_corpus_loader.controller.data_objects import FileReference
 from atap_corpus_loader.view import ViewWrapperWidget
 from atap_corpus_loader.view.gui import AbstractWidget
 from atap_corpus_loader.view.gui.FileSelectorWidget import FileSelectorWidget

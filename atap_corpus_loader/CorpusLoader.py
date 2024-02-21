@@ -27,7 +27,7 @@ class CorpusLoader(Viewer):
         :param params: passed onto the panel.viewable.Viewer super-class
         """
         super().__init__(**params)
-        self.controller: Controller = Controller(NotifierService(), root_directory)
+        self.controller: Controller = Controller(root_directory)
         self.view: ViewWrapperWidget = ViewWrapperWidget(self.controller)
 
     def __panel__(self):
