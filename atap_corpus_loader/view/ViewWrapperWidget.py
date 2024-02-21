@@ -14,10 +14,10 @@ class ViewWrapperWidget(AbstractWidget):
 
         self.file_loader: FileLoaderWidget = FileLoaderWidget(self, controller)
         self.corpus_display: CorpusInfoWidget = CorpusInfoWidget(controller)
-        self.display_idx: int = 2
 
         self.panel = Tabs(("File Loader", self.file_loader),
                           ("Corpus Overview", self.corpus_display))
+        self.corpus_info_idx: int = len(self.panel) - 1
         self.children = [self.file_loader, self.corpus_display]
 
     def update_display(self):
@@ -37,5 +37,5 @@ class ViewWrapperWidget(AbstractWidget):
         success: bool = self.controller.build_corpus(corpus_name)
         if success:
             self.update_displays()
-            self.panel.active = self.display_idx
+            self.panel.active = self.corpus_info_idx
             self.file_loader.unload_all()
