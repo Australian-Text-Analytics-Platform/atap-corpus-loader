@@ -1,3 +1,5 @@
+from io import BytesIO
+
 from odf import text, teletype
 from odf.opendocument import load
 from pandas import DataFrame
@@ -17,8 +19,8 @@ class ODTLoaderStrategy(FileLoaderStrategy):
         return headers
 
     def get_dataframe(self, headers: list[CorpusHeader]) -> DataFrame:
-        filepath: str = self.file_ref.resolve_real_file_path()
-        odt_doc = load(filepath)
+        file_buf: BytesIO = self.file_ref.get_content_buffer()
+        odt_doc = load(file_buf)
         document = ''
         for element in odt_doc.getElementsByType(text.P):
             document += teletype.extractText(element)

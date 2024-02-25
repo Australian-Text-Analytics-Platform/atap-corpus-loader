@@ -1,3 +1,4 @@
+from io import BytesIO
 from os.path import join, dirname, basename
 from tempfile import NamedTemporaryFile
 from typing import Optional
@@ -38,35 +39,52 @@ class FileReference:
     def __repr__(self):
         return self.get_path()
 
+    def get_content_buffer(self) -> BytesIO:
+        """
+        Provides a BytesIO object which contains the contents of the file. This is used to avoid writing to a
+        temporary file if the FileReference object is an instance of ZipFileReference,
+        as is done in resolve_real_file_path()
+        :return: The BytesIO object containing the file contents
+        :rtype: BytesIO
+        """
+        with open(self.get_path(), 'rb') as bytes_f:
+            buf = BytesIO(bytes_f.read())
+        return buf
+
     def resolve_real_file_path(self) -> str:
         """
         Provides a real addressable path to the file contents. If the FileReference object is an instance of
         ZipFileReference, the file is extracted, placed in a temporary file, and the temporary file path will be provided
         :return: the full addressable path of the file
+        :rtype: str
         """
         return self.get_path()
 
     def get_path(self) -> str:
         """
         :return: the path to the file
+        :rtype: str
         """
         return self.path
 
     def get_directory_path(self) -> str:
         """
         :return: the path to the immediate parent directory of the file
+        :rtype: str
         """
         return self.directory_path
 
     def get_filename(self) -> str:
         """
         :return: the filename of the file, including file extension
+        :rtype: str
         """
         return self.filename
 
     def is_hidden(self) -> bool:
         """
         :return: True if the filename begins with a '.', False otherwise
+        :rtype: bool
         """
         return self.filename.startswith('.')
 
@@ -74,6 +92,7 @@ class FileReference:
         """
         :return: the filetype extension of the file (case-sensitive), excluding the '.'.
         If the filename is 'example.txt', this method will return 'txt'.
+        :rtype: str
         """
         return self.extension
 
@@ -83,6 +102,7 @@ class FileReference:
         is not a real addressable path, just a string representation of where the file is located. A real addressable
         path can be obtained from resolve_real_file_path()
         :return: True if FileReference object is an instance of ZipFileReference, False otherwise
+        :rtype: bool
         """
         return False
 
@@ -110,6 +130,7 @@ class ZipFileReference(FileReference):
     def get_path(self) -> str:
         """
         :return: the joined zip_file_path and internal_path to form the full path of the file
+        :rtype: str
         """
         return self.path
 
@@ -119,19 +140,37 @@ class ZipFileReference(FileReference):
         is not a real addressable path, just a string representation of where the file is located. A real addressable
         path can be obtained from resolve_real_file_path()
         :return: True as FileReference object is an instance of ZipFileReference
+        :rtype: bool
         """
         return True
 
+    def get_content_buffer(self) -> BytesIO:
+        """
+        Provides a BytesIO object which contains the contents of the file. This is used to avoid writing to a
+        temporary file if the FileReference object is an instance of ZipFileReference,
+        as is done in resolve_real_file_path()
+        :return: The BytesIO object containing the file contents
+        :rtype: BytesIO
+        """
+        internal_path = join(self.internal_directory, self.filename)
+        zip_file = ZipFile(self.directory_path)
+        with zip_file.open(internal_path, force_zip64=True) as zip_f:
+            buf = BytesIO(zip_f.read())
+
+        return buf
+
     def resolve_real_file_path(self) -> str:
         """
-        Provides a real addressable path to the file contents. The zipped file is extracted,
-        placed in a temporary file, and the temporary file path is provided
+        Provides a real addressable path to the file contents. If the FileReference object is an instance of
+        ZipFileReference, the file is extracted, placed in a temporary file, and the temporary file path will be provided
         :return: the full addressable path of the file
+        :rtype: str
         """
         internal_path = join(self.internal_directory, self.filename)
         zip_file = ZipFile(self.directory_path)
         with zip_file.open(internal_path, force_zip64=True) as zip_f:
             file_content = zip_f.read()
+
         with NamedTemporaryFile(delete=False) as temp_f:
             temp_f.write(file_content)
             real_path = temp_f.name
@@ -178,6 +217,7 @@ class FileReferenceFactory:
         objects that correspond to the zipped files within the zip archive.
         :param zip_file_path: the path to the zip archive that holds the files to be listed.
         :return: a list of FileReference objects corresponding to the files within the zip archive
+        :rtype: list[FileReference]
         """
         with ZipFile(zip_file_path) as zip_f:
             info_list = zip_f.infolist()

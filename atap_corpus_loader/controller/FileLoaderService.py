@@ -86,10 +86,37 @@ class FileLoaderService:
         self.loaded_meta_files = set()
 
     def get_inferred_corpus_headers(self) -> list[CorpusHeader]:
-        return FileLoaderService._get_file_headers(self.get_loaded_corpus_files())
+        return self._get_file_headers(self.get_loaded_corpus_files())
 
     def get_inferred_meta_headers(self) -> list[CorpusHeader]:
-        return FileLoaderService._get_file_headers(self.get_loaded_meta_files())
+        return self._get_file_headers(self.get_loaded_meta_files())
+
+    def _get_file_headers(self, file_refs: list[FileReference]) -> list[CorpusHeader]:
+        headers: Optional[list[CorpusHeader]] = None
+        for ref in file_refs:
+            file_loader: FileLoaderStrategy = FileLoaderFactory.get_file_loader(ref)
+            try:
+                path_headers: list[CorpusHeader] = file_loader.get_inferred_headers()
+            except UnicodeDecodeError:
+                self.remove_corpus_filepath(ref.get_path())
+                self.remove_meta_filepath(ref.get_path())
+                raise FileLoadError(f"Error loading file at {ref.get_path()}: file is not UTF-8 encoded")
+            except Exception as e:
+                self.remove_corpus_filepath(ref.get_path())
+                self.remove_meta_filepath(ref.get_path())
+                raise FileLoadError(f"Error loading file at {ref.get_path()}: {e}")
+
+            if headers is None:
+                headers = path_headers
+            elif set(headers) != set(path_headers):
+                self.remove_corpus_filepath(ref.get_path())
+                self.remove_meta_filepath(ref.get_path())
+                raise FileLoadError(f"Incompatible data labels in file: {ref.get_path()}")
+
+        if headers is None:
+            headers = []
+
+        return headers
 
     def build_corpus(self, corpus_name: str,
                      corpus_headers: list[CorpusHeader],
@@ -139,28 +166,6 @@ class FileLoaderService:
             raise FileLoadError(f"No file found at: {filepath}")
         if not access(filepath, R_OK):
             raise FileLoadError(f"No permissions to read the file at: {filepath}")
-
-    @staticmethod
-    def _get_file_headers(file_refs: list[FileReference]) -> list[CorpusHeader]:
-        headers: Optional[list[CorpusHeader]] = None
-        for ref in file_refs:
-            file_loader: FileLoaderStrategy = FileLoaderFactory.get_file_loader(ref)
-            try:
-                path_headers: list[CorpusHeader] = file_loader.get_inferred_headers()
-            except UnicodeDecodeError:
-                raise FileLoadError(f"Error loading file at {ref.get_path()}: file is not UTF-8 encoded")
-            except Exception as e:
-                raise FileLoadError(f"Error loading file at {ref.get_path()}: {e}")
-
-            if headers is None:
-                headers = path_headers
-            elif set(headers) != set(path_headers):
-                raise FileLoadError(f"Incompatible headers within loaded files")
-
-        if headers is None:
-            headers = []
-
-        return headers
 
     @staticmethod
     def _get_concatenated_dataframe(file_refs: list[FileReference], headers: list[CorpusHeader]) -> DataFrame:

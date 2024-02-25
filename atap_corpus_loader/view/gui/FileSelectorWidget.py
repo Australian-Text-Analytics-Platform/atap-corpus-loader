@@ -73,7 +73,7 @@ class FileSelectorWidget(AbstractWidget):
         file_refs: list[FileReference] = self.controller.retrieve_all_files()
 
         filtered_refs: list[FileReference] = []
-        filter_str = f"*{self.filter_input.value_input}*"
+        filter_str = f"*{self.filter_input.value}*"
         skip_hidden: bool = not self.show_hidden_files_checkbox.value
         for ref in file_refs:
             if ref.get_extension().upper() not in selected_file_types:

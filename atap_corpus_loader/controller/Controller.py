@@ -1,4 +1,7 @@
+import logging
+from logging.handlers import RotatingFileHandler
 from io import BytesIO
+from os.path import abspath, join, dirname
 from typing import Optional, Callable
 
 from atap_corpus.corpus.corpora import UniqueCorpora
@@ -14,12 +17,15 @@ from atap_corpus_loader.view.notifications import NotifierService
 
 
 class Controller:
+    LOGGER: logging.Logger = None
     """
     Provides methods for indirection between the corpus loading logic and the user interface
     Holds a reference to the latest corpus built.
     The build_callback_fn will be called when a corpus is built (can be set using set_build_callback()).
     """
     def __init__(self, root_directory: str):
+        Controller.setup_logger()
+
         self.file_loader_service: FileLoaderService = FileLoaderService(root_directory)
         self.oni_api_service: OniAPIService = OniAPIService()
         self.corpus_export_service: CorpusExportService = CorpusExportService()
@@ -39,10 +45,36 @@ class Controller:
         self.build_callback_args: list = []
         self.build_callback_kwargs: dict = {}
 
+    @staticmethod
+    def setup_logger():
+        if Controller.LOGGER is not None:
+            return
+        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        log_file_location = abspath(join(dirname(__file__), '..', 'log.txt'))
+        # Max size is ~10MB with 1 backup, so a max size of ~20MB for log files
+        max_bytes: int = 10000000
+        backup_count: int = 1
+        file_handler = RotatingFileHandler(log_file_location, maxBytes=max_bytes, backupCount=backup_count)
+        file_handler.setLevel(logging.DEBUG)
+        file_handler.setFormatter(formatter)
+
+        console_handler = logging.StreamHandler()
+        console_handler.setLevel(logging.ERROR)
+        console_handler.setFormatter(formatter)
+
+        Controller.LOGGER = logging.getLogger(__name__)
+        Controller.LOGGER.setLevel(logging.DEBUG)
+        Controller.LOGGER.addHandler(file_handler)
+        Controller.LOGGER.addHandler(console_handler)
+
+        Controller.LOGGER.info('Logger started')
+
     def display_error(self, error_msg: str):
+        Controller.LOGGER.error(f"Error displayed: {error_msg}")
         self.notifier_service.notify_error(error_msg)
 
     def display_success(self, success_msg: str):
+        Controller.LOGGER.info(f"Success displayed: {success_msg}")
         self.notifier_service.notify_success(success_msg)
 
     def set_build_callback(self, callback: Callable, *args, **kwargs):
@@ -71,7 +103,11 @@ class Controller:
                 self.file_loader_service.remove_corpus_filepath(filepath)
                 self.display_error(str(e))
                 return False
-        self.corpus_headers = self.file_loader_service.get_inferred_corpus_headers()
+        try:
+            self.corpus_headers = self.file_loader_service.get_inferred_corpus_headers()
+        except FileLoadError as e:
+            self.display_error(str(e))
+            return False
 
         self.display_success("Corpus files loaded successfully")
         return True
@@ -84,7 +120,11 @@ class Controller:
                 self.file_loader_service.remove_meta_filepath(filepath)
                 self.display_error(str(e))
                 return False
-        self.meta_headers = self.file_loader_service.get_inferred_meta_headers()
+        try:
+            self.meta_headers = self.file_loader_service.get_inferred_meta_headers()
+        except FileLoadError as e:
+            self.display_error(str(e))
+            return False
 
         self.display_success("Metadata files loaded successfully")
         return True
@@ -100,9 +140,11 @@ class Controller:
                                                                        self.meta_headers, self.text_header,
                                                                        self.corpus_link_header, self.meta_link_header)
         except FileLoadError as e:
+            Controller.LOGGER.exception("Exception while building corpus: ")
             self.display_error(str(e))
             return False
         except Exception as e:
+            Controller.LOGGER.exception("Exception while building corpus: ")
             self.display_error(f"Unexpected error building corpus: {e}")
             return False
 
@@ -110,6 +152,7 @@ class Controller:
             if self.build_callback_fn is not None:
                 self.build_callback_fn(*self.build_callback_args, **self.build_callback_kwargs)
         except Exception as e:
+            Controller.LOGGER.exception("Exception while calling build callback: ")
             self.display_error(f"Build callback error: {e}")
             return False
 

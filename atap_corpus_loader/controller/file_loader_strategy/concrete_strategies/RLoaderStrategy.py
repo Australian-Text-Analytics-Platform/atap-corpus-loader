@@ -1,3 +1,6 @@
+from io import BytesIO
+from tempfile import NamedTemporaryFile
+
 from pandas import DataFrame, concat
 from pyreadr import list_objects, read_r
 from pyreadr.librdata import PyreadrError, LibrdataError
@@ -9,9 +12,10 @@ from atap_corpus_loader.controller.file_loader_strategy.FileLoaderStrategy impor
 
 class RLoaderStrategy(FileLoaderStrategy):
     def get_inferred_headers(self) -> list[CorpusHeader]:
-        filepath: str = self.file_ref.resolve_real_file_path()
+        real_path: str = self.file_ref.resolve_real_file_path()
+
         try:
-            file_objects: list[dict] = list_objects(filepath)
+            file_objects: list[dict] = list_objects(real_path)
         except (PyreadrError, LibrdataError) as e:
             raise FileLoadError(f"Error loading R file: {str(e)}")
 
@@ -31,9 +35,10 @@ class RLoaderStrategy(FileLoaderStrategy):
         return headers
 
     def get_dataframe(self, headers: list[CorpusHeader]) -> DataFrame:
-        filepath: str = self.file_ref.resolve_real_file_path()
+        real_path: str = self.file_ref.resolve_real_file_path()
+
         try:
-            object_df_dict: dict = read_r(filepath)
+            object_df_dict: dict = read_r(real_path)
         except (PyreadrError, LibrdataError) as e:
             raise FileLoadError(f"Error loading R file: {str(e)}")
 
