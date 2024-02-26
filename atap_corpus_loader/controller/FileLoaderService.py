@@ -5,9 +5,16 @@ from typing import Optional, Iterator
 
 from atap_corpus.corpus.corpus import DataFrameCorpus
 from pandas import DataFrame, merge, concat
+from panel.widgets import Tqdm
 
 from atap_corpus_loader.controller.data_objects import FileReference, CorpusHeader, FileReferenceFactory
 from atap_corpus_loader.controller.file_loader_strategy import FileLoaderStrategy, FileLoaderFactory, FileLoadError
+
+"""
+Some methods in this module utilise Tqdm from the panel library, which breaks the Model-View separation.
+This has been done out of necessity for a progress bar for particular operations.
+The panel Tqdm is a wrapper for the standard tqdm module and can be replaced if needed.
+"""
 
 
 class FileLoaderService:
@@ -81,9 +88,15 @@ class FileLoaderService:
         if file_ref in self.loaded_meta_files:
             self.loaded_meta_files.remove(file_ref)
 
+    def remove_loaded_corpus_files(self):
+        self.loaded_corpus_files.clear()
+
+    def remove_loaded_meta_files(self):
+        self.loaded_meta_files.clear()
+
     def remove_all_files(self):
-        self.loaded_corpus_files = set()
-        self.loaded_meta_files = set()
+        self.remove_loaded_corpus_files()
+        self.remove_loaded_meta_files()
 
     def get_inferred_corpus_headers(self) -> list[CorpusHeader]:
         return self._get_file_headers(self.get_loaded_corpus_files())
@@ -123,9 +136,16 @@ class FileLoaderService:
                      meta_headers: list[CorpusHeader],
                      text_header: CorpusHeader,
                      corpus_link_header: Optional[CorpusHeader],
-                     meta_link_header: Optional[CorpusHeader]) -> DataFrameCorpus:
-        corpus_df: DataFrame = FileLoaderService._get_concatenated_dataframe(self.get_loaded_corpus_files(), corpus_headers)
-        meta_df: DataFrame = FileLoaderService._get_concatenated_dataframe(self.get_loaded_meta_files(), meta_headers)
+                     meta_link_header: Optional[CorpusHeader],
+                     tqdm_obj: Tqdm) -> DataFrameCorpus:
+        corpus_df: DataFrame = FileLoaderService._get_concatenated_dataframe(self.get_loaded_corpus_files(),
+                                                                             corpus_headers,
+                                                                             tqdm_obj,
+                                                                             "Building corpus")
+        meta_df: DataFrame = FileLoaderService._get_concatenated_dataframe(self.get_loaded_meta_files(),
+                                                                           meta_headers,
+                                                                           tqdm_obj,
+                                                                           "Building metadata")
 
         load_corpus: bool = len(corpus_headers) > 0
         load_meta: bool = len(meta_headers) > 0
@@ -168,11 +188,14 @@ class FileLoaderService:
             raise FileLoadError(f"No permissions to read the file at: {filepath}")
 
     @staticmethod
-    def _get_concatenated_dataframe(file_refs: list[FileReference], headers: list[CorpusHeader]) -> DataFrame:
+    def _get_concatenated_dataframe(file_refs: list[FileReference],
+                                    headers: list[CorpusHeader],
+                                    tqdm_obj: Tqdm,
+                                    loading_msg: str) -> DataFrame:
         if len(file_refs) == 0:
             return DataFrame()
         df_list: list[DataFrame] = []
-        for ref in file_refs:
+        for ref in tqdm_obj(file_refs, desc=loading_msg, unit="files", leave=False):
             file_loader: FileLoaderStrategy = FileLoaderFactory.get_file_loader(ref)
             try:
                 path_df: DataFrame = file_loader.get_dataframe(headers)

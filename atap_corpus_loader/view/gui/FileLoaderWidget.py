@@ -45,7 +45,8 @@ class FileLoaderWidget(AbstractWidget):
                     Row(self.load_as_corpus_button,
                         self.load_as_meta_button),
                     Row(self.corpus_name_input,
-                        self.build_button)
+                        self.build_button),
+                    Row(self.controller.tqdm_obj)
                 ),
                     self.loaded_file_info,
                     HSpacer(),
