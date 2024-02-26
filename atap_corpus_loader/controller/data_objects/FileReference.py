@@ -108,11 +108,13 @@ class FileReference:
 
 
 class ZipFileReference(FileReference):
-    def __init__(self, zip_file_path: str, internal_path: str):
+    def __init__(self, zip_file: ZipFile, zip_file_path: str, internal_path: str):
         """
+        :param zip_file: the ZipFile object corresponding to the zip file that holds this zipped file. This allows multiple zipped files to share the same ZipFile object
         :param zip_file_path: the path to the zip file that holds this zipped file. This can be absolute or relative to the root_directory specified in CorpusLoader
         :param internal_path: the path within the zip file to this zipped file
         """
+        self.zip_file = zip_file
         self.path: str = join(zip_file_path, internal_path)
         self.path_hash: int = hash(self.path)
         self.directory_path: str = zip_file_path
@@ -124,8 +126,6 @@ class ZipFileReference(FileReference):
             self.extension = ''
         else:
             self.extension = self.filename.split('.')[-1]
-
-        self.zip_file = None
 
     def get_path(self) -> str:
         """
@@ -153,8 +153,7 @@ class ZipFileReference(FileReference):
         :rtype: BytesIO
         """
         internal_path = join(self.internal_directory, self.filename)
-        zip_file = ZipFile(self.directory_path)
-        with zip_file.open(internal_path, force_zip64=True) as zip_f:
+        with self.zip_file.open(internal_path, force_zip64=True) as zip_f:
             buf = BytesIO(zip_f.read())
 
         return buf
@@ -167,8 +166,7 @@ class ZipFileReference(FileReference):
         :rtype: str
         """
         internal_path = join(self.internal_directory, self.filename)
-        zip_file = ZipFile(self.directory_path)
-        with zip_file.open(internal_path, force_zip64=True) as zip_f:
+        with self.zip_file.open(internal_path, force_zip64=True) as zip_f:
             file_content = zip_f.read()
 
         with NamedTemporaryFile(delete=False) as temp_f:
@@ -219,23 +217,22 @@ class FileReferenceFactory:
         :return: a list of FileReference objects corresponding to the files within the zip archive
         :rtype: list[FileReference]
         """
-        with ZipFile(zip_file_path) as zip_f:
-            info_list = zip_f.infolist()
+        zip_file = ZipFile(zip_file_path)
 
         file_refs: list[FileReference] = []
-        for info in info_list:
+        for info in zip_file.infolist():
             if info.is_dir():
                 continue
-            zip_ref: FileReference = self._get_single_zip_file_ref(zip_file_path, info.filename)
+            zip_ref: FileReference = self._get_single_zip_file_ref(zip_file, zip_file_path, info.filename)
             file_refs.append(zip_ref)
 
         return file_refs
 
-    def _get_single_zip_file_ref(self, zip_file_path: str, internal_path: str) -> ZipFileReference:
+    def _get_single_zip_file_ref(self, zip_file: ZipFile, zip_file_path: str, internal_path: str) -> ZipFileReference:
         full_path: str = join(zip_file_path, internal_path)
         cached_ref: Optional[ZipFileReference] = self.file_ref_cache.get(full_path)
         if cached_ref is None:
-            cached_ref = ZipFileReference(zip_file_path, internal_path)
+            cached_ref = ZipFileReference(zip_file, zip_file_path, internal_path)
             self.file_ref_cache[full_path] = cached_ref
 
         return cached_ref
