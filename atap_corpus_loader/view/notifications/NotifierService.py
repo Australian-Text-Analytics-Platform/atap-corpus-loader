@@ -6,7 +6,7 @@ class NotifierService:
     Provides an object to handle GUI notifications as an indirection from the Panel library notifications.
     """
     def __init__(self):
-        panel.config.notifications = True
+        panel.extension(notifications=True)
 
     def notify_error(self, error_msg: str):
         """
