@@ -40,6 +40,7 @@ To publish a new version:
 ```shell
 poetry config pypi-token.pypi <TOKEN>
 poetry version minor
+poetry build
 poetry publish
 ```
 
