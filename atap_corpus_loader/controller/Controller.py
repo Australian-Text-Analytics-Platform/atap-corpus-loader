@@ -1,35 +1,36 @@
-from glob import glob
+import logging
+from logging.handlers import RotatingFileHandler
 from io import BytesIO
-from os.path import join, isdir, basename, dirname
+from os.path import abspath, join, dirname
 from typing import Optional, Callable
 
 from atap_corpus.corpus.corpora import UniqueCorpora
 from atap_corpus.corpus.corpus import DataFrameCorpus
 from pandas import DataFrame
+from panel.widgets import Tqdm
 
 from atap_corpus_loader.controller.CorpusExportService import CorpusExportService
 from atap_corpus_loader.controller.FileLoaderService import FileLoaderService, FileLoadError
 from atap_corpus_loader.controller.OniAPIService import OniAPIService
-from atap_corpus_loader.controller.data_objects import FileReference, ZipFileReference, ViewCorpusInfo
-from atap_corpus_loader.controller.data_objects.CorpusHeader import CorpusHeader
-from atap_corpus_loader.controller.data_objects.DataType import DataType
+from atap_corpus_loader.controller.data_objects import FileReference, ViewCorpusInfo, CorpusHeader, DataType
 from atap_corpus_loader.controller.file_loader_strategy.FileLoaderFactory import ValidFileType
 from atap_corpus_loader.view.notifications import NotifierService
 
 
 class Controller:
+    LOGGER: logging.Logger = None
     """
     Provides methods for indirection between the corpus loading logic and the user interface
     Holds a reference to the latest corpus built.
     The build_callback_fn will be called when a corpus is built (can be set using set_build_callback()).
     """
-    def __init__(self, notifier_service: NotifierService, root_directory: str):
-        self.root_directory: str = root_directory
+    def __init__(self, root_directory: str):
+        Controller.setup_logger()
 
-        self.file_loader_service: FileLoaderService = FileLoaderService()
+        self.file_loader_service: FileLoaderService = FileLoaderService(root_directory)
         self.oni_api_service: OniAPIService = OniAPIService()
         self.corpus_export_service: CorpusExportService = CorpusExportService()
-        self.notifier_service: NotifierService = notifier_service
+        self.notifier_service: NotifierService = NotifierService()
 
         self.text_header: Optional[CorpusHeader] = None
         self.corpus_link_header: Optional[CorpusHeader] = None
@@ -45,10 +46,39 @@ class Controller:
         self.build_callback_args: list = []
         self.build_callback_kwargs: dict = {}
 
+        self.tqdm_obj = Tqdm()
+        self.tqdm_obj.visible = False
+
+    @staticmethod
+    def setup_logger():
+        if Controller.LOGGER is not None:
+            return
+        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        log_file_location = abspath(join(dirname(__file__), '..', 'log.txt'))
+        # Max size is ~10MB with 1 backup, so a max size of ~20MB for log files
+        max_bytes: int = 10000000
+        backup_count: int = 1
+        file_handler = RotatingFileHandler(log_file_location, maxBytes=max_bytes, backupCount=backup_count)
+        file_handler.setLevel(logging.DEBUG)
+        file_handler.setFormatter(formatter)
+
+        console_handler = logging.StreamHandler()
+        console_handler.setLevel(logging.ERROR)
+        console_handler.setFormatter(formatter)
+
+        Controller.LOGGER = logging.getLogger(__name__)
+        Controller.LOGGER.setLevel(logging.DEBUG)
+        Controller.LOGGER.addHandler(file_handler)
+        Controller.LOGGER.addHandler(console_handler)
+
+        Controller.LOGGER.info('Logger started')
+
     def display_error(self, error_msg: str):
+        Controller.LOGGER.error(f"Error displayed: {error_msg}")
         self.notifier_service.notify_error(error_msg)
 
     def display_success(self, success_msg: str):
+        Controller.LOGGER.info(f"Success displayed: {success_msg}")
         self.notifier_service.notify_success(success_msg)
 
     def set_build_callback(self, callback: Callable, *args, **kwargs):
@@ -69,33 +99,44 @@ class Controller:
             return None
         return self.latest_corpus.to_dataframe()
 
-    def load_corpus_from_filepaths(self, filepath_ls: list[FileReference]) -> bool:
-        for filepath in filepath_ls:
+    def load_corpus_from_filepaths(self, filepath_ls: list[str]) -> bool:
+        for filepath in self.tqdm_obj(filepath_ls, desc="Loading corpus files", unit="files", leave=False):
             try:
-                self.file_loader_service.add_corpus_filepath(filepath)
-                self.corpus_headers = self.file_loader_service.get_inferred_corpus_headers()
+                self.file_loader_service.add_corpus_file(filepath)
             except FileLoadError as e:
-                self.file_loader_service.remove_corpus_filepath(filepath)
                 self.display_error(str(e))
+                self.unload_filepaths(filepath_ls)
                 return False
+        try:
+            self.corpus_headers = self.file_loader_service.get_inferred_corpus_headers()
+        except FileLoadError as e:
+            self.display_error(str(e))
+            self.unload_filepaths(filepath_ls)
+            return False
 
         self.display_success("Corpus files loaded successfully")
         return True
 
-    def load_meta_from_filepaths(self, filepath_ls: list[FileReference]) -> bool:
-        for filepath in filepath_ls:
+    def load_meta_from_filepaths(self, filepath_ls: list[str]) -> bool:
+        for filepath in self.tqdm_obj(filepath_ls, desc="Loading metadata files", unit="files", leave=False):
             try:
-                self.file_loader_service.add_meta_filepath(filepath)
-                self.meta_headers = self.file_loader_service.get_inferred_meta_headers()
+                self.file_loader_service.add_meta_file(filepath)
             except FileLoadError as e:
-                self.file_loader_service.remove_meta_filepath(filepath)
                 self.display_error(str(e))
+                self.unload_filepaths(filepath_ls)
                 return False
+        try:
+            self.meta_headers = self.file_loader_service.get_inferred_meta_headers()
+        except FileLoadError as e:
+            self.display_error(str(e))
+            self.unload_filepaths(filepath_ls)
+            return False
 
         self.display_success("Metadata files loaded successfully")
         return True
 
     def build_corpus(self, corpus_name: str) -> bool:
+        self.tqdm_obj.visible = True
         if self.is_meta_added():
             if (self.corpus_link_header is None) or (self.meta_link_header is None):
                 self.display_error("Cannot build without link headers set. Select a corpus header and a meta header as linking headers in the dropdowns")
@@ -104,11 +145,14 @@ class Controller:
         try:
             self.latest_corpus = self.file_loader_service.build_corpus(corpus_name, self.corpus_headers,
                                                                        self.meta_headers, self.text_header,
-                                                                       self.corpus_link_header, self.meta_link_header)
+                                                                       self.corpus_link_header, self.meta_link_header,
+                                                                       self.tqdm_obj)
         except FileLoadError as e:
+            Controller.LOGGER.exception("Exception while building corpus: ")
             self.display_error(str(e))
             return False
         except Exception as e:
+            Controller.LOGGER.exception("Exception while building corpus: ")
             self.display_error(f"Unexpected error building corpus: {e}")
             return False
 
@@ -116,11 +160,13 @@ class Controller:
             if self.build_callback_fn is not None:
                 self.build_callback_fn(*self.build_callback_args, **self.build_callback_kwargs)
         except Exception as e:
+            Controller.LOGGER.exception("Exception while calling build callback: ")
             self.display_error(f"Build callback error: {e}")
             return False
 
-        self.display_success(f"Corpus {self.latest_corpus.name} built successfully")
         self.corpora.add(self.latest_corpus)
+        self.display_success(f"Corpus {self.latest_corpus.name} built successfully")
+        self.tqdm_obj.visible = False
 
         return True
 
@@ -139,8 +185,8 @@ class Controller:
             for header_name, dtype_obj in corpus_as_df.dtypes.items():
                 try:
                     dtype = DataType(str(dtype_obj).lower()).name
-                except KeyError:
-                    dtype = str(dtype_obj).upper()
+                except ValueError:
+                    dtype = DataType.TEXT.name
                 dtypes.append(dtype)
                 headers.append(str(header_name))
 
@@ -179,7 +225,7 @@ class Controller:
 
         return file_counts
 
-    def unload_filepaths(self, filepath_ls: list[FileReference]):
+    def unload_filepaths(self, filepath_ls: list[str]):
         for filepath in filepath_ls:
             self.file_loader_service.remove_meta_filepath(filepath)
             self.file_loader_service.remove_corpus_filepath(filepath)
@@ -201,23 +247,17 @@ class Controller:
         self.corpus_link_header = None
         self.meta_link_header = None
 
-    def get_loaded_corpus_files(self) -> list[FileReference]:
-        return self.file_loader_service.get_loaded_corpus_files()
+    def get_loaded_corpus_files(self) -> set[FileReference]:
+        return self.file_loader_service.get_loaded_corpus_files_set()
 
-    def get_loaded_meta_files(self) -> list[FileReference]:
-        return self.file_loader_service.get_loaded_meta_files()
+    def get_loaded_meta_files(self) -> set[FileReference]:
+        return self.file_loader_service.get_loaded_meta_files_set()
 
     def get_corpus_headers(self) -> list[CorpusHeader]:
         return self.corpus_headers
 
     def get_meta_headers(self) -> list[CorpusHeader]:
         return self.meta_headers
-
-    def get_inferred_corpus_headers(self) -> list[CorpusHeader]:
-        return self.file_loader_service.get_inferred_corpus_headers()
-
-    def get_inferred_meta_headers(self) -> list[CorpusHeader]:
-        return self.file_loader_service.get_inferred_meta_headers()
 
     def get_text_header(self) -> Optional[CorpusHeader]:
         return self.text_header
@@ -296,25 +336,7 @@ class Controller:
         self.meta_link_header = None
 
     def retrieve_all_files(self) -> list[FileReference]:
-        all_relative_paths: list[str] = glob("**", root_dir=self.root_directory, recursive=True)
-        all_full_paths: list[str] = []
-        for path in all_relative_paths:
-            full_path = join(self.root_directory, path)
-            if not isdir(full_path):
-                all_full_paths.append(join(self.root_directory, path))
-
-        all_file_refs: list[FileReference] = []
-        for idx, full_path in enumerate(all_full_paths):
-            if full_path.endswith('.zip'):
-                zip_file_refs: list[FileReference] = ZipFileReference.get_zip_internal_file_refs(self.root_directory, full_path)
-                all_file_refs.extend(zip_file_refs)
-            else:
-                file_ref = FileReference(self.root_directory, dirname(full_path), basename(full_path))
-                all_file_refs.append(file_ref)
-
-        all_file_refs.sort(key=lambda ref: ref.get_full_path())
-
-        return all_file_refs
+        return self.file_loader_service.get_all_files()
 
     def get_export_types(self) -> list[str]:
         return self.corpus_export_service.get_filetypes()

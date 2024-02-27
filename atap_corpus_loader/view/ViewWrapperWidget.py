@@ -1,8 +1,7 @@
 from panel import Tabs
 
 from atap_corpus_loader.controller import Controller
-from atap_corpus_loader.controller.data_objects import FileReference
-from atap_corpus_loader.view.gui import AbstractWidget, FileLoaderWidget, OniLoaderWidget, CorpusInfoWidget
+from atap_corpus_loader.view.gui import AbstractWidget, FileLoaderWidget, CorpusInfoWidget
 
 
 class ViewWrapperWidget(AbstractWidget):
@@ -14,24 +13,22 @@ class ViewWrapperWidget(AbstractWidget):
         self.controller: Controller = controller
 
         self.file_loader: FileLoaderWidget = FileLoaderWidget(self, controller)
-        self.oni_loader: OniLoaderWidget = OniLoaderWidget(controller)
         self.corpus_display: CorpusInfoWidget = CorpusInfoWidget(controller)
-        self.display_idx: int = 2
 
         self.panel = Tabs(("File Loader", self.file_loader),
-                          ("Oni Loader", self.oni_loader),
                           ("Corpus Overview", self.corpus_display))
-        self.children = [self.file_loader, self.oni_loader, self.corpus_display]
+        self.corpus_info_idx: int = len(self.panel) - 1
+        self.children = [self.file_loader, self.corpus_display]
 
     def update_display(self):
         pass
 
-    def load_corpus_from_filepaths(self, filepath_ls: list[FileReference]) -> bool:
+    def load_corpus_from_filepaths(self, filepath_ls: list[str]) -> bool:
         success = self.controller.load_corpus_from_filepaths(filepath_ls)
         self.update_displays()
         return success
 
-    def load_meta_from_filepaths(self, filepath_ls: list[FileReference]) -> bool:
+    def load_meta_from_filepaths(self, filepath_ls: list[str]) -> bool:
         success = self.controller.load_meta_from_filepaths(filepath_ls)
         self.update_displays()
         return success
@@ -40,5 +37,5 @@ class ViewWrapperWidget(AbstractWidget):
         success: bool = self.controller.build_corpus(corpus_name)
         if success:
             self.update_displays()
-            self.panel.active = self.display_idx
+            self.panel.active = self.corpus_info_idx
             self.file_loader.unload_all()

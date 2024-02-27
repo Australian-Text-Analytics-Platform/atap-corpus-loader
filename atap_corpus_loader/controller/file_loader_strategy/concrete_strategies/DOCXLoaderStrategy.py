@@ -1,3 +1,5 @@
+from io import BytesIO
+
 from docx import Document
 from pandas import DataFrame
 
@@ -16,11 +18,9 @@ class DOCXLoaderStrategy(FileLoaderStrategy):
         return headers
 
     def get_dataframe(self, headers: list[CorpusHeader]) -> DataFrame:
-        filepath: str = self.file_ref.resolve_real_file_path()
-        docx_doc = Document(filepath)
-        document = ''
-        for paragraph in docx_doc.paragraphs:
-            document += paragraph.text + '\n'
+        file_buf: BytesIO = self.file_ref.get_content_buffer()
+        docx_doc = Document(file_buf)
+        document = ''.join([p.text for p in docx_doc.paragraphs])
 
         included_headers: list[str] = [header.name for header in headers if header.include]
         file_data = {}
@@ -29,9 +29,8 @@ class DOCXLoaderStrategy(FileLoaderStrategy):
         if 'filename' in included_headers:
             file_data['filename'] = [self.file_ref.get_filename()]
         if 'filepath' in included_headers:
-            file_data['filepath'] = [self.file_ref.get_full_path()]
+            file_data['filepath'] = [self.file_ref.get_path()]
 
-        df: DataFrame = DataFrame(file_data)
-        dtypes_applied_df: DataFrame = FileLoaderStrategy._apply_selected_dtypes(df, headers)
+        df: DataFrame = DataFrame(file_data, dtype='string')
 
-        return dtypes_applied_df
+        return df

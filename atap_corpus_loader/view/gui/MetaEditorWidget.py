@@ -22,16 +22,16 @@ class MetaEditorWidget(AbstractWidget):
         self.corpus_table_container = GridBox(styles=MetaEditorWidget.TABLE_BORDER_STYLE)
         self.meta_table_container = GridBox(styles=MetaEditorWidget.TABLE_BORDER_STYLE)
 
-        self.corpus_table_title = Markdown("## Corpus header editor")
-        self.meta_table_title = Markdown("## Metadata header editor")
+        self.corpus_table_title = Markdown("## Corpus editor")
+        self.meta_table_title = Markdown("## Metadata editor")
 
-        self.text_header_dropdown = Select(name='Select document header', width=200)
+        self.text_header_dropdown = Select(name='Select document label', width=200)
         text_header_fn = bind(self._set_text_header, self.text_header_dropdown)
 
         self.link_row = Row(visible=False, styles=MetaEditorWidget.ERROR_BORDER_STYLE)
-        self.corpus_link_dropdown = Select(name='Select corpus linking header', width=200)
+        self.corpus_link_dropdown = Select(name='Select corpus linking label', width=200)
         corpus_link_fn = bind(self._set_corpus_link_header, self.corpus_link_dropdown)
-        self.meta_link_dropdown = Select(name='Select metadata linking header', width=200)
+        self.meta_link_dropdown = Select(name='Select metadata linking label', width=200)
         meta_link_fn = bind(self._set_meta_link_header, self.meta_link_dropdown)
         link_emoji = '\U0001F517'
         self.link_markdown = Str(link_emoji, styles={"font-size": "2em", "margin": "auto"})
@@ -73,7 +73,7 @@ class MetaEditorWidget(AbstractWidget):
         all_datatypes: list[str] = self.controller.get_all_datatypes()
         text_header: Optional[CorpusHeader] = self.controller.get_text_header()
 
-        table_cells: list = [Markdown('**Header name**', align='start'),
+        table_cells: list = [Markdown('**Data label**', align='start'),
                              Markdown('**Datatype**', align='start'),
                              Markdown('**Include**', align='center')]
         if self.controller.is_meta_added():
