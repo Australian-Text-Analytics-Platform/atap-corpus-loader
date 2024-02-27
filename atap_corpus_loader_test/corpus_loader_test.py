@@ -175,24 +175,5 @@ class TestFileTypes(unittest.TestCase):
         self._test_file_filter(corpus_filter, None)
 
 
-# class TestCorpusLoader(unittest.TestCase):
-#     TEST_DIR: str = join(dirname(realpath(__file__)), 'test_data')
-#
-#     def setUp(self):
-#         self.corpus_loader: CorpusLoader = CorpusLoader(TestCorpusLoader.TEST_DIR)
-#
-#     def test_bad_dir(self):
-#         corpus_loader: CorpusLoader = CorpusLoader("this_isnt_a_directory")
-#
-#     def test_build_callback(self):
-#         pass
-#
-#     def test_get_corpora(self):
-#         pass
-#
-#     def test_get_corpus(self):
-#         pass
-
-
 if __name__ == '__main__':
     unittest.main()
