@@ -19,12 +19,9 @@ class CorpusLoader(Viewer):
 
     def __init__(self, root_directory: str, **params):
         """
-
-        :param root_directory: The root directory that the file selector will search for files to load.
-        The argument must be a string. The directory may be non-existent at initialisation time,
-        but no files will be displayed until it exists.
-        :type root_directory: str
+        :param root_directory: The root directory that the file selector will search for files to load. The argument must be a string. The directory may be non-existent at initialisation time, but no files will be displayed until it exists.
         :param params: passed onto the panel.viewable.Viewer super-class
+        :type root_directory: str
         """
         super().__init__(**params)
         self.controller: Controller = Controller(root_directory)
@@ -39,14 +36,22 @@ class CorpusLoader(Viewer):
         :param callback: the function to call when a corpus has been built
         :param args: positional arguments to pass onto the callback function
         :param kwargs: keyword arguments to pass onto the callback function
+        :type callback: Callable
+        :type args: Any
+        :type kwargs: Any
         """
         self.controller.set_build_callback(callback, *args, **kwargs)
 
     def get_corpus(self) -> Optional[DataFrameCorpus]:
         """
         :return: the last DataFrameCorpus object that was built. If none have been built, returns None.
+        :rtype: Optional[DataFrameCorpus]
         """
         return self.controller.get_latest_corpus()
 
     def get_corpora(self) -> list[DataFrameCorpus]:
+        """
+        :return: a list of DataFrameCorpus objects that have been built using this CorpusLoader
+        :rtype: list[DataFrameCorpus]
+        """
         return self.controller.get_corpora()
