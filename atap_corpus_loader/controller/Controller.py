@@ -99,33 +99,23 @@ class Controller:
             return None
         return self.latest_corpus.to_dataframe()
 
-    def load_corpus_from_filepaths(self, filepath_ls: list[str]) -> bool:
-        for filepath in self.tqdm_obj(filepath_ls, desc="Loading corpus files", unit="files", leave=False):
-            try:
-                self.file_loader_service.add_corpus_file(filepath)
-            except FileLoadError as e:
-                self.display_error(str(e))
-                self.unload_filepaths(filepath_ls)
-                return False
+    def load_corpus_from_filepaths(self, filepath_ls: list[str], include_hidden: bool) -> bool:
         try:
+            self.file_loader_service.add_corpus_files(filepath_ls, include_hidden, self.tqdm_obj)
             self.corpus_headers = self.file_loader_service.get_inferred_corpus_headers()
         except FileLoadError as e:
             self.display_error(str(e))
             self.unload_filepaths(filepath_ls)
             return False
+        print(self.file_loader_service.get_loaded_corpus_files())
 
         self.display_success("Corpus files loaded successfully")
         return True
 
-    def load_meta_from_filepaths(self, filepath_ls: list[str]) -> bool:
-        for filepath in self.tqdm_obj(filepath_ls, desc="Loading metadata files", unit="files", leave=False):
-            try:
-                self.file_loader_service.add_meta_file(filepath)
-            except FileLoadError as e:
-                self.display_error(str(e))
-                self.unload_filepaths(filepath_ls)
-                return False
+
+    def load_meta_from_filepaths(self, filepath_ls: list[str], include_hidden: bool) -> bool:
         try:
+            self.file_loader_service.add_meta_files(filepath_ls, include_hidden, self.tqdm_obj)
             self.meta_headers = self.file_loader_service.get_inferred_meta_headers()
         except FileLoadError as e:
             self.display_error(str(e))
@@ -136,12 +126,12 @@ class Controller:
         return True
 
     def build_corpus(self, corpus_name: str) -> bool:
-        self.tqdm_obj.visible = True
         if self.is_meta_added():
             if (self.corpus_link_header is None) or (self.meta_link_header is None):
                 self.display_error("Cannot build without link headers set. Select a corpus header and a meta header as linking headers in the dropdowns")
                 return False
 
+        self.tqdm_obj.visible = True
         try:
             self.latest_corpus = self.file_loader_service.build_corpus(corpus_name, self.corpus_headers,
                                                                        self.meta_headers, self.text_header,
@@ -150,10 +140,12 @@ class Controller:
         except FileLoadError as e:
             Controller.LOGGER.exception("Exception while building corpus: ")
             self.display_error(str(e))
+            self.tqdm_obj.visible = False
             return False
         except Exception as e:
             Controller.LOGGER.exception("Exception while building corpus: ")
             self.display_error(f"Unexpected error building corpus: {e}")
+            self.tqdm_obj.visible = False
             return False
 
         try:
@@ -162,6 +154,7 @@ class Controller:
         except Exception as e:
             Controller.LOGGER.exception("Exception while calling build callback: ")
             self.display_error(f"Build callback error: {e}")
+            self.tqdm_obj.visible = False
             return False
 
         self.corpora.add(self.latest_corpus)
@@ -280,13 +273,6 @@ class Controller:
     def is_meta_added(self) -> bool:
         return len(self.meta_headers) > 0
 
-    def get_loaded_file_count(self) -> int:
-        corpus_file_set = set(self.file_loader_service.get_loaded_corpus_files())
-        meta_file_set = set(self.file_loader_service.get_loaded_meta_files())
-        file_set = corpus_file_set | meta_file_set
-
-        return len(file_set)
-
     def update_corpus_header(self, header: CorpusHeader, include: Optional[bool], datatype_name: Optional[str]):
         if include is not None:
             header.include = include
@@ -335,8 +321,8 @@ class Controller:
                 return
         self.meta_link_header = None
 
-    def retrieve_all_files(self) -> list[FileReference]:
-        return self.file_loader_service.get_all_files()
+    def retrieve_all_files(self, expand_archived: bool) -> list[FileReference]:
+        return self.file_loader_service.get_all_files(expand_archived)
 
     def get_export_types(self) -> list[str]:
         return self.corpus_export_service.get_filetypes()

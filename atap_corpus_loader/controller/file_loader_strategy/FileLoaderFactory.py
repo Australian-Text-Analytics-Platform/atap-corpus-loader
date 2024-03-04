@@ -20,6 +20,7 @@ class ValidFileType(Enum):
     RDS = auto()
     RDATA = auto()
     RDA = auto()
+    ZIP = auto()
 
 
 class FileLoaderFactory:

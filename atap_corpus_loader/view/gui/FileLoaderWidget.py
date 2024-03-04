@@ -85,12 +85,14 @@ class FileLoaderWidget(AbstractWidget):
             self.unload_selected_button.disabled = True
 
     def load_as_corpus(self, *_):
+        include_hidden: bool = self.file_selector.get_show_hidden_value()
         file_ls: list[str] = self.file_selector.get_selector_value()
-        self.view_handler.load_corpus_from_filepaths(file_ls)
+        self.view_handler.load_corpus_from_filepaths(file_ls, include_hidden)
 
     def load_as_meta(self, *_):
+        include_hidden: bool = self.file_selector.get_show_hidden_value()
         file_ls: list[str] = self.file_selector.get_selector_value()
-        self.view_handler.load_meta_from_filepaths(file_ls)
+        self.view_handler.load_meta_from_filepaths(file_ls, include_hidden)
 
     def unload_selected(self, *_):
         file_ls: list[str] = self.file_selector.get_selector_value()

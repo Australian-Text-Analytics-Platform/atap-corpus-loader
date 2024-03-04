@@ -19,11 +19,17 @@ class FileReference:
         self.directory_path: str = dirname(path)
         self.filename: str = basename(path)
 
+        self.filename_no_ext: str
         self.extension: str
         if '.' not in self.filename:
             self.extension = ''
+            self.filename_no_ext = self.filename
         else:
-            self.extension = self.filename.split('.')[-1]
+            filename_dot_split = self.filename.split('.')
+            self.extension = filename_dot_split[-1]
+            self.filename_no_ext = '.'.join(filename_dot_split[:-1])
+
+        self.is_ref_archive = self.extension.lower() == 'zip'
 
     def __eq__(self, other):
         if not isinstance(other, FileReference):
@@ -81,6 +87,13 @@ class FileReference:
         """
         return self.filename
 
+    def get_filename_no_ext(self) -> str:
+        """
+        :return: the filename of the file, excluding file extension
+        :rtype: str
+        """
+        return self.filename_no_ext
+
     def is_hidden(self) -> bool:
         """
         :return: True if the filename begins with a '.', False otherwise
@@ -106,6 +119,15 @@ class FileReference:
         """
         return False
 
+    def is_archive(self) -> bool:
+        """
+        Returns True if the file is an archive file (e.g. example.zip), False otherwise.
+        Returns False for files within an archive (e.g. example.zip/text.txt)
+        :return: True if the file is an archive file (e.g. example.zip), False otherwise.
+        :rtype: bool
+        """
+        return self.is_ref_archive
+
 
 class ZipFileReference(FileReference):
     def __init__(self, zip_file: ZipFile, zip_file_path: str, internal_path: str):
@@ -121,11 +143,17 @@ class ZipFileReference(FileReference):
         self.internal_directory: str = dirname(internal_path)
         self.filename: str = basename(internal_path)
 
+        self.filename_no_ext: str
         self.extension: str
         if '.' not in self.filename:
             self.extension = ''
+            self.filename_no_ext = self.filename
         else:
-            self.extension = self.filename.split('.')[-1]
+            filename_dot_split = self.filename.split('.')
+            self.extension = filename_dot_split[-1]
+            self.filename_no_ext = '.'.join(filename_dot_split[:-1])
+
+        self.is_ref_archive = self.extension.lower() == 'zip'
 
     def get_path(self) -> str:
         """
@@ -192,12 +220,15 @@ class FileReferenceFactory:
         """
         self.file_ref_cache = {}
 
-    def get_file_refs_from_path(self, path: str) -> list[FileReference]:
+    def get_file_refs_from_path(self, path: str, expand_archived: bool) -> list[FileReference]:
         file_refs: list[FileReference]
+        curr_file_ref = [self.get_file_ref(path)]
         if path.endswith('.zip'):
             file_refs = self.get_zip_file_refs(path)
+            if not expand_archived:
+                file_refs = curr_file_ref
         else:
-            file_refs = [self.get_file_ref(path)]
+            file_refs = curr_file_ref
 
         return file_refs
 

@@ -27,7 +27,7 @@ class DOCXLoaderStrategy(FileLoaderStrategy):
         if 'document' in included_headers:
             file_data['document'] = [document]
         if 'filename' in included_headers:
-            file_data['filename'] = [self.file_ref.get_filename()]
+            file_data['filename'] = [self.file_ref.get_filename_no_ext()]
         if 'filepath' in included_headers:
             file_data['filepath'] = [self.file_ref.get_path()]
 

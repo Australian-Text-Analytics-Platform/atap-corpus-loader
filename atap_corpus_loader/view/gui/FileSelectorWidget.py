@@ -23,8 +23,11 @@ class FileSelectorWidget(AbstractWidget):
                                       sizing_mode='stretch_width')
         self.filter_input.param.watch(self._on_filter_change, ['value'])
 
-        self.show_hidden_files_checkbox = Checkbox(name="Show hidden", value=False, align="center")
+        self.show_hidden_files_checkbox = Checkbox(name="Show hidden", value=False, align="start")
         self.show_hidden_files_checkbox.param.watch(self._on_filter_change, ['value'])
+
+        self.expand_archive_checkbox = Checkbox(name="Expand archive", value=False, align="start")
+        self.expand_archive_checkbox.param.watch(self._on_filter_change, ['value'])
 
         self.file_type_filter = Select(width=150)
         self.file_type_filter.options = ['All valid filetypes'] + self.controller.get_valid_filetypes()
@@ -35,7 +38,10 @@ class FileSelectorWidget(AbstractWidget):
         self.panel = Column(
             Row(self.select_all_button),
             Row(self.filter_input,
-                self.show_hidden_files_checkbox,
+                Column(
+                    self.show_hidden_files_checkbox,
+                    self.expand_archive_checkbox
+                ),
                 self.file_type_filter),
             Row(self.selector_widget),
             width=700)
@@ -70,7 +76,8 @@ class FileSelectorWidget(AbstractWidget):
         else:
             selected_file_types = {ft.upper() for ft in valid_file_types}
 
-        file_refs: list[FileReference] = self.controller.retrieve_all_files()
+        expand_archived: bool = self.expand_archive_checkbox.value
+        file_refs: list[FileReference] = self.controller.retrieve_all_files(expand_archived)
 
         filtered_refs: list[FileReference] = []
         filter_str = f"*{self.filter_input.value}*"
@@ -95,3 +102,6 @@ class FileSelectorWidget(AbstractWidget):
 
     def get_selector_value(self) -> list[str]:
         return self.selector_widget.value
+
+    def get_show_hidden_value(self) -> bool:
+        return self.show_hidden_files_checkbox.value
