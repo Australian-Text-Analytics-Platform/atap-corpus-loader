@@ -33,50 +33,63 @@ class FileLoaderService:
         self.all_files_cache: list[FileReference] = []
         self.all_files_count: int = 0
 
-    def _retrieve_all_files(self) -> list[FileReference]:
+    def get_all_files(self, expand_archived: bool) -> list[FileReference]:
         path_iter: Iterator = iglob(f"{self.root_directory}**", recursive=True)
         all_file_refs: list[FileReference] = []
         for path in path_iter:
             if isdir(path):
                 continue
 
-            file_refs: list[FileReference] = self.file_ref_factory.get_file_refs_from_path(path)
+            file_refs: list[FileReference] = self.file_ref_factory.get_file_refs_from_path(path, expand_archived)
             all_file_refs.extend(file_refs)
 
         all_file_refs.sort(key=lambda ref: ref.get_path())
 
         return all_file_refs
 
-    def get_all_files(self) -> list[FileReference]:
-        return self._retrieve_all_files()
-
-    def get_loaded_corpus_files_set(self) -> set[FileReference]:
-        return self.loaded_corpus_files
-
     def get_loaded_corpus_files(self) -> list[FileReference]:
-        return list(self.loaded_corpus_files)
+        return [f for f in self.loaded_corpus_files if not f.is_archive()]
 
     def get_loaded_meta_files(self) -> list[FileReference]:
-        return list(self.loaded_meta_files)
+        return [f for f in self.loaded_meta_files if not f.is_archive()]
+
+    def get_loaded_corpus_files_set(self) -> set[FileReference]:
+        return set(self.get_loaded_corpus_files())
 
     def get_loaded_meta_files_set(self) -> set[FileReference]:
-        return self.loaded_meta_files
+        return set(self.get_loaded_meta_files())
 
-    def add_corpus_file(self, corpus_filepath: str):
-        file_ref: FileReference = self.file_ref_factory.get_file_ref(corpus_filepath)
-        if file_ref in self.loaded_corpus_files:
-            return
+    def add_corpus_files(self, corpus_filepaths: list[str], include_hidden: bool, tqdm_obj: Tqdm):
+        for filepath in tqdm_obj(corpus_filepaths, desc="Loading corpus files", unit="files", leave=False):
+            file_ref: FileReference = self.file_ref_factory.get_file_ref(filepath)
+            if file_ref in self.loaded_corpus_files:
+                continue
+            if not include_hidden and file_ref.is_hidden():
+                continue
+            FileLoaderService._check_filepath_permissions(file_ref)
 
-        FileLoaderService._check_filepath_permissions(file_ref)
-        self.loaded_corpus_files.add(file_ref)
+            self.loaded_corpus_files.add(file_ref)
+            if file_ref.is_archive():
+                zip_refs: list[FileReference] = self.file_ref_factory.get_zip_file_refs(filepath)
+                for zip_ref in zip_refs:
+                    if not zip_ref.is_hidden() or include_hidden:
+                        self.loaded_corpus_files.add(zip_ref)
 
-    def add_meta_file(self, meta_filepath: str):
-        file_ref: FileReference = self.file_ref_factory.get_file_ref(meta_filepath)
-        if file_ref in self.loaded_meta_files:
-            return
+    def add_meta_files(self, meta_filepaths: list[str], include_hidden: bool, tqdm_obj: Tqdm):
+        for filepath in tqdm_obj(meta_filepaths, desc="Loading metadata files", unit="files", leave=False):
+            file_ref: FileReference = self.file_ref_factory.get_file_ref(filepath)
+            if file_ref in self.loaded_meta_files:
+                continue
+            if not include_hidden and file_ref.is_hidden():
+                continue
+            FileLoaderService._check_filepath_permissions(file_ref)
 
-        FileLoaderService._check_filepath_permissions(file_ref)
-        self.loaded_meta_files.add(file_ref)
+            self.loaded_meta_files.add(file_ref)
+            if file_ref.is_archive():
+                zip_refs: list[FileReference] = self.file_ref_factory.get_zip_file_refs(filepath)
+                for zip_ref in zip_refs:
+                    if not zip_ref.is_hidden() or include_hidden:
+                        self.loaded_meta_files.add(zip_ref)
 
     def remove_corpus_filepath(self, corpus_filepath: str):
         file_ref: FileReference = self.file_ref_factory.get_file_ref(corpus_filepath)

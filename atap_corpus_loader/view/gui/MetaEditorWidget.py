@@ -45,10 +45,11 @@ class MetaEditorWidget(AbstractWidget):
             self.corpus_table_title,
             Row(self.text_header_dropdown, text_header_fn),
             self.corpus_table_container,
-            self.meta_table_title,
-            self.meta_table_container,
             Spacer(height=20),
-            self.link_row
+            self.link_row,
+            Spacer(height=20),
+            self.meta_table_title,
+            self.meta_table_container
         )
         self.update_display()
 

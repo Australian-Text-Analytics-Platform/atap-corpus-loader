@@ -59,6 +59,8 @@ class TestFileTypes(unittest.TestCase):
         file_loader_widget.load_as_corpus()
         file_loader_widget.update_displays()
 
+        self.assertTrue(len(self.corpus_loader.controller.get_corpus_headers()) > 0, "Expected more than 0 headers, got 0")
+
         text_header = self.corpus_loader.controller.get_corpus_headers()[0].name
         meta_editor_widget._set_text_header(text_header)
 
@@ -76,6 +78,7 @@ class TestFileTypes(unittest.TestCase):
 
         # Compare the resulting DataFrame to the expected DataFrame
         corpus: DataFrameCorpus = self.corpus_loader.get_corpus()
+        self.assertIsNotNone(corpus)
         corpus_df: DataFrame = corpus.to_dataframe()
         # Drop filename and filepath columns as these are too changeable to test easily
         corpus_df = corpus_df.drop(labels=['filename', 'filepath'],
@@ -86,92 +89,92 @@ class TestFileTypes(unittest.TestCase):
         if not self.expected_df.equals(corpus_df):
             assert False, "Expected corpus differs from built corpus"
 
-    def test_csv(self):
-        corpus_filter: str = "test_data/csv/philosophers.csv"
+    def test_csv_corpus(self):
+        corpus_filter: str = "test_data/csv_corpus/philosophers.csv"
         self._test_file_filter(corpus_filter, None)
 
-    def test_csv_meta_txt_text(self):
-        corpus_filter: str = "test_data/csv_meta_txt_text/*.txt"
-        meta_filter: str = "test_data/csv_meta_txt_text/*.csv"
+    def test_csv_meta_txt_corpus(self):
+        corpus_filter: str = "test_data/txt_corpus/*"
+        meta_filter: str = "test_data/csv_split_meta/*"
         self._test_file_filter(corpus_filter, meta_filter)
 
-    def test_excel_meta_docx_text(self):
-        corpus_filter: str = "test_data/excel_meta_docx_text/*.docx"
-        meta_filter: str = "test_data/excel_meta_docx_text/*.xlsx"
+    def test_xlsx_meta_docx_corpus(self):
+        corpus_filter: str = "test_data/docx_corpus/*"
+        meta_filter: str = "test_data/xlsx_meta/*"
         self._test_file_filter(corpus_filter, meta_filter)
 
-    def test_ods(self):
-        corpus_filter: str = "test_data/ods/philosophers.ods"
+    def test_ods_corpus(self):
+        corpus_filter: str = "test_data/ods_corpus/*"
         self._test_file_filter(corpus_filter, None)
 
-    def test_ods_meta_odt_text(self):
-        corpus_filter: str = "test_data/ods_meta_odt_text/*.odt"
-        meta_filter: str = "test_data/ods_meta_odt_text/*.ods"
+    def test_ods_meta_odt_corpus(self):
+        corpus_filter: str = "test_data/odt_corpus/*"
+        meta_filter: str = "test_data/ods_meta/*"
         self._test_file_filter(corpus_filter, meta_filter)
 
-    def test_tsv_meta_txt_text(self):
-        corpus_filter: str = "test_data/tsv_meta_txt_text/*.txt"
-        meta_filter: str = "test_data/tsv_meta_txt_text/*.tsv"
+    def test_tsv_meta_txt_corpus(self):
+        corpus_filter: str = "test_data/txt_corpus/*"
+        meta_filter: str = "test_data/tsv_meta/*"
         self._test_file_filter(corpus_filter, meta_filter)
 
-    def test_xlsx(self):
-        corpus_filter: str = "test_data/xlsx/philosophers.xlsx"
+    def test_xlsx_corpus(self):
+        corpus_filter: str = "test_data/xlsx_corpus/*"
         self._test_file_filter(corpus_filter, None)
 
-    def test_rda(self):
-        corpus_filter: str = "test_data/R/rda/philosophers.RDa"
+    def test_rda_corpus(self):
+        corpus_filter: str = "test_data/rda_corpus/*"
         self._test_file_filter(corpus_filter, None)
 
-    def test_rdata(self):
-        corpus_filter: str = "test_data/R/philosophers.RData"
+    def test_rdata_corpus(self):
+        corpus_filter: str = "test_data/rdata_corpus/*"
         self._test_file_filter(corpus_filter, None)
 
-    def test_rds(self):
-        corpus_filter: str = "test_data/R/philosophers.rds"
+    def test_rds_corpus(self):
+        corpus_filter: str = "test_data/rds_corpus/*"
         self._test_file_filter(corpus_filter, None)
 
-    def test_csv_zip(self):
-        corpus_filter: str = "test_data/csv.zip/*philosophers.csv"
+    def test_csv_corpus_zip(self):
+        corpus_filter: str = "test_data/csv_corpus.zip"
         self._test_file_filter(corpus_filter, None)
 
-    def test_csv_meta_txt_text_zip(self):
-        corpus_filter: str = "test_data/csv_meta_txt_text.zip/*.txt"
-        meta_filter: str = "test_data/csv_meta_txt_text.zip/*.csv"
+    def test_csv_meta_txt_corpus_zip(self):
+        corpus_filter: str = "test_data/txt_corpus.zip"
+        meta_filter: str = "test_data/csv_split_meta.zip"
         self._test_file_filter(corpus_filter, meta_filter)
 
-    def test_excel_meta_docx_text_zip(self):
-        corpus_filter: str = "test_data/excel_meta_docx_text.zip/*.docx"
-        meta_filter: str = "test_data/excel_meta_docx_text.zip/*.xlsx"
+    def test_xlsx_meta_docx_corpus_zip(self):
+        corpus_filter: str = "test_data/docx_corpus.zip"
+        meta_filter: str = "test_data/xlsx_meta.zip"
         self._test_file_filter(corpus_filter, meta_filter)
 
-    def test_ods_zip(self):
-        corpus_filter: str = "test_data/ods.zip/*philosophers.ods"
+    def test_ods_corpus_zip(self):
+        corpus_filter: str = "test_data/ods_corpus.zip"
         self._test_file_filter(corpus_filter, None)
 
-    def test_ods_meta_odt_text_zip(self):
-        corpus_filter: str = "test_data/ods_meta_odt_text.zip/*.odt"
-        meta_filter: str = "test_data/ods_meta_odt_text.zip/*.ods"
+    def test_ods_meta_odt_corpus_zip(self):
+        corpus_filter: str = "test_data/odt_corpus.zip"
+        meta_filter: str = "test_data/ods_meta.zip"
         self._test_file_filter(corpus_filter, meta_filter)
 
-    def test_tsv_meta_txt_text_zip(self):
-        corpus_filter: str = "test_data/tsv_meta_txt_text.zip/*.txt"
-        meta_filter: str = "test_data/tsv_meta_txt_text.zip/*.tsv"
+    def test_tsv_meta_txt_corpus_zip(self):
+        corpus_filter: str = "test_data/txt_corpus.zip"
+        meta_filter: str = "test_data/tsv_meta.zip"
         self._test_file_filter(corpus_filter, meta_filter)
 
-    def test_xlsx_zip(self):
-        corpus_filter: str = "test_data/xlsx.zip/*philosophers.xlsx"
+    def test_xlsx_corpus_zip(self):
+        corpus_filter: str = "test_data/*xlsx_corpus.zip"
         self._test_file_filter(corpus_filter, None)
 
-    def test_rda_zip(self):
-        corpus_filter: str = "test_data/R.zip/*rda/philosophers.RDa"
+    def test_rda_corpus_zip(self):
+        corpus_filter: str = "test_data/*rda_corpus.zip"
         self._test_file_filter(corpus_filter, None)
 
-    def test_rdata_zip(self):
-        corpus_filter: str = "test_data/R.zip/*philosophers.RData"
+    def test_rdata_corpus_zip(self):
+        corpus_filter: str = "test_data/*rdata_corpus.zip"
         self._test_file_filter(corpus_filter, None)
 
-    def test_rds_zip(self):
-        corpus_filter: str = "test_data/R.zip/*philosophers.rds"
+    def test_rds_corpus_zip(self):
+        corpus_filter: str = "rds_corpus.zip"
         self._test_file_filter(corpus_filter, None)
 
 
