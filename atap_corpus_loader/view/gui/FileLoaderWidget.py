@@ -73,26 +73,28 @@ class FileLoaderWidget(AbstractWidget):
         return count_str
 
     def _set_build_buttons_status(self, active: bool, *_):
-        if active:
-            self.corpus_name_input.visible = True
-            self.build_button.visible = True
-            self.unload_all_button.disabled = False
-            self.unload_selected_button.disabled = False
-        else:
-            self.corpus_name_input.visible = False
-            self.build_button.visible = False
-            self.unload_all_button.disabled = True
-            self.unload_selected_button.disabled = True
+        self.corpus_name_input.visible = active
+        self.build_button.visible = active
+        self.unload_all_button.disabled = not active
+        self.unload_selected_button.disabled = not active
+
+    def _set_load_buttons_status(self, active: bool, *_):
+        self.load_as_corpus_button.disabled = not active
+        self.load_as_meta_button.disabled = not active
 
     def load_as_corpus(self, *_):
+        self._set_load_buttons_status(False)
         include_hidden: bool = self.file_selector.get_show_hidden_value()
         file_ls: list[str] = self.file_selector.get_selector_value()
         self.view_handler.load_corpus_from_filepaths(file_ls, include_hidden)
+        self._set_load_buttons_status(True)
 
     def load_as_meta(self, *_):
+        self._set_load_buttons_status(False)
         include_hidden: bool = self.file_selector.get_show_hidden_value()
         file_ls: list[str] = self.file_selector.get_selector_value()
         self.view_handler.load_meta_from_filepaths(file_ls, include_hidden)
+        self._set_load_buttons_status(True)
 
     def unload_selected(self, *_):
         file_ls: list[str] = self.file_selector.get_selector_value()
@@ -106,3 +108,4 @@ class FileLoaderWidget(AbstractWidget):
     def build_corpus(self, *_):
         self.view_handler.build_corpus(self.corpus_name_input.value)
         self.corpus_name_input.value = ""
+        self.unload_all()

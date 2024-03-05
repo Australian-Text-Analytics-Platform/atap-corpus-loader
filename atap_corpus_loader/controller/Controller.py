@@ -107,9 +107,7 @@ class Controller:
             self.display_error(str(e))
             self.unload_filepaths(filepath_ls)
             return False
-        print(self.file_loader_service.get_loaded_corpus_files())
 
-        self.display_success("Corpus files loaded successfully")
         return True
 
 
@@ -122,7 +120,6 @@ class Controller:
             self.unload_filepaths(filepath_ls)
             return False
 
-        self.display_success("Metadata files loaded successfully")
         return True
 
     def build_corpus(self, corpus_name: str) -> bool:
@@ -158,7 +155,6 @@ class Controller:
             return False
 
         self.corpora.add(self.latest_corpus)
-        self.display_success(f"Corpus {self.latest_corpus.name} built successfully")
         self.tqdm_obj.visible = False
 
         return True
