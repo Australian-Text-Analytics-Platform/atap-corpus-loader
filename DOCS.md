@@ -27,7 +27,7 @@ Params
 Example
 
 ```python
-loader = CorpusLoader('atap_corpus_loader_test/test_data')'
+loader = CorpusLoader('atap_corpus_loader_tests/test_data')'
 ```
 
 ---
@@ -39,7 +39,7 @@ Inherited from panel.viewable.Viewer. Call CorpusLoader.servable() in a Jupyter 
 Example
 
 ```python
-loader = CorpusLoader('atap_corpus_loader_test/test_data')
+loader = CorpusLoader('atap_corpus_loader_tests/test_data')
 loader.servable()
 ```
 
@@ -57,7 +57,7 @@ Params
 Example
 
 ```python
-loader = CorpusLoader('atap_corpus_loader_test/test_data')
+loader = CorpusLoader('atap_corpus_loader_tests/test_data')
 loader.set_build_callback(foo(loader))
 ```
 
@@ -70,7 +70,7 @@ Returns: DataFrameCorpus | None - the last DataFrameCorpus object that was built
 Example
 
 ```python
-loader = CorpusLoader('atap_corpus_loader_test/test_data')
+loader = CorpusLoader('atap_corpus_loader_tests/test_data')
 corpus = loader.get_corpus()
 ```
 
@@ -83,7 +83,7 @@ Returns: list[DataFrameCorpus] - a list of DataFrameCorpus objects that have bee
 Example
 
 ```python
-loader = CorpusLoader('atap_corpus_loader_test/test_data')
+loader = CorpusLoader('atap_corpus_loader_tests/test_data')
 corpus_list = loader.get_corpora()
 ```
 
@@ -103,7 +103,7 @@ def print_corpus_df(loader: CorpusLoader):
         print(corpus_df.to_dataframe().to_string())
 
 
-loader = CorpusLoader('atap_corpus_loader_test/test_data')
+loader = CorpusLoader('atap_corpus_loader_tests/test_data')
 loader.set_build_callback(print_corpus_df, loader)
 loader.servable()
 ```

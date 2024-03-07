@@ -1,6 +1,6 @@
+import sys
 import unittest
 import os
-import sys
 from typing import Optional
 
 from atap_corpus.corpus.corpus import DataFrameCorpus
@@ -12,7 +12,7 @@ from atap_corpus_loader.view.gui import FileLoaderWidget, FileSelectorWidget, Me
 
 
 class TestFileTypes(unittest.TestCase):
-    TEST_DIR: str = 'atap_corpus_loader_test/test_data'
+    TEST_DIR: str = str(os.path.join(os.path.dirname(__file__), 'test_data'))
     META_LINKING_HEADER: str = "filename"
     EXPECTED_DATA: dict = {
         "document_": [
@@ -59,7 +59,8 @@ class TestFileTypes(unittest.TestCase):
         file_loader_widget.load_as_corpus()
         file_loader_widget.update_displays()
 
-        self.assertTrue(len(self.corpus_loader.controller.get_corpus_headers()) > 0, "Expected more than 0 headers, got 0")
+        self.assertTrue(len(self.corpus_loader.controller.get_corpus_headers()) > 0,
+                        "Expected more than 0 headers, got 0")
 
         text_header = self.corpus_loader.controller.get_corpus_headers()[0].name
         meta_editor_widget._set_text_header(text_header)

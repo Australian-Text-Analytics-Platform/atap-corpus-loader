@@ -29,6 +29,12 @@ python3 -m pip install atap-corpus-loader
 
 Documentation can be found in [DOCS.md](DOCS.md)
 
+## Tests
+
+```shell
+python3 atap_corpus_loader_tests/tests.py
+```
+
 ## Contributing
 
 The package for this project is hosted on PyPi: https://pypi.org/project/atap-corpus-loader/
