@@ -1,4 +1,5 @@
 from fnmatch import fnmatch
+from typing import Callable
 
 import panel
 from panel import Row, Column
@@ -14,6 +15,8 @@ class FileSelectorWidget(AbstractWidget):
         super().__init__()
         self.view_handler: AbstractWidget = view_handler
         self.controller: Controller = controller
+        # The function will be set by an instance method, but must be callable until then
+        self._set_button_status_on_operation: Callable = lambda curr_loading: None
 
         self.select_all_button = Button(name="Select all", width=95,
                                         button_style="solid", button_type="primary")
@@ -26,7 +29,7 @@ class FileSelectorWidget(AbstractWidget):
         self.show_hidden_files_checkbox = Checkbox(name="Show hidden", value=False, align="start")
         self.show_hidden_files_checkbox.param.watch(self._on_filter_change, ['value'])
 
-        self.expand_archive_checkbox = Checkbox(name="Expand archive", value=False, align="start")
+        self.expand_archive_checkbox = Checkbox(name="Expand archives", value=False, align="start")
         self.expand_archive_checkbox.param.watch(self._on_filter_change, ['value'])
 
         self.file_type_filter = Select(width=150)
@@ -48,7 +51,9 @@ class FileSelectorWidget(AbstractWidget):
 
         panel.state.add_periodic_callback(self.update_display, period=2000)
         self.update_display()
-        self.select_all()
+
+    def set_button_operation_fn(self, _set_button_status_on_operation: Callable):
+        self._set_button_status_on_operation = _set_button_status_on_operation
 
     def update_display(self):
         loaded_corpus_files: set[FileReference] = self.controller.get_loaded_corpus_files()
@@ -95,10 +100,14 @@ class FileSelectorWidget(AbstractWidget):
         return filtered_refs
 
     def _on_filter_change(self, *_):
+        self._set_button_status_on_operation(curr_loading=True)
         self.update_display()
+        self._set_button_status_on_operation(curr_loading=False)
 
     def select_all(self, *_):
+        self._set_button_status_on_operation(curr_loading=True)
         self.selector_widget.value = list(self.selector_widget.options.values())
+        self._set_button_status_on_operation(curr_loading=False)
 
     def get_selector_value(self) -> list[str]:
         return self.selector_widget.value

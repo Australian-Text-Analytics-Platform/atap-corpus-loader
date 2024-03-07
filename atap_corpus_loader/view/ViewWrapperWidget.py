@@ -23,19 +23,23 @@ class ViewWrapperWidget(AbstractWidget):
     def update_display(self):
         pass
 
-    def load_corpus_from_filepaths(self, filepath_ls: list[str], include_hidden: bool) -> bool:
+    def load_corpus_from_filepaths(self, filepath_ls: list[str], include_hidden: bool):
         success = self.controller.load_corpus_from_filepaths(filepath_ls, include_hidden)
         self.update_displays()
-        return success
+        if success:
+            self.controller.display_success("Corpus files loaded successfully")
 
-    def load_meta_from_filepaths(self, filepath_ls: list[str], include_hidden: bool) -> bool:
+    def load_meta_from_filepaths(self, filepath_ls: list[str], include_hidden: bool):
         success = self.controller.load_meta_from_filepaths(filepath_ls, include_hidden)
         self.update_displays()
-        return success
+        if success:
+            self.controller.display_success("Metadata files loaded successfully")
 
     def build_corpus(self, corpus_name: str):
         success: bool = self.controller.build_corpus(corpus_name)
         if success:
             self.update_displays()
+
             self.panel.active = self.corpus_info_idx
-            self.file_loader.unload_all()
+            corpus_name: str = self.controller.get_latest_corpus().name
+            self.controller.display_success(f"Corpus {corpus_name} built successfully")

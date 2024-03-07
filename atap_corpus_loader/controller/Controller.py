@@ -100,6 +100,7 @@ class Controller:
         return self.latest_corpus.to_dataframe()
 
     def load_corpus_from_filepaths(self, filepath_ls: list[str], include_hidden: bool) -> bool:
+        Controller.LOGGER.debug(f"Files loaded as corpus: {filepath_ls}")
         try:
             self.file_loader_service.add_corpus_files(filepath_ls, include_hidden, self.tqdm_obj)
             self.corpus_headers = self.file_loader_service.get_inferred_corpus_headers()
@@ -107,13 +108,12 @@ class Controller:
             self.display_error(str(e))
             self.unload_filepaths(filepath_ls)
             return False
-        print(self.file_loader_service.get_loaded_corpus_files())
 
-        self.display_success("Corpus files loaded successfully")
         return True
 
 
     def load_meta_from_filepaths(self, filepath_ls: list[str], include_hidden: bool) -> bool:
+        Controller.LOGGER.debug(f"Files loaded as meta: {filepath_ls}")
         try:
             self.file_loader_service.add_meta_files(filepath_ls, include_hidden, self.tqdm_obj)
             self.meta_headers = self.file_loader_service.get_inferred_meta_headers()
@@ -122,7 +122,6 @@ class Controller:
             self.unload_filepaths(filepath_ls)
             return False
 
-        self.display_success("Metadata files loaded successfully")
         return True
 
     def build_corpus(self, corpus_name: str) -> bool:
@@ -158,7 +157,6 @@ class Controller:
             return False
 
         self.corpora.add(self.latest_corpus)
-        self.display_success(f"Corpus {self.latest_corpus.name} built successfully")
         self.tqdm_obj.visible = False
 
         return True
