@@ -36,6 +36,7 @@ class FileLoaderWidget(AbstractWidget):
         self.build_button.on_click(self.build_corpus)
 
         self.file_selector = FileSelectorWidget(view_handler, controller)
+        self.file_selector.set_button_operation_fn(self._set_button_status_on_operation)
         self.meta_editor = MetaEditorWidget(view_handler, controller)
 
         self.panel = Row(
@@ -60,8 +61,7 @@ class FileLoaderWidget(AbstractWidget):
         self.update_display()
 
     def update_display(self):
-        files_added: bool = self.controller.is_meta_added() or self.controller.is_corpus_added()
-        self._set_build_buttons_status(files_added)
+        self._set_build_buttons_status()
         self.loaded_file_info.object = self.get_loaded_file_info()
 
     def get_loaded_file_info(self) -> str:
@@ -72,40 +72,55 @@ class FileLoaderWidget(AbstractWidget):
 
         return count_str
 
-    def _set_build_buttons_status(self, active: bool, *_):
-        self.corpus_name_input.visible = active
-        self.build_button.visible = active
-        self.unload_all_button.disabled = not active
-        self.unload_selected_button.disabled = not active
+    def _set_build_buttons_status(self, *_):
+        files_added: bool = self.controller.is_meta_added() or self.controller.is_corpus_added()
+        self.corpus_name_input.visible = files_added
+        self.build_button.visible = files_added
+        self.unload_all_button.disabled = not files_added
+        self.unload_selected_button.disabled = not files_added
 
-    def _set_load_buttons_status(self, active: bool, *_):
-        self.load_as_corpus_button.disabled = not active
-        self.load_as_meta_button.disabled = not active
+    def _set_button_status_on_operation(self, curr_loading: bool, *_):
+        self.file_selector.selector_widget.disabled = curr_loading
+        self.file_selector.show_hidden_files_checkbox.disabled = curr_loading
+        self.file_selector.expand_archive_checkbox.disabled = curr_loading
+        self.file_selector.select_all_button.disabled = curr_loading
+        self.file_selector.file_type_filter.disabled = curr_loading
+        self.file_selector.filter_input.disabled = curr_loading
+
+        self.load_as_corpus_button.disabled = curr_loading
+        self.load_as_meta_button.disabled = curr_loading
+        self.build_button.disabled = curr_loading
 
     def load_as_corpus(self, *_):
-        self._set_load_buttons_status(False)
+        self._set_button_status_on_operation(curr_loading=True)
         include_hidden: bool = self.file_selector.get_show_hidden_value()
         file_ls: list[str] = self.file_selector.get_selector_value()
         self.view_handler.load_corpus_from_filepaths(file_ls, include_hidden)
-        self._set_load_buttons_status(True)
+        self._set_button_status_on_operation(curr_loading=False)
 
     def load_as_meta(self, *_):
-        self._set_load_buttons_status(False)
+        self._set_button_status_on_operation(curr_loading=True)
         include_hidden: bool = self.file_selector.get_show_hidden_value()
         file_ls: list[str] = self.file_selector.get_selector_value()
         self.view_handler.load_meta_from_filepaths(file_ls, include_hidden)
-        self._set_load_buttons_status(True)
+        self._set_button_status_on_operation(curr_loading=False)
 
     def unload_selected(self, *_):
+        self._set_button_status_on_operation(curr_loading=True)
         file_ls: list[str] = self.file_selector.get_selector_value()
         self.controller.unload_filepaths(file_ls)
         self.view_handler.update_displays()
+        self._set_button_status_on_operation(curr_loading=False)
 
     def unload_all(self, *_):
+        self._set_button_status_on_operation(curr_loading=True)
         self.controller.unload_all()
         self.view_handler.update_displays()
+        self._set_button_status_on_operation(curr_loading=False)
 
     def build_corpus(self, *_):
+        self._set_button_status_on_operation(curr_loading=True)
         self.view_handler.build_corpus(self.corpus_name_input.value)
         self.corpus_name_input.value = ""
         self.unload_all()
+        self._set_button_status_on_operation(curr_loading=False)
