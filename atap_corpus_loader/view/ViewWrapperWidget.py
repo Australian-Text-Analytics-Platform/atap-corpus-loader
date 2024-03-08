@@ -35,7 +35,7 @@ class ViewWrapperWidget(AbstractWidget):
         if success:
             self.controller.display_success("Metadata files loaded successfully")
 
-    def build_corpus(self, corpus_name: str):
+    def build_corpus(self, corpus_name: str) -> bool:
         success: bool = self.controller.build_corpus(corpus_name)
         if success:
             self.update_displays()
@@ -43,3 +43,5 @@ class ViewWrapperWidget(AbstractWidget):
             self.panel.active = self.corpus_info_idx
             corpus_name: str = self.controller.get_latest_corpus().name
             self.controller.display_success(f"Corpus {corpus_name} built successfully")
+
+        return success
