@@ -1,9 +1,7 @@
 from abc import ABC, abstractmethod
-from typing import Callable
 
-from panel import Row, Column
+from panel import Row
 from panel.layout import Panel
-from panel.widgets import Button
 
 
 class AbstractWidget(ABC):
@@ -31,22 +29,6 @@ class AbstractWidget(ABC):
 
     def toggle_visibility(self):
         self.panel.visible = not self.panel.visible
-
-    def create_confirmation_box(self, *_, confirm_callable: Callable):
-        def confirm_action(_):
-            confirm_callable()
-            response.clear()
-
-        def cancel_action(_):
-            response.clear()
-
-        confirmation = Button(name='Confirm')
-        confirmation.on_click(confirm_action)
-        cancel = Button(name='Cancel')
-        cancel.on_click(cancel_action)
-
-        response = Column("Are you sure?", Row(confirmation, cancel))
-        response.show()
 
     @abstractmethod
     def update_display(self):
