@@ -32,7 +32,7 @@ class FileSelectorWidget(AbstractWidget):
         self.expand_archive_checkbox = Checkbox(name="Expand archives", value=False, align="start")
         self.expand_archive_checkbox.param.watch(self._on_filter_change, ['value'])
 
-        self.file_type_filter = Select(width=150)
+        self.file_type_filter = Select(name='Filter by filetype', width=150)
         self.file_type_filter.options = ['All valid filetypes'] + self.controller.get_valid_filetypes()
         self.file_type_filter.param.watch(self._on_filter_change, ['value'])
 
