@@ -1,18 +1,19 @@
 import logging
+from datetime import datetime
 from logging.handlers import RotatingFileHandler
 from io import BytesIO
 from os.path import abspath, join, dirname
 from typing import Optional, Callable
 
-from atap_corpus.corpus.corpora import UniqueCorpora
+from atap_corpus.corpus.corpus import DataFrameCorpus
 from pandas import DataFrame
 from panel.widgets import Tqdm
 
 from atap_corpus_loader.controller.CorpusExportService import CorpusExportService
 from atap_corpus_loader.controller.FileLoaderService import FileLoaderService, FileLoadError
 from atap_corpus_loader.controller.OniAPIService import OniAPIService
-from atap_corpus_loader.controller.data_objects import FileReference, ViewCorpusInfo, CorpusHeader, DataType, \
-    UniqueNameCorpus
+from atap_corpus_loader.controller.data_objects import (FileReference, ViewCorpusInfo, CorpusHeader, DataType,
+                                                        UniqueNameCorpora)
 from atap_corpus_loader.controller.file_loader_strategy.FileLoaderFactory import ValidFileType
 from atap_corpus_loader.view.notifications import NotifierService
 
@@ -39,7 +40,7 @@ class Controller:
         self.corpus_headers: list[CorpusHeader] = []
         self.meta_headers: list[CorpusHeader] = []
 
-        self.corpora: UniqueCorpora = UniqueCorpora()
+        self.corpora: UniqueNameCorpora = UniqueNameCorpora()
 
         self.build_callback_fn: Optional[Callable] = None
         self.build_callback_args: list = []
@@ -87,18 +88,21 @@ class Controller:
         self.build_callback_args = args
         self.build_callback_kwargs = kwargs
 
-    def get_corpora(self) -> dict[str, UniqueNameCorpus]:
+    def get_latest_corpus(self) -> Optional[DataFrameCorpus]:
+        if len(self.corpora) == 0:
+            return
+        return self.corpora.items()[-1]
+
+    def get_corpus(self, corpus_name: str) -> Optional[DataFrameCorpus]:
+        return self.corpora.get(corpus_name)
+
+    def get_corpora(self) -> dict[str, DataFrameCorpus]:
         corpora_list: list = self.corpora.items()
-        corpora_dict: dict[str, UniqueNameCorpus] = {}
+        corpora_dict: dict[str, DataFrameCorpus] = {}
         for corpus in corpora_list:
             corpora_dict[corpus.name] = corpus
 
         return corpora_dict
-
-    def get_latest_corpus(self) -> Optional[UniqueNameCorpus]:
-        corpora_list = self.corpora.items()
-        if len(corpora_list) != 0:
-            return corpora_list[-1]
 
     def load_corpus_from_filepaths(self, filepath_ls: list[str], include_hidden: bool) -> bool:
         Controller.LOGGER.debug(f"Files loaded as corpus: {filepath_ls}")
@@ -131,6 +135,9 @@ class Controller:
                 self.display_error("Cannot build without link headers set. Select a corpus header and a meta header as linking headers in the dropdowns")
                 return False
 
+        if (corpus_name == '') or (corpus_name is None):
+            corpus_name = f"Corpus-{datetime.now()}"
+
         self.tqdm_obj.visible = True
         try:
             corpus = self.file_loader_service.build_corpus(corpus_name, self.corpus_headers,
@@ -157,7 +164,14 @@ class Controller:
             self.tqdm_obj.visible = False
             return False
 
-        self.corpora.add(corpus)
+        try:
+            self.corpora.add(corpus)
+        except Exception as e:
+            Controller.LOGGER.exception("Exception while adding corpus to corpora: ")
+            self.display_error(str(e))
+            self.tqdm_obj.visible = False
+            return False
+
         self.tqdm_obj.visible = False
 
         return True
@@ -168,7 +182,6 @@ class Controller:
         for corpus in self.corpora.items():
             corpus_as_df: DataFrame = corpus.to_dataframe()
 
-            corpus_id: str = str(corpus.id)
             name: Optional[str] = corpus.name
             num_rows: int = len(corpus)
             headers: list[str] = []
@@ -182,21 +195,21 @@ class Controller:
                 dtypes.append(dtype)
                 headers.append(str(header_name))
 
-            corpora_info.append(ViewCorpusInfo(corpus_id, name, num_rows, headers, dtypes))
+            corpora_info.append(ViewCorpusInfo(name, num_rows, headers, dtypes))
 
         return corpora_info
 
-    def delete_corpus(self, corpus_id: str):
-        self.corpora.remove(corpus_id)
+    def delete_corpus(self, corpus_name: str):
+        self.corpora.remove(corpus_name)
 
-    def rename_corpus(self, corpus_id: str, new_name: str):
-        corpus: Optional[UniqueNameCorpus] = self.corpora.get(corpus_id)
+    def rename_corpus(self, corpus_name: str, new_name: str):
+        corpus: Optional[DataFrameCorpus] = self.corpora.get(corpus_name)
         if corpus is None:
-            self.display_error(f"No corpus with id {corpus_id} found")
+            self.display_error(f"No corpus with name {corpus_name} found")
             return
 
         try:
-            corpus.name = new_name
+            corpus.rename(new_name)
         except ValueError as e:
             self.display_error(str(e))
 
@@ -229,6 +242,7 @@ class Controller:
             self.meta_link_header = None
 
     def unload_all(self):
+        Controller.LOGGER.debug("All files unloaded")
         self.file_loader_service.remove_all_files()
 
         self.text_header = None
@@ -324,10 +338,10 @@ class Controller:
     def get_export_types(self) -> list[str]:
         return self.corpus_export_service.get_filetypes()
 
-    def export_corpus(self, corpus_id: str, filetype: str) -> Optional[BytesIO]:
-        corpus: Optional[UniqueNameCorpus] = self.corpora.get(corpus_id)
+    def export_corpus(self, corpus_name: str, filetype: str) -> Optional[BytesIO]:
+        corpus: Optional[DataFrameCorpus] = self.corpora.get(corpus_name)
         if corpus is None:
-            self.display_error(f"No corpus with id {corpus_id} found")
+            self.display_error(f"No corpus with name '{corpus_name}' found")
             return None
 
         try:

@@ -50,15 +50,15 @@ class CorpusInfoWidget(AbstractWidget):
         header_table_text = f"{header_row}\n{spacer_row}\n{data_row}"
         return header_table_text
 
-    def export_corpus(self, corpus_id: str, filetype: str) -> Optional[BytesIO]:
-        return self.controller.export_corpus(corpus_id, filetype)
+    def export_corpus(self, corpus_name: str, filetype: str) -> Optional[BytesIO]:
+        return self.controller.export_corpus(corpus_name, filetype)
 
-    def rename_corpus(self, corpus_id: str, name: str):
-        self.controller.rename_corpus(corpus_id, name)
+    def rename_corpus(self, corpus_name: str, name: str):
+        self.controller.rename_corpus(corpus_name, name)
         self.update_display()
 
-    def delete_corpus(self, corpus_id: str):
-        self.controller.delete_corpus(corpus_id)
+    def delete_corpus(self, corpus_name: str):
+        self.controller.delete_corpus(corpus_name)
         self.update_display()
 
     def _update_corpus_display(self, *event):
@@ -95,7 +95,7 @@ class CorpusInfoWidget(AbstractWidget):
             corpus_export_button = FileDownload(
                 label=f"Export",
                 filename=f"{corpus_info.name}.{default_filetype}",
-                callback=bind(self.export_corpus, corpus_id=corpus_info.corpus_id, filetype=filetype_dropdown),
+                callback=bind(self.export_corpus, corpus_name=corpus_info.name, filetype=filetype_dropdown),
                 button_type="primary", button_style="solid",
                 height=30, width=100,
                 align="center")
@@ -107,9 +107,9 @@ class CorpusInfoWidget(AbstractWidget):
 
             rename_field: TextInput = TextInput(name="Rename corpus", value=corpus_info.name,
                                                 align='center', width=150)
-            rename_field.param.watch(lambda event, corpus_id=corpus_info.corpus_id: self.rename_corpus(corpus_id, event.new), ['value'])
+            rename_field.param.watch(lambda event, corpus_name=corpus_info.name: self.rename_corpus(corpus_name, event.new), ['value'])
             delete_button: Button = Button(name="Delete corpus", button_type="danger", align='center')
-            delete_button.on_click(lambda event, corpus_id=corpus_info.corpus_id: self.delete_corpus(corpus_id))
+            delete_button.on_click(lambda event, corpus_name=corpus_info.name: self.delete_corpus(corpus_name))
 
             corpus_control_row = Row(rename_field, filetype_dropdown, corpus_export_button,
                                      HSpacer(), delete_button, name=label)
