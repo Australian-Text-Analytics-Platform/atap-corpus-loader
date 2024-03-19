@@ -3,9 +3,9 @@ from os import R_OK, access
 from os.path import normpath, sep, isdir, exists
 from typing import Optional, Iterator
 
-from atap_corpus.corpus.corpus import DataFrameCorpus
 from pandas import DataFrame, merge, concat
 from panel.widgets import Tqdm
+from atap_corpus.corpus.corpus import DataFrameCorpus
 
 from atap_corpus_loader.controller.data_objects import FileReference, CorpusHeader, FileReferenceFactory
 from atap_corpus_loader.controller.file_loader_strategy import FileLoaderStrategy, FileLoaderFactory, FileLoadError
@@ -175,7 +175,7 @@ class FileLoaderService:
         else:
             raise ValueError("No corpus headers or metadata headers provided")
 
-        return DataFrameCorpus.from_dataframe(df=final_df, col_doc=text_header.name, name=corpus_name)
+        return DataFrameCorpus.from_dataframe(final_df, text_header.name, corpus_name)
 
     @staticmethod
     def _sanitise_root_dir(root_directory: str) -> str:

@@ -37,21 +37,28 @@ class CorpusLoader(Viewer):
         :param args: positional arguments to pass onto the callback function
         :param kwargs: keyword arguments to pass onto the callback function
         :type callback: Callable
-        :type args: Any
-        :type kwargs: Any
+        :type args: list
+        :type kwargs: dict
         """
         self.controller.set_build_callback(callback, *args, **kwargs)
 
-    def get_corpus(self) -> Optional[DataFrameCorpus]:
+    def get_latest_corpus(self) -> Optional[DataFrameCorpus]:
         """
         :return: the last DataFrameCorpus object that was built. If none have been built, returns None.
         :rtype: Optional[DataFrameCorpus]
         """
         return self.controller.get_latest_corpus()
 
-    def get_corpora(self) -> list[DataFrameCorpus]:
+    def get_corpus(self, corpus_name: str) -> Optional[DataFrameCorpus]:
         """
-        :return: a list of DataFrameCorpus objects that have been built using this CorpusLoader
-        :rtype: list[DataFrameCorpus]
+        :return: the DataFrameCorpus corresponding to the provided name. If no corpus with the given name is found, return None
+        :rtype: Optional[DataFrameCorpus]
+        """
+        return self.controller.get_corpus(corpus_name)
+
+    def get_corpora(self) -> dict[str, DataFrameCorpus]:
+        """
+        :return: a dictionary that maps Corpus names to DataFrameCorpus objects that have been built using this CorpusLoader
+        :rtype: dict[str, DataFrameCorpus]
         """
         return self.controller.get_corpora()

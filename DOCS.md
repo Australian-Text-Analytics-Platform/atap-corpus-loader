@@ -63,7 +63,7 @@ loader.set_build_callback(foo(loader))
 
 ---
 
-### CorpusLoader.get_corpus
+### CorpusLoader.get_latest_corpus
 
 Returns: DataFrameCorpus | None - the last DataFrameCorpus object that was built. If none have been built, returns None.
 
@@ -71,7 +71,23 @@ Example
 
 ```python
 loader = CorpusLoader('atap_corpus_loader_tests/test_data')
-corpus = loader.get_corpus()
+corpus = loader.get_latest_corpus()
+```
+
+---
+
+### CorpusLoader.get_corpus
+
+Params
+-  name: str – The name of the DataFrameCorpus to retrieve.
+
+Returns: DataFrameCorpus | None - the DataFrameCorpus object in the corpora with the provided name. If none with the provided name are found, returns None.
+
+Example
+
+```python
+loader = CorpusLoader('atap_corpus_loader_tests/test_data')
+corpus = loader.get_corpus("example")
 ```
 
 ---
@@ -98,7 +114,7 @@ from atap_corpus_loader import CorpusLoader
 from pandas import DataFrame
 
 def print_corpus_df(loader: CorpusLoader):
-    corpus_df: DataFrame | None = loader.get_corpus()
+    corpus_df: DataFrame | None = loader.get_latest_corpus()
     if corpus_df is not None:
         print(corpus_df.to_dataframe().to_string())
 

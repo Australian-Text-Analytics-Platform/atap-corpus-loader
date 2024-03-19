@@ -78,7 +78,7 @@ class TestFileTypes(unittest.TestCase):
         file_loader_widget.build_corpus()
 
         # Compare the resulting DataFrame to the expected DataFrame
-        corpus: DataFrameCorpus = self.corpus_loader.get_corpus()
+        corpus: DataFrameCorpus = self.corpus_loader.get_latest_corpus()
         self.assertIsNotNone(corpus)
         corpus_df: DataFrame = corpus.to_dataframe()
         # Drop filename and filepath columns as these are too changeable to test easily
