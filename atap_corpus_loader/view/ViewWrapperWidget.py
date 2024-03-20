@@ -24,12 +24,16 @@ class ViewWrapperWidget(AbstractWidget):
         pass
 
     def load_corpus_from_filepaths(self, filepath_ls: list[str], include_hidden: bool):
+        if len(filepath_ls) == 0:
+            return
         success = self.controller.load_corpus_from_filepaths(filepath_ls, include_hidden)
         self.update_displays()
         if success:
             self.controller.display_success("Corpus files loaded successfully")
 
     def load_meta_from_filepaths(self, filepath_ls: list[str], include_hidden: bool):
+        if len(filepath_ls) == 0:
+            return
         success = self.controller.load_meta_from_filepaths(filepath_ls, include_hidden)
         self.update_displays()
         if success:

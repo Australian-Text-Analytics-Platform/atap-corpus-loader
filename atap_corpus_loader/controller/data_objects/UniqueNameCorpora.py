@@ -35,6 +35,9 @@ class UniqueNameCorpora(BaseCorpora):
         if name in self._collection:
             raise ValueError(f"Corpus with name '{name}' already exists. Select a different name")
 
+    def _simple_rename(self, name: str):
+        self._name = name
+
     def _unique_rename(self, name: str):
         self._verify_unique_name(name)
         self._name = name
@@ -55,9 +58,11 @@ class UniqueNameCorpora(BaseCorpora):
 
     def remove(self, name: str):
         """ Remove a Corpus from the Corpora.
+        The rename method of the Corpus object has the unique name constraint removed before it is removed from the Corpora.
         If Corpus does not exist, it'll have no effect.
         """
         try:
+            self._collection[name].rename = self._simple_rename
             del self._collection[name]
         except KeyError:
             return
