@@ -1,6 +1,3 @@
-from io import BytesIO
-from tempfile import NamedTemporaryFile
-
 from pandas import DataFrame, concat
 from pyreadr import list_objects, read_r
 from pyreadr.librdata import PyreadrError, LibrdataError
@@ -25,7 +22,10 @@ class RLoaderStrategy(FileLoaderStrategy):
         columns = file_objects[0].get('columns')
         for file_object in file_objects[1:]:
             if file_object.get('columns') != columns:
-                raise FileLoadError(f"Incompatible headers within loaded RData objects")
+                raise FileLoadError(f"Incompatible headers within loaded R objects")
+
+        if len(columns) == 0:
+            raise FileLoadError(f"No tabular data found. Ensure the file contains tabular data (rows and columns)")
 
         headers: list[CorpusHeader] = []
         dtype: DataType = DataType.TEXT
