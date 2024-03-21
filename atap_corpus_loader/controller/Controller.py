@@ -156,19 +156,19 @@ class Controller:
             return False
 
         try:
+            self.corpora.add(corpus)
+        except Exception as e:
+            Controller.LOGGER.exception("Exception while adding corpus to corpora: ")
+            self.display_error(str(e))
+            self.tqdm_obj.visible = False
+            return False
+
+        try:
             if self.build_callback_fn is not None:
                 self.build_callback_fn(*self.build_callback_args, **self.build_callback_kwargs)
         except Exception as e:
             Controller.LOGGER.exception("Exception while calling build callback: ")
             self.display_error(f"Build callback error: {e}")
-            self.tqdm_obj.visible = False
-            return False
-
-        try:
-            self.corpora.add(corpus)
-        except Exception as e:
-            Controller.LOGGER.exception("Exception while adding corpus to corpora: ")
-            self.display_error(str(e))
             self.tqdm_obj.visible = False
             return False
 
@@ -279,10 +279,10 @@ class Controller:
         return [ft.name for ft in ValidFileType]
 
     def is_corpus_added(self) -> bool:
-        return len(self.corpus_headers) > 0
+        return len(self.file_loader_service.get_loaded_corpus_files()) > 0
 
     def is_meta_added(self) -> bool:
-        return len(self.meta_headers) > 0
+        return len(self.file_loader_service.get_loaded_meta_files()) > 0
 
     def update_corpus_header(self, header: CorpusHeader, include: Optional[bool], datatype_name: Optional[str]):
         if include is not None:

@@ -37,8 +37,8 @@ class CorpusLoader(Viewer):
         :param args: positional arguments to pass onto the callback function
         :param kwargs: keyword arguments to pass onto the callback function
         :type callback: Callable
-        :type args: list
-        :type kwargs: dict
+        :type args: Any
+        :type kwargs: Any
         """
         self.controller.set_build_callback(callback, *args, **kwargs)
 
