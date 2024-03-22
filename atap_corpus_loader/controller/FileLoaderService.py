@@ -151,11 +151,14 @@ class FileLoaderService:
                      corpus_link_header: Optional[CorpusHeader],
                      meta_link_header: Optional[CorpusHeader],
                      tqdm_obj: Tqdm) -> DataFrameCorpus:
-        corpus_df: DataFrame = FileLoaderService._get_concatenated_dataframe(self.get_loaded_corpus_files(),
+        corpus_files: list[FileReference] = sorted(self.get_loaded_corpus_files(), key=lambda f: f.get_path())
+        meta_files: list[FileReference] = sorted(self.get_loaded_meta_files(), key=lambda f: f.get_path())
+
+        corpus_df: DataFrame = FileLoaderService._get_concatenated_dataframe(corpus_files,
                                                                              corpus_headers,
                                                                              tqdm_obj,
                                                                              "Building corpus")
-        meta_df: DataFrame = FileLoaderService._get_concatenated_dataframe(self.get_loaded_meta_files(),
+        meta_df: DataFrame = FileLoaderService._get_concatenated_dataframe(meta_files,
                                                                            meta_headers,
                                                                            tqdm_obj,
                                                                            "Building metadata")
@@ -174,6 +177,8 @@ class FileLoaderService:
             final_df = meta_df
         else:
             raise ValueError("No corpus headers or metadata headers provided")
+
+
 
         return DataFrameCorpus.from_dataframe(final_df, text_header.name, corpus_name)
 
