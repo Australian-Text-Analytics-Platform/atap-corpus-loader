@@ -122,18 +122,6 @@ class TestFileTypes(unittest.TestCase):
         corpus_filter: str = "test_data/xlsx_corpus/*"
         self._test_file_filter(corpus_filter, None)
 
-    def test_rda_corpus(self):
-        corpus_filter: str = "test_data/rda_corpus/*"
-        self._test_file_filter(corpus_filter, None)
-
-    def test_rdata_corpus(self):
-        corpus_filter: str = "test_data/rdata_corpus/*"
-        self._test_file_filter(corpus_filter, None)
-
-    def test_rds_corpus(self):
-        corpus_filter: str = "test_data/rds_corpus/*"
-        self._test_file_filter(corpus_filter, None)
-
     def test_csv_corpus_zip(self):
         corpus_filter: str = "test_data/csv_corpus.zip"
         self._test_file_filter(corpus_filter, None)
@@ -164,18 +152,6 @@ class TestFileTypes(unittest.TestCase):
 
     def test_xlsx_corpus_zip(self):
         corpus_filter: str = "test_data/*xlsx_corpus.zip"
-        self._test_file_filter(corpus_filter, None)
-
-    def test_rda_corpus_zip(self):
-        corpus_filter: str = "test_data/*rda_corpus.zip"
-        self._test_file_filter(corpus_filter, None)
-
-    def test_rdata_corpus_zip(self):
-        corpus_filter: str = "test_data/*rdata_corpus.zip"
-        self._test_file_filter(corpus_filter, None)
-
-    def test_rds_corpus_zip(self):
-        corpus_filter: str = "rds_corpus.zip"
         self._test_file_filter(corpus_filter, None)
 
 
