@@ -17,9 +17,6 @@ class ValidFileType(Enum):
     TSV = auto()
     XLSX = auto()
     ODS = auto()
-    RDS = auto()
-    RDATA = auto()
-    RDA = auto()
     ZIP = auto()
 
 
@@ -37,10 +34,7 @@ class FileLoaderFactory:
         ValidFileType.CSV: CSVLoaderStrategy,
         ValidFileType.TSV: TSVLoaderStrategy,
         ValidFileType.XLSX: XLSXLoaderStrategy,
-        ValidFileType.ODS: ODSLoaderStrategy,
-        ValidFileType.RDS: RLoaderStrategy,
-        ValidFileType.RDATA: RLoaderStrategy,
-        ValidFileType.RDA: RLoaderStrategy
+        ValidFileType.ODS: ODSLoaderStrategy
     }
 
     @staticmethod
