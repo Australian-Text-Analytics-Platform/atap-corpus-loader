@@ -32,7 +32,7 @@ Documentation can be found in [DOCS.md](DOCS.md)
 ## Tests
 
 ```shell
-python3 atap_corpus_loader_tests/tests.py
+python3 tests/tests.py
 ```
 
 ## Contributing
