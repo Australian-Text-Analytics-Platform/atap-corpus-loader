@@ -10,7 +10,7 @@ from atap_corpus_loader.view.gui.MetaEditorWidget import MetaEditorWidget
 
 
 class FileLoaderWidget(AbstractWidget):
-    def __init__(self, view_handler: ViewWrapperWidget, controller: Controller):
+    def __init__(self, view_handler: ViewWrapperWidget, controller: Controller, include_meta_loader: bool):
         super().__init__()
         self.view_handler: ViewWrapperWidget = view_handler
         self.controller: Controller = controller
@@ -21,6 +21,7 @@ class FileLoaderWidget(AbstractWidget):
         self.load_as_meta_button: Button = Button(name='Load as metadata', width=130,
                                                   button_style='outline', button_type='success')
         self.load_as_meta_button.on_click(self.load_as_meta)
+        self.load_as_meta_button.visible = include_meta_loader
 
         self.unload_all_button: Button = Button(name="Unload all", width=100, button_style='solid',
                                                 button_type='danger', disabled=True)

@@ -8,11 +8,11 @@ class ViewWrapperWidget(AbstractWidget):
     """
     A wrapper class that holds different loading method interfaces within a Tab
     """
-    def __init__(self, controller: Controller):
+    def __init__(self, controller: Controller, include_meta_loader: bool):
         super().__init__()
         self.controller: Controller = controller
 
-        self.file_loader: FileLoaderWidget = FileLoaderWidget(self, controller)
+        self.file_loader: FileLoaderWidget = FileLoaderWidget(self, controller, include_meta_loader)
         self.corpus_display: CorpusInfoWidget = CorpusInfoWidget(controller)
 
         self.panel = Tabs(("File Loader", self.file_loader),

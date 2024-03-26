@@ -17,15 +17,17 @@ class CorpusLoader(Viewer):
     The build_callback_fn will be called when a corpus is built (can be set using set_build_callback()).
     """
 
-    def __init__(self, root_directory: str, **params):
+    def __init__(self, root_directory: str, include_meta_loader: bool = False, **params):
         """
         :param root_directory: The root directory that the file selector will search for files to load. The argument must be a string. The directory may be non-existent at initialisation time, but no files will be displayed until it exists.
+        :param include_meta_loader: If True, the Corpus Loader will include additional metadata joining functionality. False by default
         :param params: passed onto the panel.viewable.Viewer super-class
         :type root_directory: str
+        :type include_meta_loader: bool
         """
         super().__init__(**params)
         self.controller: Controller = Controller(root_directory)
-        self.view: ViewWrapperWidget = ViewWrapperWidget(self.controller)
+        self.view: ViewWrapperWidget = ViewWrapperWidget(self.controller, include_meta_loader)
 
     def __panel__(self):
         return self.view
