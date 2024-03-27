@@ -62,7 +62,9 @@ class TestFileTypes(unittest.TestCase):
         self.assertTrue(len(self.corpus_loader.controller.get_corpus_headers()) > 0,
                         "Expected more than 0 headers, got 0")
 
-        text_header = self.corpus_loader.controller.get_corpus_headers()[0].name
+        corpus_headers = self.corpus_loader.controller.get_corpus_headers()
+
+        text_header = corpus_headers[0].name
         meta_editor_widget._set_text_header(text_header)
 
         if meta_filter is not None:
@@ -73,6 +75,13 @@ class TestFileTypes(unittest.TestCase):
             file_loader_widget.load_as_meta()
             meta_editor_widget.corpus_link_dropdown.value = TestFileTypes.META_LINKING_HEADER
             meta_editor_widget.meta_link_dropdown.value = TestFileTypes.META_LINKING_HEADER
+
+            meta_headers = self.corpus_loader.controller.get_meta_headers()
+            for header in meta_headers:
+                header.include = True
+
+        for header in corpus_headers:
+            header.include = True
 
         # Build the corpus
         file_loader_widget.build_corpus()
