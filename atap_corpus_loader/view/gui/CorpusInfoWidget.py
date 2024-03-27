@@ -2,7 +2,8 @@ from io import BytesIO
 from typing import Optional
 
 import panel
-from panel import Row, Accordion, bind, HSpacer
+from panel import Row, Accordion, bind, HSpacer, Column
+from panel.layout import Divider
 from panel.pane import Markdown
 from panel.widgets import Button, TextInput, FileDownload, Select
 
@@ -25,7 +26,7 @@ class CorpusInfoWidget(AbstractWidget):
 
         self.corpus_display: Markdown = Markdown()
 
-        self.panel = Row(self.corpus_controls, self.corpus_display)
+        self.panel = Column(self.corpus_controls, Divider(), self.corpus_display)
 
     @staticmethod
     def _build_corpus_label(corpus_info: ViewCorpusInfo) -> str:
@@ -43,11 +44,12 @@ class CorpusInfoWidget(AbstractWidget):
         if len(corpus_info.headers) != len(corpus_info.dtypes):
             return " "
 
-        header_row = "| " + " | ".join(corpus_info.headers) + " |"
-        spacer_row = "| :-: " * len(corpus_info.headers) + "|"
-        data_row = "| " + " | ".join(corpus_info.dtypes) + " |"
+        header_row = "| Data label " + "| " + " | ".join(corpus_info.headers) + " |"
+        spacer_row = "| :-: " * (len(corpus_info.headers) + 1) + "|"
+        dtype_row = "| **Datatype** " + "| " + " | ".join(corpus_info.dtypes) + " |"
+        data_row = "| **First document** " + "| " + " | ".join(corpus_info.first_row_data) + " |"
 
-        header_table_text = f"{header_row}\n{spacer_row}\n{data_row}"
+        header_table_text = f"**{corpus_info.name}**\n{header_row}\n{spacer_row}\n{dtype_row}\n{data_row}"
         return header_table_text
 
     def export_corpus(self, corpus_name: str, filetype: str) -> Optional[BytesIO]:

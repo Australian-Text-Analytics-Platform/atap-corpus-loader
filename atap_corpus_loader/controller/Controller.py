@@ -180,22 +180,23 @@ class Controller:
         corpora_info: list[ViewCorpusInfo] = []
 
         for corpus in self.corpora.items():
-            corpus_as_df: DataFrame = corpus.to_dataframe()
+            corpus_df: DataFrame = corpus.to_dataframe()
 
             name: Optional[str] = corpus.name
             num_rows: int = len(corpus)
             headers: list[str] = []
             dtypes: list[str] = []
             dtype: str
-            for header_name, dtype_obj in corpus_as_df.dtypes.items():
+            for header_name, dtype_obj in corpus_df.dtypes.items():
                 try:
                     dtype = DataType(str(dtype_obj).lower()).name
                 except ValueError:
                     dtype = DataType.TEXT.name
                 dtypes.append(dtype)
                 headers.append(str(header_name))
+            first_row_data: list[str] = [str(x) for x in corpus_df.iloc[0]]
 
-            corpora_info.append(ViewCorpusInfo(name, num_rows, headers, dtypes))
+            corpora_info.append(ViewCorpusInfo(name, num_rows, headers, dtypes, first_row_data))
 
         return corpora_info
 
