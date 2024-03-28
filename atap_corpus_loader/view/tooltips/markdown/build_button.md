@@ -1,0 +1,1 @@
+After loading all necessary files, _optionally_ enter a name in the **Corpus name** field and then click the **Build corpus** button to finalise the corpus.

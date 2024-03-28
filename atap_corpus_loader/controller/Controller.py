@@ -111,11 +111,10 @@ class Controller:
             self.corpus_headers = self.file_loader_service.get_inferred_corpus_headers()
         except FileLoadError as e:
             self.display_error(str(e))
-            self.unload_filepaths(filepath_ls)
+            self.unload_all()
             return False
 
         return True
-
 
     def load_meta_from_filepaths(self, filepath_ls: list[str], include_hidden: bool) -> bool:
         Controller.LOGGER.debug(f"Files loaded as meta: {filepath_ls}")
@@ -124,7 +123,7 @@ class Controller:
             self.meta_headers = self.file_loader_service.get_inferred_meta_headers()
         except FileLoadError as e:
             self.display_error(str(e))
-            self.unload_filepaths(filepath_ls)
+            self.unload_all()
             return False
 
         return True

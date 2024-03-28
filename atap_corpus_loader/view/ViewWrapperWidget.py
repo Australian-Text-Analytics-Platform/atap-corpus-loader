@@ -1,7 +1,11 @@
+from typing import Optional
+
 from panel import Tabs
+from panel.widgets import TooltipIcon
 
 from atap_corpus_loader.controller import Controller
 from atap_corpus_loader.view.gui import AbstractWidget, FileLoaderWidget, CorpusInfoWidget
+from atap_corpus_loader.view.tooltips import TooltipManager
 
 
 class ViewWrapperWidget(AbstractWidget):
@@ -11,6 +15,7 @@ class ViewWrapperWidget(AbstractWidget):
     def __init__(self, controller: Controller, include_meta_loader: bool):
         super().__init__()
         self.controller: Controller = controller
+        self.tooltip_manager: TooltipManager = TooltipManager()
 
         self.file_loader: FileLoaderWidget = FileLoaderWidget(self, controller, include_meta_loader)
         self.corpus_display: CorpusInfoWidget = CorpusInfoWidget(controller)
@@ -49,3 +54,6 @@ class ViewWrapperWidget(AbstractWidget):
             self.controller.display_success(f"Corpus {corpus_name} built successfully")
 
         return success
+
+    def get_tooltip(self, tooltip_name: str) -> Optional[TooltipIcon]:
+        return self.tooltip_manager.get_tooltip(tooltip_name)
