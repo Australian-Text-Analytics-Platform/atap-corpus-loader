@@ -129,6 +129,7 @@ class Controller:
         return True
 
     def build_corpus(self, corpus_name: str) -> bool:
+        Controller.LOGGER.debug(f"build_corpus method: Building corpus with name {corpus_name}")
         if self.is_meta_added():
             if (self.corpus_link_header is None) or (self.meta_link_header is None):
                 self.display_error("Cannot build without link headers set. Select a corpus header and a meta header as linking headers in the dropdowns")
@@ -136,6 +137,7 @@ class Controller:
 
         if (corpus_name == '') or (corpus_name is None):
             corpus_name = f"Corpus-{datetime.now()}"
+            Controller.LOGGER.debug(f"build_corpus method: No name provided, so corpus name generated: {corpus_name}")
 
         self.tqdm_obj.visible = True
         try:
@@ -143,6 +145,7 @@ class Controller:
                                                            self.meta_headers, self.text_header,
                                                            self.corpus_link_header, self.meta_link_header,
                                                            self.tqdm_obj)
+            Controller.LOGGER.debug(f"build_corpus method: corpus built")
         except FileLoadError as e:
             Controller.LOGGER.exception("Exception while building corpus: ")
             self.display_error(str(e))
@@ -156,6 +159,7 @@ class Controller:
 
         try:
             self.corpora.add(corpus)
+            Controller.LOGGER.debug(f"build_corpus method: corpus added to corpora")
         except Exception as e:
             Controller.LOGGER.exception("Exception while adding corpus to corpora: ")
             self.display_error(str(e))
@@ -165,6 +169,7 @@ class Controller:
         try:
             if self.build_callback_fn is not None:
                 self.build_callback_fn(*self.build_callback_args, **self.build_callback_kwargs)
+                Controller.LOGGER.debug(f"build_corpus method: callback function called")
         except Exception as e:
             Controller.LOGGER.exception("Exception while calling build callback: ")
             self.display_error(f"Build callback error: {e}")
@@ -172,6 +177,7 @@ class Controller:
             return False
 
         self.tqdm_obj.visible = False
+        Controller.LOGGER.debug(f"build_corpus method: corpus building complete")
 
         return True
 
@@ -193,7 +199,9 @@ class Controller:
                     dtype = DataType.TEXT.name
                 dtypes.append(dtype)
                 headers.append(str(header_name))
-            first_row_data: list[str] = [str(x) for x in corpus_df.iloc[0]]
+            first_row_data: list[str] = []
+            if not corpus_df.empty:
+                first_row_data = [str(x) for x in corpus_df.iloc[0]]
 
             corpora_info.append(ViewCorpusInfo(name, num_rows, headers, dtypes, first_row_data))
 
