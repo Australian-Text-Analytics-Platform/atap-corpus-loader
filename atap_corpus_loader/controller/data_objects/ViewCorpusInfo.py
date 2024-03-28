@@ -3,6 +3,7 @@ from typing import Optional
 
 class ViewCorpusInfo:
     DATA_WIDTH: int = 50
+
     def __init__(self, name: Optional[str], num_rows: int,
                  headers: list[str], dtypes: list[str], first_row_data: list[str]):
         self.name: Optional[str] = name
