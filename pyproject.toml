@@ -10,9 +10,9 @@ packages = [{include = "atap_corpus_loader"}]
 [tool.poetry.dependencies]
 python = ">=3.10.0,<3.12.0"
 pandas = "~=2.1.0"
-atap_corpus = "~=0.1.12"
+atap_corpus = "~=0.1.13"
 odfpy = "~=1.4.0"
-panel = "~=1.3.0"
+panel = "~=1.4.0"
 pyreadr = "~=0.5.0"
 python-docx = "~=1.1.0"
 

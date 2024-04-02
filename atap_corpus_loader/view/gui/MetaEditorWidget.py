@@ -6,6 +6,7 @@ from panel.widgets import Select, Checkbox
 
 from atap_corpus_loader.controller import Controller
 from atap_corpus_loader.controller.data_objects.CorpusHeader import CorpusHeader
+from atap_corpus_loader.view import ViewWrapperWidget
 from atap_corpus_loader.view.gui import AbstractWidget
 
 
@@ -14,41 +15,48 @@ class MetaEditorWidget(AbstractWidget):
     ERROR_BORDER_STYLE = {'border': '1px solid red', 'border-radius': '5px'}
     HEADER_STYLE = {'margin-top': '0', 'margin-bottom': '0'}
 
-    def __init__(self, view_handler: AbstractWidget, controller: Controller):
+    def __init__(self, view_handler: ViewWrapperWidget, controller: Controller):
         super().__init__()
-        self.view_handler: AbstractWidget = view_handler
+        self.view_handler: ViewWrapperWidget = view_handler
         self.controller: Controller = controller
 
         self.corpus_table_container = GridBox(styles=MetaEditorWidget.TABLE_BORDER_STYLE)
         self.meta_table_container = GridBox(styles=MetaEditorWidget.TABLE_BORDER_STYLE)
 
-        self.corpus_table_title = Markdown("## Corpus editor")
-        self.meta_table_title = Markdown("## Metadata editor")
+        corpus_table_title = Markdown("## Corpus editor")
+        corpus_table_tooltip = self.view_handler.get_tooltip('corpus_editor')
+        self.corpus_table_row: Row = Row(corpus_table_title, corpus_table_tooltip)
+
+        meta_table_title = Markdown("## Metadata editor")
+        meta_table_tooltip = self.view_handler.get_tooltip('meta_editor')
+        self.meta_table_row: Row = Row(meta_table_title, meta_table_tooltip)
 
         self.text_header_dropdown = Select(name='Select document label', width=200)
         text_header_fn = bind(self._set_text_header, self.text_header_dropdown)
 
         self.link_row = Row(visible=False, styles=MetaEditorWidget.ERROR_BORDER_STYLE)
-        self.corpus_link_dropdown = Select(name='Select corpus linking label', width=200)
+        link_row_tooltip = self.view_handler.get_tooltip('linking_selectors')
+        self.corpus_link_dropdown = Select(name='Select corpus linking label', width=180)
         corpus_link_fn = bind(self._set_corpus_link_header, self.corpus_link_dropdown)
-        self.meta_link_dropdown = Select(name='Select metadata linking label', width=200)
+        self.meta_link_dropdown = Select(name='Select metadata linking label', width=180)
         meta_link_fn = bind(self._set_meta_link_header, self.meta_link_dropdown)
         link_emoji = '\U0001F517'
         self.link_markdown = Str(link_emoji, styles={"font-size": "2em", "margin": "auto"})
-        self.link_row.objects = [self.corpus_link_dropdown,
-                                 self.link_markdown,
+        self.link_row.objects = [link_row_tooltip,
+                                 self.corpus_link_dropdown,
+                                 self.link_markdown.clone(),
                                  self.meta_link_dropdown,
                                  Column(corpus_link_fn, visible=False),
                                  Column(meta_link_fn, visible=False)]
 
         self.panel = Column(
-            self.corpus_table_title,
+            self.corpus_table_row,
             Row(self.text_header_dropdown, text_header_fn),
             self.corpus_table_container,
             Spacer(height=20),
             self.link_row,
             Spacer(height=20),
-            self.meta_table_title,
+            self.meta_table_row,
             self.meta_table_container
         )
         self.update_display()
@@ -95,14 +103,14 @@ class MetaEditorWidget(AbstractWidget):
                 dtype_fn = bind(self.controller.update_meta_header, header, None, datatype_selector)
             else:
                 dtype_fn = bind(self.controller.update_corpus_header, header, None, datatype_selector)
-            table_cells.append(Row(datatype_selector, dtype_fn))
+            table_cells.append(Row(datatype_selector, Column(dtype_fn, visible=False)))
 
             include_checkbox = Checkbox(value=header.include, align='center', disabled=(is_text or is_link))
             if is_meta_table:
                 include_fn = bind(self.controller.update_meta_header, header, include_checkbox, None)
             else:
                 include_fn = bind(self.controller.update_corpus_header, header, include_checkbox, None)
-            table_cells.append(Row(include_checkbox, include_fn))
+            table_cells.append(Row(include_checkbox, Column(include_fn, visible=False)))
 
             if self.controller.is_meta_added():
                 if is_link:
@@ -115,7 +123,7 @@ class MetaEditorWidget(AbstractWidget):
 
     def _build_corpus_table(self):
         is_corpus_added = self.controller.is_corpus_added()
-        self.corpus_table_title.visible = is_corpus_added
+        self.corpus_table_row.visible = is_corpus_added
         self.corpus_table_container.visible = is_corpus_added
 
         corpus_headers: list[CorpusHeader] = self.controller.get_corpus_headers()
@@ -128,7 +136,7 @@ class MetaEditorWidget(AbstractWidget):
 
     def _build_meta_table(self):
         is_meta_added = self.controller.is_meta_added()
-        self.meta_table_title.visible = is_meta_added
+        self.meta_table_row.visible = is_meta_added
         self.meta_table_container.visible = is_meta_added
 
         meta_headers: list[CorpusHeader] = self.controller.get_meta_headers()

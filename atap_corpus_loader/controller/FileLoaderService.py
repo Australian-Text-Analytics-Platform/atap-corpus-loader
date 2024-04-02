@@ -178,8 +178,6 @@ class FileLoaderService:
         else:
             raise ValueError("No corpus headers or metadata headers provided")
 
-
-
         return DataFrameCorpus.from_dataframe(final_df, text_header.name, corpus_name)
 
     @staticmethod

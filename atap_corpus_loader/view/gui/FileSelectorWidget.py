@@ -7,13 +7,14 @@ from panel.widgets import Button, MultiSelect, TextInput, Select, Checkbox
 
 from atap_corpus_loader.controller import Controller
 from atap_corpus_loader.controller.data_objects import FileReference
+from atap_corpus_loader.view import ViewWrapperWidget
 from atap_corpus_loader.view.gui import AbstractWidget
 
 
 class FileSelectorWidget(AbstractWidget):
-    def __init__(self, view_handler: AbstractWidget, controller: Controller):
+    def __init__(self, view_handler: ViewWrapperWidget, controller: Controller, width: int):
         super().__init__()
-        self.view_handler: AbstractWidget = view_handler
+        self.view_handler: ViewWrapperWidget = view_handler
         self.controller: Controller = controller
         # The function will be set by an instance method, but must be callable until then
         self._set_button_status_on_operation: Callable = lambda curr_loading: None
@@ -22,9 +23,11 @@ class FileSelectorWidget(AbstractWidget):
                                         button_style="solid", button_type="primary")
         self.select_all_button.on_click(self.select_all)
 
-        self.filter_input = TextInput(placeholder="Filter displayed files (supports wildcard syntax)",
+        self.filter_input = TextInput(placeholder="Filter displayed files\t\t\t\N{DOWNWARDS ARROW WITH CORNER LEFTWARDS}",
                                       sizing_mode='stretch_width')
         self.filter_input.param.watch(self._on_filter_change, ['value'])
+        filter_input_tooltip = self.view_handler.get_tooltip('file_filter_input')
+        self.filter_row: Row = Row(self.filter_input, filter_input_tooltip)
 
         self.show_hidden_files_checkbox = Checkbox(name="Show hidden", value=False, align="start")
         self.show_hidden_files_checkbox.param.watch(self._on_filter_change, ['value'])
@@ -36,18 +39,20 @@ class FileSelectorWidget(AbstractWidget):
         self.file_type_filter.options = ['All valid filetypes'] + self.controller.get_valid_filetypes()
         self.file_type_filter.param.watch(self._on_filter_change, ['value'])
 
-        self.selector_widget = MultiSelect(size=20, sizing_mode='stretch_width')
+        self.selector_widget = MultiSelect(size=10, sizing_mode='stretch_width')
 
         self.panel = Column(
-            Row(self.select_all_button),
-            Row(self.filter_input,
+            Row(Column(
+                self.filter_row,
+                self.select_all_button
+            ),
                 Column(
                     self.show_hidden_files_checkbox,
                     self.expand_archive_checkbox
                 ),
                 self.file_type_filter),
             Row(self.selector_widget),
-            width=700)
+            width=width)
 
         panel.state.add_periodic_callback(self.update_display, period=2000)
         self.update_display()

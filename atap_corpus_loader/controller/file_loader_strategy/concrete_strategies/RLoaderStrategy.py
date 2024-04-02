@@ -30,7 +30,7 @@ class RLoaderStrategy(FileLoaderStrategy):
         headers: list[CorpusHeader] = []
         dtype: DataType = DataType.TEXT
         for col_name in columns:
-            headers.append(CorpusHeader(col_name, dtype, True))
+            headers.append(CorpusHeader(col_name, dtype))
 
         return headers
 

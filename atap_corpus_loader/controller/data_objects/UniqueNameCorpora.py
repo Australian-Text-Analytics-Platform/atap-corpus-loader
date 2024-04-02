@@ -35,12 +35,11 @@ class UniqueNameCorpora(BaseCorpora):
         if name in self._collection:
             raise ValueError(f"Corpus with name '{name}' already exists. Select a different name")
 
-    def _simple_rename(self, name: str):
-        self._name = name
-
-    def _unique_rename(self, name: str):
+    def _unique_rename(self, corpus: TCorpus, name: str):
         self._verify_unique_name(name)
-        self._name = name
+        old_name = corpus.name
+        corpus._name = name
+        self._collection[name] = self._collection.pop(old_name)
 
     def add(self, corpus: TCorpus):
         """ Adds a Corpus into the Corpora. Corpus name is used as the name for get(), remove().
@@ -53,7 +52,8 @@ class UniqueNameCorpora(BaseCorpora):
 
         self._verify_unique_name(corpus.name)
 
-        corpus.rename = self._unique_rename
+        corpus.__ORIG_RENAME = corpus.rename
+        corpus.rename = lambda new_name, corpus_obj=corpus: self._unique_rename(corpus_obj, new_name)
         self._collection[corpus.name] = corpus
 
     def remove(self, name: str):
@@ -62,7 +62,7 @@ class UniqueNameCorpora(BaseCorpora):
         If Corpus does not exist, it'll have no effect.
         """
         try:
-            self._collection[name].rename = self._simple_rename
+            self._collection[name].rename = self._collection[name].__ORIG_RENAME
             del self._collection[name]
         except KeyError:
             return

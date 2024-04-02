@@ -1,6 +1,6 @@
 from panel import Row, Spacer, Column, HSpacer
 from panel.pane import Markdown
-from panel.widgets import Button, TextInput
+from panel.widgets import Button, TextInput, TooltipIcon
 
 from atap_corpus_loader.controller import Controller
 from atap_corpus_loader.view import ViewWrapperWidget
@@ -10,32 +10,38 @@ from atap_corpus_loader.view.gui.MetaEditorWidget import MetaEditorWidget
 
 
 class FileLoaderWidget(AbstractWidget):
-    def __init__(self, view_handler: ViewWrapperWidget, controller: Controller):
+    LOADER_WIDTH: int = 600
+
+    def __init__(self, view_handler: ViewWrapperWidget, controller: Controller, include_meta_loader: bool):
         super().__init__()
         self.view_handler: ViewWrapperWidget = view_handler
         self.controller: Controller = controller
         
-        self.load_as_corpus_button: Button = Button(name='Load as corpus', width=130,
-                                                    button_style='outline', button_type='success')
+        self.load_as_corpus_button: Button = Button(name='Load as corpus', width=130, button_style='outline', button_type='success')
         self.load_as_corpus_button.on_click(self.load_as_corpus)
-        self.load_as_meta_button: Button = Button(name='Load as metadata', width=130,
-                                                  button_style='outline', button_type='success')
+        load_corpus_tooltip = self.view_handler.get_tooltip('load_corpus_button')
+        load_corpus_tooltip.visible = not include_meta_loader
+        self.load_as_corpus_row: Row = Row(self.load_as_corpus_button, load_corpus_tooltip)
+        self.load_as_meta_button: Button = Button(name='Load as metadata', width=130, button_style='outline', button_type='success')
         self.load_as_meta_button.on_click(self.load_as_meta)
+        load_buttons_tooltip = self.view_handler.get_tooltip('load_buttons')
+        self.load_as_meta_row: Row = Row(self.load_as_meta_button, load_buttons_tooltip, visible=include_meta_loader)
 
-        self.unload_all_button: Button = Button(name="Unload all", width=100, button_style='solid',
-                                                button_type='danger', disabled=True)
-        self.unload_all_button.on_click(self.unload_all)
-        self.unload_selected_button: Button = Button(name="Unload selected", width=100, button_style='outline',
-                                                     button_type='danger', disabled=True)
+        self.unload_selected_button: Button = Button(name="Unload selected", width=120, button_style='outline', button_type='danger', disabled=True, align='end')
         self.unload_selected_button.on_click(self.unload_selected)
+        self.unload_all_button: Button = Button(name="Unload all", width=120, button_style='solid', button_type='danger', disabled=True, align='end')
+        self.unload_all_button.on_click(self.unload_all)
+        self.unload_col: Column = Column(self.unload_selected_button, self.unload_all_button)
 
         self.loaded_file_info = Markdown()
         
-        self.corpus_name_input = TextInput(placeholder='Corpus name', width=150, visible=False)
-        self.build_button = Button(name='Build corpus', button_style='solid', button_type='success', visible=False)
+        self.corpus_name_input = TextInput(placeholder='Corpus name', width=150)
+        self.build_button: Button = Button(name='Build corpus', button_style='solid', button_type='success')
         self.build_button.on_click(self.build_corpus)
+        build_tool_tip: TooltipIcon = self.view_handler.get_tooltip('build_button')
+        self.build_button_row: Row = Row(self.corpus_name_input, self.build_button, build_tool_tip, visible=False, align='end')
 
-        self.file_selector = FileSelectorWidget(view_handler, controller)
+        self.file_selector = FileSelectorWidget(view_handler, controller, width=self.LOADER_WIDTH)
         self.file_selector.set_button_operation_fn(self._set_button_status_on_operation)
         self.meta_editor = MetaEditorWidget(view_handler, controller)
 
@@ -43,17 +49,15 @@ class FileLoaderWidget(AbstractWidget):
             Column(
                 self.file_selector,
                 Row(Column(
-                    Row(self.load_as_corpus_button,
-                        self.load_as_meta_button),
-                    Row(self.corpus_name_input,
-                        self.build_button),
-                    Row(self.controller.tqdm_obj)
+                    Row(self.load_as_corpus_row,
+                        self.load_as_meta_row),
+                    self.build_button_row
                 ),
                     self.loaded_file_info,
                     HSpacer(),
-                    self.unload_selected_button,
-                    self.unload_all_button,
-                    width=700)
+                    self.unload_col,
+                    width=self.LOADER_WIDTH),
+                Row(self.controller.get_build_progress_bar())
             ),
             Spacer(width=50),
             self.meta_editor)
@@ -74,10 +78,9 @@ class FileLoaderWidget(AbstractWidget):
 
     def _set_build_buttons_status(self, *_):
         files_added: bool = self.controller.is_meta_added() or self.controller.is_corpus_added()
-        self.corpus_name_input.visible = files_added
-        self.build_button.visible = files_added
-        self.unload_all_button.disabled = not files_added
+        self.build_button_row.visible = files_added
         self.unload_selected_button.disabled = not files_added
+        self.unload_all_button.disabled = not files_added
 
     def _set_button_status_on_operation(self, curr_loading: bool, *_):
         self.file_selector.selector_widget.disabled = curr_loading

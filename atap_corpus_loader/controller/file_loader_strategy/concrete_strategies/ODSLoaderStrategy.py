@@ -17,7 +17,7 @@ class ODSLoaderStrategy(FileLoaderStrategy):
                 dtype = DataType(str(dtype_obj))
             except ValueError:
                 dtype = DataType.TEXT
-            headers.append(CorpusHeader(str(header_name), dtype, True))
+            headers.append(CorpusHeader(str(header_name), dtype))
 
         return headers
 
