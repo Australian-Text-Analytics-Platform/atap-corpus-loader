@@ -19,15 +19,14 @@ class ODTLoaderStrategy(FileLoaderStrategy):
         return headers
 
     def get_dataframe(self, headers: list[CorpusHeader]) -> DataFrame:
-        file_buf: BytesIO = self.file_ref.get_content_buffer()
-        odt_doc = load(file_buf)
-        document = ''
-        for element in odt_doc.getElementsByType(text.P):
-            document += teletype.extractText(element)
-
         included_headers: list[str] = [header.name for header in headers if header.include]
         file_data = {}
         if 'document' in included_headers:
+            file_buf: BytesIO = self.file_ref.get_content_buffer()
+            odt_doc = load(file_buf)
+            document = ''
+            for element in odt_doc.getElementsByType(text.P):
+                document += teletype.extractText(element)
             file_data['document'] = [document]
         if 'filename' in included_headers:
             file_data['filename'] = [self.file_ref.get_filename_no_ext()]

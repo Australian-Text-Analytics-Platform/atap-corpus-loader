@@ -17,12 +17,11 @@ class TXTLoaderStrategy(FileLoaderStrategy):
         return headers
 
     def get_dataframe(self, headers: list[CorpusHeader]) -> DataFrame:
-        file_buf: BytesIO = self.file_ref.get_content_buffer()
-        document = file_buf.read()
-
         included_headers: list[str] = [header.name for header in headers if header.include]
         file_data = {}
         if 'document' in included_headers:
+            file_buf: BytesIO = self.file_ref.get_content_buffer()
+            document = file_buf.read()
             file_data['document'] = [document]
         if 'filename' in included_headers:
             file_data['filename'] = [self.file_ref.get_filename_no_ext()]
