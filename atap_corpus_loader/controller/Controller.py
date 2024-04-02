@@ -46,8 +46,8 @@ class Controller:
         self.build_callback_args: list = []
         self.build_callback_kwargs: dict = {}
 
-        self.tqdm_obj = Tqdm()
-        self.tqdm_obj.visible = False
+        self.build_tqdm = Tqdm(visible=False)
+        self.export_tqdm = Tqdm(visible=False)
 
     @staticmethod
     def setup_logger():
@@ -107,7 +107,7 @@ class Controller:
     def load_corpus_from_filepaths(self, filepath_ls: list[str], include_hidden: bool) -> bool:
         Controller.LOGGER.debug(f"Files loaded as corpus: {filepath_ls}")
         try:
-            self.file_loader_service.add_corpus_files(filepath_ls, include_hidden, self.tqdm_obj)
+            self.file_loader_service.add_corpus_files(filepath_ls, include_hidden, self.build_tqdm)
             self.corpus_headers = self.file_loader_service.get_inferred_corpus_headers()
         except FileLoadError as e:
             self.display_error(str(e))
@@ -119,7 +119,7 @@ class Controller:
     def load_meta_from_filepaths(self, filepath_ls: list[str], include_hidden: bool) -> bool:
         Controller.LOGGER.debug(f"Files loaded as meta: {filepath_ls}")
         try:
-            self.file_loader_service.add_meta_files(filepath_ls, include_hidden, self.tqdm_obj)
+            self.file_loader_service.add_meta_files(filepath_ls, include_hidden, self.build_tqdm)
             self.meta_headers = self.file_loader_service.get_inferred_meta_headers()
         except FileLoadError as e:
             self.display_error(str(e))
@@ -139,22 +139,22 @@ class Controller:
             corpus_name = f"Corpus-{datetime.now()}"
             Controller.LOGGER.debug(f"build_corpus method: No name provided, so corpus name generated: {corpus_name}")
 
-        self.tqdm_obj.visible = True
+        self.build_tqdm.visible = True
         try:
             corpus = self.file_loader_service.build_corpus(corpus_name, self.corpus_headers,
                                                            self.meta_headers, self.text_header,
                                                            self.corpus_link_header, self.meta_link_header,
-                                                           self.tqdm_obj)
+                                                           self.build_tqdm)
             Controller.LOGGER.debug(f"build_corpus method: corpus built")
         except FileLoadError as e:
             Controller.LOGGER.exception("Exception while building corpus: ")
             self.display_error(str(e))
-            self.tqdm_obj.visible = False
+            self.build_tqdm.visible = False
             return False
         except Exception as e:
             Controller.LOGGER.exception("Exception while building corpus: ")
             self.display_error(f"Unexpected error building corpus: {e}")
-            self.tqdm_obj.visible = False
+            self.build_tqdm.visible = False
             return False
 
         try:
@@ -163,7 +163,7 @@ class Controller:
         except Exception as e:
             Controller.LOGGER.exception("Exception while adding corpus to corpora: ")
             self.display_error(str(e))
-            self.tqdm_obj.visible = False
+            self.build_tqdm.visible = False
             return False
 
         try:
@@ -173,10 +173,10 @@ class Controller:
         except Exception as e:
             Controller.LOGGER.exception("Exception while calling build callback: ")
             self.display_error(f"Build callback error: {e}")
-            self.tqdm_obj.visible = False
+            self.build_tqdm.visible = False
             return False
 
-        self.tqdm_obj.visible = False
+        self.build_tqdm.visible = False
         Controller.LOGGER.debug(f"build_corpus method: corpus building complete")
 
         return True
@@ -211,6 +211,7 @@ class Controller:
         self.corpora.remove(corpus_name)
 
     def rename_corpus(self, corpus_name: str, new_name: str):
+        Controller.LOGGER.debug(f"Renaming corpus named '{corpus_name}' to '{new_name}'")
         corpus: Optional[DataFrameCorpus] = self.corpora.get(corpus_name)
         if corpus is None:
             self.display_error(f"No corpus with name {corpus_name} found")
@@ -220,6 +221,8 @@ class Controller:
             corpus.rename(new_name)
         except ValueError as e:
             self.display_error(str(e))
+        except Exception as e:
+            self.display_error(f"Unexpected error while renaming: {e}")
 
     def get_loaded_file_counts(self) -> dict[str, int]:
         corpus_file_set = set(self.file_loader_service.get_loaded_corpus_files())
@@ -285,6 +288,9 @@ class Controller:
 
     def get_valid_filetypes(self) -> list[str]:
         return [ft.name for ft in ValidFileType]
+
+    def get_build_progress_bar(self) -> Tqdm:
+        return self.build_tqdm
 
     def is_corpus_added(self) -> bool:
         return len(self.file_loader_service.get_loaded_corpus_files()) > 0
@@ -352,7 +358,16 @@ class Controller:
             self.display_error(f"No corpus with name '{corpus_name}' found")
             return None
 
+        self.export_tqdm.visible = True
         try:
-            return self.corpus_export_service.export(corpus.to_dataframe(), filetype)
+            file_object: BytesIO = self.corpus_export_service.export(corpus.to_dataframe(), filetype, self.export_tqdm)
+            self.export_tqdm.visible = False
+            return file_object
         except ValueError as e:
             self.display_error(str(e))
+        except Exception as e:
+            self.display_error(f"Unexpected error while exporting: {e}")
+        self.export_tqdm.visible = False
+
+    def get_export_progress_bar(self) -> Tqdm:
+        return self.export_tqdm

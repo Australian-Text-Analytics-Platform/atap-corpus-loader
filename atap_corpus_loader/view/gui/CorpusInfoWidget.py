@@ -1,7 +1,7 @@
+import re
 from io import BytesIO
 from typing import Optional
 
-import panel
 from panel import Row, Accordion, bind, HSpacer, Column
 from panel.layout import Divider
 from panel.pane import Markdown
@@ -10,8 +10,6 @@ from panel.widgets import Button, TextInput, FileDownload, Select
 from atap_corpus_loader.controller import Controller
 from atap_corpus_loader.controller.data_objects import ViewCorpusInfo
 from atap_corpus_loader.view.gui import AbstractWidget
-
-panel.extension()
 
 
 class CorpusInfoWidget(AbstractWidget):
@@ -26,7 +24,11 @@ class CorpusInfoWidget(AbstractWidget):
 
         self.corpus_display: Markdown = Markdown()
 
-        self.panel = Column(self.corpus_controls, Divider(), self.corpus_display)
+        self.panel = Column(
+            self.corpus_controls,
+            Row(self.controller.get_export_progress_bar()),
+            Divider(),
+            self.corpus_display)
 
     @staticmethod
     def _build_corpus_label(corpus_info: ViewCorpusInfo) -> str:
@@ -44,10 +46,13 @@ class CorpusInfoWidget(AbstractWidget):
         if len(corpus_info.headers) != len(corpus_info.dtypes):
             return " "
 
+        sanitised_first_row: list[str] = [re.sub(r'([\\\`*_{}[\]()#+\-.!])', r'\\\1', x) for x in corpus_info.first_row_data]
+        sanitised_first_row = [re.sub(r'\n', ' ', x) for x in sanitised_first_row]
+
         header_row = "| Data label " + "| " + " | ".join(corpus_info.headers) + " |"
         spacer_row = "| :-: " * (len(corpus_info.headers) + 1) + "|"
         dtype_row = "| **Datatype** " + "| " + " | ".join(corpus_info.dtypes) + " |"
-        data_row = "| **First document** " + "| " + " | ".join(corpus_info.first_row_data) + " |"
+        data_row = "| **First document** " + "| " + " | ".join(sanitised_first_row) + " |"
 
         header_table_text = f"**{corpus_info.name}**\n{header_row}\n{spacer_row}\n{dtype_row}\n{data_row}"
         return header_table_text

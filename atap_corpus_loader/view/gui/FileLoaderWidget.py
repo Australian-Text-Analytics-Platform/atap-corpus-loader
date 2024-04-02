@@ -51,13 +51,13 @@ class FileLoaderWidget(AbstractWidget):
                 Row(Column(
                     Row(self.load_as_corpus_row,
                         self.load_as_meta_row),
-                    self.build_button_row,
-                    Row(self.controller.tqdm_obj)
+                    self.build_button_row
                 ),
                     self.loaded_file_info,
                     HSpacer(),
                     self.unload_col,
-                    width=self.LOADER_WIDTH)
+                    width=self.LOADER_WIDTH),
+                Row(self.controller.get_build_progress_bar())
             ),
             Spacer(width=50),
             self.meta_editor)
