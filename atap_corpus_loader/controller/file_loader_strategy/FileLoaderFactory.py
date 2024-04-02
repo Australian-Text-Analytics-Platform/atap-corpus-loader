@@ -11,12 +11,13 @@ class ValidFileType(Enum):
     An enum of valid file extensions that are supported with a loader
     """
     TXT = auto()
-    ODT = auto()
     DOCX = auto()
+    ODT = auto()
     CSV = auto()
     TSV = auto()
     XLSX = auto()
     ODS = auto()
+    XML = auto()
     ZIP = auto()
 
 
@@ -29,12 +30,13 @@ class FileLoaderFactory:
     """
     FILETYPE_LOADER_MAP: dict = {
         ValidFileType.TXT: TXTLoaderStrategy,
-        ValidFileType.ODT: ODTLoaderStrategy,
         ValidFileType.DOCX: DOCXLoaderStrategy,
+        ValidFileType.ODT: ODTLoaderStrategy,
         ValidFileType.CSV: CSVLoaderStrategy,
         ValidFileType.TSV: TSVLoaderStrategy,
         ValidFileType.XLSX: XLSXLoaderStrategy,
-        ValidFileType.ODS: ODSLoaderStrategy
+        ValidFileType.ODS: ODSLoaderStrategy,
+        ValidFileType.XML: XMLLoaderStrategy
     }
 
     @staticmethod
