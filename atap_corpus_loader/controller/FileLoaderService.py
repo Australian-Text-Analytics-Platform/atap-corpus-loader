@@ -2,6 +2,7 @@ from glob import iglob
 from os import R_OK, access
 from os.path import normpath, sep, isdir, exists
 from typing import Optional, Iterator
+from zipfile import BadZipFile
 
 from pandas import DataFrame, merge, concat
 from panel.widgets import Tqdm
@@ -70,7 +71,10 @@ class FileLoaderService:
 
             self.loaded_corpus_files.add(file_ref)
             if file_ref.is_archive():
-                zip_refs: list[FileReference] = self.file_ref_factory.get_zip_file_refs(filepath)
+                try:
+                    zip_refs: list[FileReference] = self.file_ref_factory.get_zip_file_refs(filepath)
+                except BadZipFile:
+                    raise FileLoadError(f"Can't read Zip file as it is malformed: {file_ref.get_filename()}")
                 for zip_ref in zip_refs:
                     if not zip_ref.is_hidden() or include_hidden:
                         self.loaded_corpus_files.add(zip_ref)
@@ -86,7 +90,10 @@ class FileLoaderService:
 
             self.loaded_meta_files.add(file_ref)
             if file_ref.is_archive():
-                zip_refs: list[FileReference] = self.file_ref_factory.get_zip_file_refs(filepath)
+                try:
+                    zip_refs: list[FileReference] = self.file_ref_factory.get_zip_file_refs(filepath)
+                except BadZipFile:
+                    raise FileLoadError(f"Can't read Zip file as it is malformed: {file_ref.get_filename()}")
                 for zip_ref in zip_refs:
                     if not zip_ref.is_hidden() or include_hidden:
                         self.loaded_meta_files.add(zip_ref)

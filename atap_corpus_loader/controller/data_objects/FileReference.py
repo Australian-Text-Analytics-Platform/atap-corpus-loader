@@ -2,7 +2,7 @@ from io import BytesIO
 from os.path import join, dirname, basename
 from tempfile import NamedTemporaryFile
 from typing import Optional
-from zipfile import ZipFile
+from zipfile import ZipFile, BadZipFile
 
 
 class FileReference:
@@ -224,7 +224,10 @@ class FileReferenceFactory:
         file_refs: list[FileReference]
         curr_file_ref = [self.get_file_ref(path)]
         if path.endswith('.zip'):
-            file_refs = self.get_zip_file_refs(path)
+            try:
+                file_refs = self.get_zip_file_refs(path)
+            except BadZipFile:
+                return []
             if not expand_archived:
                 file_refs = curr_file_ref
         else:
