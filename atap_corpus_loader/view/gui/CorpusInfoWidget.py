@@ -17,9 +17,9 @@ class CorpusInfoWidget(AbstractWidget):
         super().__init__()
         self.controller: Controller = controller
 
-        self.corpus_controls = Accordion(toggle=True, width=600)
-        self.corpus_controls.header_background = "#FFFFFA"
-        self.corpus_controls.active_header_background = "#7A8B99"
+        self.corpus_controls = Accordion(toggle=True, width=600,
+                                         header_background="#2675C3",
+                                         active_header_background="#56AAFC")
         self.corpus_controls.param.watch(self._update_corpus_display, 'active', onlychanged=False)
 
         self.corpus_display: Markdown = Markdown()
