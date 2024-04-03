@@ -1,6 +1,5 @@
 from io import BytesIO
-from typing import Literal
-from xml.etree.ElementTree import parse, tostring, Element
+from xml.etree.ElementTree import parse, Element
 
 from pandas import DataFrame
 
