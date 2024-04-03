@@ -6,3 +6,4 @@ from .TSVLoaderStrategy import TSVLoaderStrategy
 from .XLSXLoaderStrategy import XLSXLoaderStrategy
 from .ODSLoaderStrategy import ODSLoaderStrategy
 from .RLoaderStrategy import RLoaderStrategy
+from .XMLLoaderStrategy import XMLLoaderStrategy

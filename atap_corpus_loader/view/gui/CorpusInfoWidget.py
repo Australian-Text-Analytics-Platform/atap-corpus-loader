@@ -17,9 +17,9 @@ class CorpusInfoWidget(AbstractWidget):
         super().__init__()
         self.controller: Controller = controller
 
-        self.corpus_controls = Accordion(toggle=True, width=600)
-        self.corpus_controls.header_background = "#FFFFFA"
-        self.corpus_controls.active_header_background = "#7A8B99"
+        self.corpus_controls = Accordion(toggle=True, width=600,
+                                         header_background="#2675C3",
+                                         active_header_background="#56AAFC")
         self.corpus_controls.param.watch(self._update_corpus_display, 'active', onlychanged=False)
 
         self.corpus_display: Markdown = Markdown()
@@ -69,14 +69,16 @@ class CorpusInfoWidget(AbstractWidget):
         self.update_display()
 
     def _update_corpus_display(self, *event):
-        current_active: list[int] = self.corpus_controls.active
-        if len(current_active) == 0:
+        corpora_info: list[ViewCorpusInfo] = self.controller.get_corpora_info()
+        if len(corpora_info) == 0:
             self.corpus_display.object = ' '
             self.corpus_display.visible = False
             return
 
-        corpora_info: list[ViewCorpusInfo] = self.controller.get_corpora_info()
-        active_idx: int = current_active[0]
+        if len(self.corpus_controls.active) == 0:
+            self.corpus_controls.active = [0]
+
+        active_idx: int = self.corpus_controls.active[0]
         if active_idx >= len(corpora_info):
             self.corpus_display.object = ' '
             self.corpus_display.visible = False

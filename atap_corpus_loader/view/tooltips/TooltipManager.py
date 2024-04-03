@@ -3,9 +3,7 @@ from glob import iglob
 from os.path import sep, isdir, basename, join
 from typing import Optional
 
-from bokeh.models import Tooltip
 from panel.widgets import TooltipIcon
-
 
 
 class TooltipManager:

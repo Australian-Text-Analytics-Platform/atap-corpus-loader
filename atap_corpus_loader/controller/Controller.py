@@ -184,7 +184,7 @@ class Controller:
     def get_corpora_info(self) -> list[ViewCorpusInfo]:
         corpora_info: list[ViewCorpusInfo] = []
 
-        for corpus in self.corpora.items():
+        for corpus in reversed(self.corpora.items()):
             corpus_df: DataFrame = corpus.to_dataframe()
 
             name: Optional[str] = corpus.name

@@ -1,6 +1,7 @@
 import sys
 import unittest
 import os
+import warnings
 from typing import Optional
 
 from atap_corpus.corpus.corpus import DataFrameCorpus
@@ -40,6 +41,9 @@ class TestFileTypes(unittest.TestCase):
         return df
 
     def setUp(self):
+        # Tqdm progress bars don't handle the stderr TextIOWrapper properly during tests.
+        # This warning filter removes clutter from the test output for a (relatively) harmless issue
+        warnings.filterwarnings(action="ignore", message="unclosed", category=ResourceWarning)
         self.corpus_loader: CorpusLoader = CorpusLoader(TestFileTypes.TEST_DIR)
         self.expected_df: DataFrame = DataFrame(TestFileTypes.EXPECTED_DATA)
         for col_name, dtype in TestFileTypes.EXPECTED_DATA_TYPES.items():
@@ -131,6 +135,11 @@ class TestFileTypes(unittest.TestCase):
         corpus_filter: str = "test_data/xlsx_corpus/*"
         self._test_file_filter(corpus_filter, None)
 
+    def test_csv_meta_xml_corpus(self):
+        corpus_filter: str = "test_data/xml_corpus/*"
+        meta_filter: str = "test_data/csv_split_meta/*"
+        self._test_file_filter(corpus_filter, meta_filter)
+
     def test_csv_corpus_zip(self):
         corpus_filter: str = "test_data/csv_corpus.zip"
         self._test_file_filter(corpus_filter, None)
@@ -162,6 +171,11 @@ class TestFileTypes(unittest.TestCase):
     def test_xlsx_corpus_zip(self):
         corpus_filter: str = "test_data/*xlsx_corpus.zip"
         self._test_file_filter(corpus_filter, None)
+
+    def test_csv_meta_xml_corpus_zip(self):
+        corpus_filter: str = "test_data/*xml_corpus.zip"
+        meta_filter: str = "test_data/csv_split_meta/*"
+        self._test_file_filter(corpus_filter, meta_filter)
 
 
 if __name__ == '__main__':
