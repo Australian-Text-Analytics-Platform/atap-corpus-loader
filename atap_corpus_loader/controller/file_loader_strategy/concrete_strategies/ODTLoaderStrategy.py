@@ -4,7 +4,7 @@ from odf import text, teletype
 from odf.opendocument import load
 from pandas import DataFrame
 
-from atap_corpus_loader.controller.data_objects import CorpusHeader, DataType, FileReference
+from atap_corpus_loader.controller.data_objects import CorpusHeader, DataType
 from atap_corpus_loader.controller.file_loader_strategy.FileLoaderStrategy import FileLoaderStrategy
 
 
@@ -24,9 +24,11 @@ class ODTLoaderStrategy(FileLoaderStrategy):
         if 'document' in included_headers:
             file_buf: BytesIO = self.file_ref.get_content_buffer()
             odt_doc = load(file_buf)
-            document = ''
+            paragraphs: list[str] = []
             for element in odt_doc.getElementsByType(text.P):
-                document += teletype.extractText(element)
+                paragraphs.append(teletype.extractText(element))
+            document = '\n'.join(paragraphs)
+
             file_data['document'] = [document]
         if 'filename' in included_headers:
             file_data['filename'] = [self.file_ref.get_filename_no_ext()]
