@@ -360,7 +360,7 @@ class Controller:
 
         self.export_tqdm.visible = True
         try:
-            file_object: BytesIO = self.corpus_export_service.export(corpus.to_dataframe(), filetype, self.export_tqdm)
+            file_object: BytesIO = self.corpus_export_service.export(corpus, filetype, self.export_tqdm)
             self.export_tqdm.visible = False
             return file_object
         except ValueError as e:
