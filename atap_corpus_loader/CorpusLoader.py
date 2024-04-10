@@ -33,17 +33,14 @@ class CorpusLoader(Viewer):
     def __panel__(self):
         return self.view
 
-    def set_build_callback(self, callback: Callable, *args, **kwargs):
+    def set_build_callback(self, callback: Callable):
         """
-        Allows a callback function to be set when a corpus has completed building
+        Allows a callback function to be set when a corpus has completed building.
+        When the function is called, the only argument passed will be the built corpus object.
         :param callback: the function to call when a corpus has been built
-        :param args: positional arguments to pass onto the callback function
-        :param kwargs: keyword arguments to pass onto the callback function
         :type callback: Callable
-        :type args: Any
-        :type kwargs: Any
         """
-        self.controller.set_build_callback(callback, *args, **kwargs)
+        self.controller.set_build_callback(callback)
 
     def get_latest_corpus(self) -> Optional[DataFrameCorpus]:
         """
