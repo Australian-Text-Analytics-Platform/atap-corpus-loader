@@ -1,1 +1,1 @@
-from .CorpusLoader import CorpusLoader
+from .CorpusLoader import CorpusLoader, DataFrameCorpus
