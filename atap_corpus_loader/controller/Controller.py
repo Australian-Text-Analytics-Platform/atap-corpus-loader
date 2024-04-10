@@ -44,8 +44,6 @@ class Controller:
         self.corpora: UniqueNameCorpora = UniqueNameCorpora()
 
         self.build_callback_fn: Optional[Callable] = None
-        self.build_callback_args: list = []
-        self.build_callback_kwargs: dict = {}
 
         self.build_tqdm = Tqdm(visible=False)
         self.export_tqdm = Tqdm(visible=False)
@@ -82,12 +80,10 @@ class Controller:
         Controller.LOGGER.info(f"Success displayed: {success_msg}")
         self.notifier_service.notify_success(success_msg)
 
-    def set_build_callback(self, callback: Callable, *args, **kwargs):
+    def set_build_callback(self, callback: Callable):
         if not callable(callback):
             raise ValueError("Provided callback function must be a callable")
         self.build_callback_fn = callback
-        self.build_callback_args = args
-        self.build_callback_kwargs = kwargs
 
     def get_latest_corpus(self) -> Optional[DataFrameCorpus]:
         if len(self.corpora) == 0:
@@ -169,7 +165,7 @@ class Controller:
 
         try:
             if self.build_callback_fn is not None:
-                self.build_callback_fn(*self.build_callback_args, **self.build_callback_kwargs)
+                self.build_callback_fn(corpus)
                 Controller.LOGGER.debug(f"build_corpus method: callback function called")
         except Exception as e:
             Controller.LOGGER.exception("Exception while calling build callback: ")

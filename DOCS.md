@@ -48,18 +48,19 @@ loader.servable()
 
 ### CorpusLoader.set_build_callback
 
-Allows a callback function to be set when a corpus has completed building
+
+Allows a callback function to be set when a corpus has completed building.
+When the function is called, the only argument passed will be the built corpus object.
 
 Params
 - callback: Callable – the function to call when a corpus has been built
-- args: Any – positional arguments to pass onto the callback function
-- kwargs: Any – keyword arguments to pass onto the callback function
 
 Example
 
 ```python
+corpus_list = []
 loader = CorpusLoader('tests/test_data')
-loader.set_build_callback(foo(loader))
+loader.set_build_callback(corpus_list.append)
 ```
 
 ---
@@ -108,19 +109,13 @@ corpus_list = loader.get_corpora()
 
 ## Example usage
 
-The following snippet could be used as a cell in a Jupyter notebook. Each time the user builds a corpus, the contents will be printed.
+The following snippet could be used as a cell in a Jupyter notebook. Each time the user builds a corpus, the built corpus will be added to the list.
 
 ```python
 from atap_corpus_loader import CorpusLoader
-from pandas import DataFrame
 
-def print_corpus_df(loader: CorpusLoader):
-    corpus_df: DataFrame | None = loader.get_latest_corpus()
-    if corpus_df is not None:
-        print(corpus_df.to_dataframe().to_string())
-
-
+corpus_list = []
 loader = CorpusLoader('tests/test_data')
-loader.set_build_callback(print_corpus_df, loader)
+loader.set_build_callback(corpus_list.append)
 loader.servable()
 ```
