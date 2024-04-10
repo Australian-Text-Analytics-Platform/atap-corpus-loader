@@ -47,7 +47,7 @@ class CorpusInfoWidget(AbstractWidget):
             return " "
 
         sanitised_first_row: list[str] = [re.sub(r'([\\\`*_{}[\]()#+\-.!])', r'\\\1', x) for x in corpus_info.first_row_data]
-        sanitised_first_row = [re.sub(r'\n', ' ', x) for x in sanitised_first_row]
+        sanitised_first_row = [re.sub(r'([\n\r\n])', ' ', x) for x in sanitised_first_row]
 
         header_row = "| Data label " + "| " + " | ".join(corpus_info.headers) + " |"
         spacer_row = "| :-: " * (len(corpus_info.headers) + 1) + "|"
