@@ -4,7 +4,7 @@ from panel import Tabs
 from panel.widgets import TooltipIcon
 
 from atap_corpus_loader.controller import Controller
-from atap_corpus_loader.view.gui import AbstractWidget, FileLoaderWidget, CorpusInfoWidget
+from atap_corpus_loader.view.gui import AbstractWidget, FileLoaderWidget, CorpusInfoWidget, OniLoaderWidget
 from atap_corpus_loader.view.tooltips import TooltipManager
 
 
@@ -18,9 +18,11 @@ class ViewWrapperWidget(AbstractWidget):
         self.tooltip_manager: TooltipManager = TooltipManager()
 
         self.file_loader: FileLoaderWidget = FileLoaderWidget(self, controller, include_meta_loader)
+        self.oni_loader: OniLoaderWidget = OniLoaderWidget(self, controller)
         self.corpus_display: CorpusInfoWidget = CorpusInfoWidget(controller)
 
         self.panel = Tabs(("File Loader", self.file_loader),
+                          ("Oni Loader", self.oni_loader),
                           ("Corpus Overview", self.corpus_display))
         self.corpus_info_idx: int = len(self.panel) - 1
         self.children = [self.file_loader, self.corpus_display]

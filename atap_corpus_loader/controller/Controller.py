@@ -11,7 +11,7 @@ from panel.widgets import Tqdm
 
 from atap_corpus_loader.controller.CorpusExportService import CorpusExportService
 from atap_corpus_loader.controller.FileLoaderService import FileLoaderService, FileLoadError
-from atap_corpus_loader.controller.OniAPIService import OniAPIService
+from atap_corpus_loader.controller.OniAPIService import OniAPIService, OniAPIError
 from atap_corpus_loader.controller.data_objects import (FileReference, ViewCorpusInfo, CorpusHeader, DataType,
                                                         UniqueNameCorpora)
 from atap_corpus_loader.controller.file_loader_strategy.FileLoaderFactory import ValidFileType
@@ -25,6 +25,7 @@ class Controller:
     Holds a reference to the latest corpus built.
     The build_callback_fn will be called when a corpus is built (can be set using set_build_callback()).
     """
+
     def __init__(self, root_directory: str):
         Controller.setup_logger()
 
@@ -371,3 +372,40 @@ class Controller:
 
     def get_export_progress_bar(self) -> Tqdm:
         return self.export_tqdm
+
+    # Oni Loader methods
+
+    def set_provider(self, name: str, address: str) -> bool:
+        try:
+            self.oni_api_service.set_provider(name, address)
+        except ValueError as e:
+            self.display_error(str(e))
+            return False
+        except Exception as e:
+            self.display_error(f"Unexpected error while adding provider: {e}")
+        return True
+
+    def get_providers(self) -> list[str]:
+        return self.oni_api_service.get_providers()
+
+    def set_curr_provider(self, name: str):
+        try:
+            self.oni_api_service.set_curr_provider(name)
+        except ValueError as e:
+            self.display_error(str(e))
+        except Exception as e:
+            self.display_error(f"Unexpected error while setting provider: {e}")
+
+    def get_curr_provider(self) -> str:
+        return self.oni_api_service.get_curr_provider()
+
+    def get_auth_url(self) -> str:
+        return self.oni_api_service.get_auth_url()
+
+    def retrieve_oni_corpus(self, collection_id: str):
+        try:
+            corpus_files: list[str] = self.oni_api_service.retrieve_collection(collection_id)
+            self.load_corpus_from_filepaths(corpus_files)
+        except OniAPIError as e:
+            self.display_error(str(e))
+            return
