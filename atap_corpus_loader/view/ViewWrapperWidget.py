@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Literal
 
 from panel import Tabs
 from panel.widgets import TooltipIcon
@@ -46,14 +46,14 @@ class ViewWrapperWidget(AbstractWidget):
         if success:
             self.controller.display_success("Metadata files loaded successfully")
 
-    def build_corpus(self, corpus_name: str) -> bool:
-        success: bool = self.controller.build_corpus(corpus_name)
+    def build_corpus(self, corpus_id: str, build_strategy: Literal["file", "api"]) -> bool:
+        success: bool = self.controller.build_corpus(corpus_id, build_strategy)
         if success:
             self.update_displays()
 
             self.panel.active = self.corpus_info_idx
-            corpus_name: str = self.controller.get_latest_corpus().name
-            self.controller.display_success(f"Corpus {corpus_name} built successfully")
+            corpus_id: str = self.controller.get_latest_corpus().name
+            self.controller.display_success(f"Corpus {corpus_id} built successfully")
 
         return success
 

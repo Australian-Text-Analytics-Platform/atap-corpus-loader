@@ -1,9 +1,8 @@
 import logging
-from datetime import datetime
 from logging.handlers import RotatingFileHandler
 from io import BytesIO
 from os.path import abspath, join, dirname
-from typing import Optional, Callable
+from typing import Optional, Callable, Literal
 
 from atap_corpus.corpus.corpus import DataFrameCorpus
 from pandas import DataFrame
@@ -125,25 +124,28 @@ class Controller:
 
         return True
 
-    def build_corpus(self, corpus_name: str) -> bool:
-        Controller.LOGGER.debug(f"build_corpus method: Building corpus with name {corpus_name}")
+    def build_corpus(self, corpus_id: str, build_strategy: Literal["file", "api"]) -> bool:
+        Controller.LOGGER.debug(f"build_corpus method: Building corpus with name: {corpus_id} and build strategy: {build_strategy}")
         if self.is_meta_added():
             if (self.corpus_link_header is None) or (self.meta_link_header is None):
                 self.display_error("Cannot build without link headers set. Select a corpus header and a meta header as linking headers in the dropdowns")
                 return False
 
-        if (corpus_name == '') or (corpus_name is None):
-            corpus_name = f"Corpus-{datetime.now()}"
-            Controller.LOGGER.debug(f"build_corpus method: No name provided, so corpus name generated: {corpus_name}")
-
         self.build_tqdm.visible = True
         try:
-            corpus = self.file_loader_service.build_corpus(corpus_name, self.corpus_headers,
-                                                           self.meta_headers, self.text_header,
-                                                           self.corpus_link_header, self.meta_link_header,
-                                                           self.build_tqdm)
+            if build_strategy == "file":
+                corpus = self.file_loader_service.build_corpus(corpus_id, self.corpus_headers,
+                                                               self.meta_headers, self.text_header,
+                                                               self.corpus_link_header, self.meta_link_header,
+                                                               self.build_tqdm)
+            elif build_strategy == "api":
+                corpus = self.oni_api_service.build_corpus(corpus_id, self.build_tqdm)
+            else:
+                self.display_error("Unexpected error building corpus: selected build_strategy invalid")
+                self.build_tqdm.visible = False
+                return False
             Controller.LOGGER.debug(f"build_corpus method: corpus built")
-        except FileLoadError as e:
+        except (FileLoadError, OniAPIError) as e:
             Controller.LOGGER.exception("Exception while building corpus: ")
             self.display_error(str(e))
             self.build_tqdm.visible = False
@@ -395,13 +397,9 @@ class Controller:
     def get_curr_provider(self) -> str:
         return self.oni_api_service.get_curr_provider()
 
-    def get_auth_url(self) -> str:
-        return self.oni_api_service.get_auth_url()
-
-    def retrieve_oni_corpus(self, collection_id: str):
-        try:
-            corpus_files: list[str] = self.oni_api_service.retrieve_collection(collection_id)
-            self.load_corpus_from_filepaths(corpus_files)
-        except OniAPIError as e:
-            self.display_error(str(e))
-            return
+    def set_api_key(self, api_key: str):
+        success: bool = self.oni_api_service.set_api_key(api_key)
+        if success:
+            self.display_success("API key set")
+        else:
+            self.display_error("API key not valid. Please try again")

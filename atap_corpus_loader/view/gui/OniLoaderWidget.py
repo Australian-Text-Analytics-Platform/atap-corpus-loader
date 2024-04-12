@@ -1,6 +1,5 @@
 from panel import Row, Column
-from panel.pane import  Markdown
-from panel.widgets import Select, TextInput, Button
+from panel.widgets import Select, TextInput, Button, PasswordInput
 
 from atap_corpus_loader.controller import Controller
 from atap_corpus_loader.view import ViewWrapperWidget
@@ -28,12 +27,10 @@ class OniLoaderWidget(AbstractWidget):
                                                  self.add_provider_button,
                                                  visible=False)
 
-        self.cilogon_button = Markdown(f'<a href="{self.controller.get_auth_url()}" target="_blank">Login using CILogon</a>')
-        # self.toggle_auth_panel_button = Button(name="Login using CILogon", button_type='primary', button_style='outline')
-        # self.toggle_auth_panel_button.on_click(self._toggle_show_auth_panel)
-        # self.auth_link: Markdown = Markdown(visible=False)
+        self.api_key_input = PasswordInput(name='API Key', placeholder='API Key, e.g. af6391e0-f873-11ee-8355-bae397411a92')
+        self.api_key_input.param.watch(self._set_api_key, ['value'])
 
-        self.collection_id_input = TextInput(name='Collection ID', placeholder='Collection ID, e.g. arcp://name,doi10.26180%2F23961609')
+        self.collection_id_input = TextInput(name='Collection ID', placeholder='Collection ID, e.g. arcp://name,corpus-of-oz-early-english')
         self.retrieve_collection_button = Button(name='Retrieve collection', button_type='success', button_style='solid', align='end')
         self.retrieve_collection_button.on_click(self._retrieve_collection)
 
@@ -43,14 +40,13 @@ class OniLoaderWidget(AbstractWidget):
                 self.add_provider_panel,
                 align='start'),
             Row(
-                # self.toggle_auth_panel_button,
-                # self.auth_link,
-                self.cilogon_button,
+                self.api_key_input,
                 align='start'
                 ),
             Row(self.collection_id_input,
                 self.retrieve_collection_button,
                 align='center'),
+            Row(self.controller.get_build_progress_bar()),
             sizing_mode='stretch_width'
         )
         self.update_display()
@@ -87,17 +83,11 @@ class OniLoaderWidget(AbstractWidget):
 
         self.update_display()
 
-    def _toggle_show_auth_panel(self, *_):
-        auth_panel_button_style = self.toggle_auth_panel_button.button_style
-        if auth_panel_button_style == 'outline':
-            self.toggle_auth_panel_button.button_style = 'solid'
-        elif auth_panel_button_style == 'solid':
-            self.toggle_auth_panel_button.button_style = 'outline'
-
-        self.auth_link.visible = not self.auth_link.visible
-        self.auth_link.object = f"Click here to authorise: {self.controller.get_auth_url()}"
+    def _set_api_key(self, *_):
+        api_key: str = self.api_key_input.value
+        self.controller.set_api_key(api_key)
 
     def _retrieve_collection(self, *_):
         collection_id: str = self.collection_id_input.value
-        self.controller.retrieve_oni_corpus(collection_id)
+        self.view_handler.build_corpus(collection_id, "api")
         self.view_handler.update_displays()

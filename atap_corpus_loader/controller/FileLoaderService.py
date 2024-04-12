@@ -1,3 +1,4 @@
+from datetime import datetime
 from glob import iglob
 from os import R_OK, access
 from os.path import normpath, sep, isdir, exists
@@ -184,6 +185,9 @@ class FileLoaderService:
             final_df = meta_df
         else:
             raise ValueError("No corpus headers or metadata headers provided")
+
+        if (corpus_name == '') or (corpus_name is None):
+            corpus_name = f"Corpus-{datetime.now()}"
 
         return DataFrameCorpus.from_dataframe(final_df, text_header.name, corpus_name)
 
