@@ -1,2 +1,0 @@
-class FileLoadError(ValueError):
-    pass

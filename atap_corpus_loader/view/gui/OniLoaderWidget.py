@@ -1,13 +1,14 @@
 from panel import Row, Column
+from panel.layout import Divider
 from panel.widgets import Select, TextInput, Button, PasswordInput
 
 from atap_corpus_loader.controller import Controller
 from atap_corpus_loader.view import ViewWrapperWidget
-from atap_corpus_loader.view.gui import AbstractWidget
+from atap_corpus_loader.view.gui import AbstractWidget, FileLoaderWidget
 
 
 class OniLoaderWidget(AbstractWidget):
-    def __init__(self, view_handler: ViewWrapperWidget, controller: Controller):
+    def __init__(self, view_handler: ViewWrapperWidget, controller: Controller, include_meta_loader: bool):
         super().__init__()
         self.view_handler: ViewWrapperWidget = view_handler
         self.controller: Controller = controller
@@ -27,28 +28,26 @@ class OniLoaderWidget(AbstractWidget):
                                                  self.add_provider_button,
                                                  visible=False)
 
-        self.api_key_input = PasswordInput(name='API Key', placeholder='API Key, e.g. af6391e0-f873-11ee-8355-bae397411a92')
+        self.api_key_input = PasswordInput(name='API Key', placeholder='af6391e0-f873-11ee-8355-bae397411a92')
         self.api_key_input.param.watch(self._set_api_key, ['value'])
 
-        self.collection_id_input = TextInput(name='Collection ID', placeholder='Collection ID, e.g. arcp://name,corpus-of-oz-early-english')
-        self.retrieve_collection_button = Button(name='Retrieve collection', button_type='success', button_style='solid', align='end')
-        self.retrieve_collection_button.on_click(self._retrieve_collection)
+        self.collection_id_input = TextInput(name='Collection ID', placeholder='arcp://name,corpus-of-oz-early-english')
+        self.retrieve_collection_button = Button(name='Retrieve collection information', button_type='success', button_style='solid', align='end')
+        self.retrieve_collection_button.on_click(self._retrieve_collection_information)
+
+        self.file_loader: FileLoaderWidget = FileLoaderWidget(view_handler, controller, include_meta_loader)
 
         self.panel = Column(
-            Row(self.provider_selector, align='start'),
-            Row(self.toggle_add_provider_button,
-                self.add_provider_panel,
-                align='start'),
-            Row(
-                self.api_key_input,
-                align='start'
-                ),
-            Row(self.collection_id_input,
-                self.retrieve_collection_button,
-                align='center'),
+            Row(self.provider_selector, self.api_key_input),
+            Row(self.toggle_add_provider_button),
+            Row(self.add_provider_panel),
+            Row(self.collection_id_input, self.retrieve_collection_button),
+            Divider(),
+            Row(self.file_loader),
             Row(self.controller.get_build_progress_bar()),
             sizing_mode='stretch_width'
         )
+        self.children = [self.file_loader]
         self.update_display()
 
     def update_display(self):
@@ -87,7 +86,7 @@ class OniLoaderWidget(AbstractWidget):
         api_key: str = self.api_key_input.value
         self.controller.set_api_key(api_key)
 
-    def _retrieve_collection(self, *_):
+    def _retrieve_collection_information(self, *_):
         collection_id: str = self.collection_id_input.value
-        self.view_handler.build_corpus(collection_id, "api")
+        self.controller.set_collection_id(collection_id)
         self.view_handler.update_displays()
