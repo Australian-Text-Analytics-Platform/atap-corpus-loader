@@ -44,7 +44,6 @@ class OniLoaderWidget(AbstractWidget):
             Row(self.collection_id_input, self.retrieve_collection_button),
             Divider(),
             Row(self.file_loader),
-            Row(self.controller.get_build_progress_bar()),
             sizing_mode='stretch_width'
         )
         self.children = [self.file_loader]
