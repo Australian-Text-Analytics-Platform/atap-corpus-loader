@@ -67,17 +67,16 @@ class OniLoaderService(LoaderService):
             return True
         return False
 
-    def set_collection_id(self, collection_id: str) -> bool:
+    def set_collection_id(self, collection_id: str):
         stripped_id = collection_id.strip()
         if not self._validate_collection_id(stripped_id):
-            return False
+            raise FileLoadError("Collection ID is malformed")
         self.collection_id = stripped_id
         self.retrieve_collection_files()
 
-        return True
-
     def retrieve_collection_files(self):
         if self.api_key is None:
+            self.collection_files = []
             raise FileLoadError("No API key set")
 
         api_root: str = self._get_api_root()
@@ -90,12 +89,22 @@ class OniLoaderService(LoaderService):
         try:
             r.raise_for_status()
         except Exception as e:
+            self.collection_files = []
             raise FileLoadError(str(e))
 
         metadata = r.json()
+        if metadata.get('error') is not None:
+            self.collection_files = []
+            raise FileLoadError('Error retrieving collection. Ensure the collection ID is correct')
+        metadata_items = metadata.get('@graph')
+        if metadata_items is None:
+            self.collection_files = []
+            raise FileLoadError('No items found in collection')
+
         all_file_refs: list[FileReference] = []
-        for item in metadata['@graph']:
-            if item["@type"] == "RepositoryObject":
+        for item in metadata_items:
+            item_type = item.get("@type")
+            if item_type == "RepositoryObject":
                 filepath = item["indexableText"]["@id"]
 
                 file_refs: list[FileReference] = self.file_ref_factory.get_file_refs_from_path(filepath, False)

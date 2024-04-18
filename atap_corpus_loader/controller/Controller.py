@@ -415,4 +415,10 @@ class Controller:
             self.display_error("API key not valid. Please try again")
 
     def set_collection_id(self, collection_id: str):
-        self.oni_loader_service.set_collection_id(collection_id)
+        try:
+            self.oni_loader_service.set_collection_id(collection_id)
+            self.display_success(f"Collection files retrieved successfully for '{collection_id}'")
+        except FileLoadError as e:
+            self.display_error(str(e))
+        except Exception as e:
+            self.display_error(f"Unexpected error while setting collection ID: {e}")
