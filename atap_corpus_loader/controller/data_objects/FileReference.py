@@ -99,6 +99,16 @@ class FileReference(ABC):
         """
         return self.is_ref_archive
 
+    @staticmethod
+    def is_zipped() -> bool:
+        """
+        Returns True if the file is within an archive (e.g. example.zip/text.txt), False otherwise.
+        Returns False if file is an archive (e.g. example.zip)
+        :return: True if the file is within an archive (e.g. example.zip/text.txt), False otherwise.
+        :rtype: bool
+        """
+        return False
+
 
 class DiskFileReference(FileReference):
     """
@@ -139,6 +149,10 @@ class ZipFileReference(FileReference):
             buf = BytesIO(zip_f.read())
 
         return buf
+
+    @staticmethod
+    def is_zipped() -> bool:
+        return True
 
 
 class RemoteFileReference(FileReference):
