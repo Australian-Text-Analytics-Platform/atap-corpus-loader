@@ -4,6 +4,8 @@ version = "1.4.0"
 description = " A GUI loader for atap_corpus using the Panel library."
 authors = ["Hamish Croser <hamish.croser@sydney.edu.au>"]
 readme = "README.md"
+documentation = "https://australian-text-analytics-platform.github.io/atap-corpus-loader/DOCS.html"
+repository = "https://github.com/Australian-Text-Analytics-Platform/atap-corpus-loader"
 license = "MIT"
 packages = [{include = "atap_corpus_loader"}]
 
