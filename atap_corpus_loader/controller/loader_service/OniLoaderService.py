@@ -14,10 +14,10 @@ class OniLoaderService(LoaderService):
     def __init__(self):
         super().__init__()
         self.providers: dict[str, str] = {
-            "ATAP": "https://data.atap.edu.au",
-            "LDaCA": "https://data.ldaca.edu.au"
+            "LDaCA": "https://data.ldaca.edu.au",
+            "ATAP": "https://data.atap.edu.au"
         }
-        self.curr_provider: str = "ATAP"
+        self.curr_provider: str = "LDaCA"
         self.api_key: Optional[str] = None
         self.collection_id: str = ''
         self.collection_files: list[FileReference] = []
