@@ -65,6 +65,7 @@ class ViewWrapperWidget(AbstractWidget):
             self.controller.set_loader_service_type('file')
         elif active_tab == 1:
             self.controller.set_loader_service_type('oni')
+        self.file_loader.unload_all()
 
     def get_tooltip(self, tooltip_name: str) -> Optional[TooltipIcon]:
         return self.tooltip_manager.get_tooltip(tooltip_name)
