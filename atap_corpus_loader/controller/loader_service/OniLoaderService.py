@@ -61,6 +61,12 @@ class OniLoaderService(LoaderService):
     def get_curr_provider(self) -> str:
         return self.curr_provider
 
+    def get_curr_provider_address(self) -> str:
+        curr_address = self.providers.get(self.curr_provider)
+        if curr_address:
+            return curr_address
+        return ''
+
     def set_api_key(self, api_key: str) -> bool:
         if self._validate_api_key(api_key):
             self.api_key = api_key
@@ -68,10 +74,10 @@ class OniLoaderService(LoaderService):
         return False
 
     def set_collection_id(self, collection_id: str):
-        stripped_id = collection_id.strip()
-        if not self._validate_collection_id(stripped_id):
+        collection_id = collection_id.strip()
+        if not self._validate_collection_id(collection_id):
             raise FileLoadError("Collection ID is malformed")
-        self.collection_id = stripped_id
+        self.collection_id = collection_id
         self.retrieve_collection_files()
 
     def retrieve_collection_files(self):

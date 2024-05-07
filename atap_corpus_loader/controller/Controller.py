@@ -407,6 +407,9 @@ class Controller:
     def get_curr_provider(self) -> str:
         return self.oni_loader_service.get_curr_provider()
 
+    def get_curr_provider_address(self) -> str:
+        return self.oni_loader_service.get_curr_provider_address()
+
     def set_api_key(self, api_key: str):
         success: bool = self.oni_loader_service.set_api_key(api_key)
         if success:
