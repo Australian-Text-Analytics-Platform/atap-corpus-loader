@@ -420,6 +420,7 @@ class Controller:
     def set_collection_id(self, collection_id: str):
         try:
             self.oni_loader_service.set_collection_id(collection_id)
+            self.unload_all()
             self.display_success(f"Collection files retrieved successfully for '{collection_id}'")
         except FileLoadError as e:
             self.display_error(str(e))

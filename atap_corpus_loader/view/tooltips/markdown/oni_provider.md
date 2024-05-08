@@ -1,8 +1,7 @@
 ### Provider selector
 Select an Oni provider using the dropdown to set the current Oni provider.
 
-### Visit provider portal
-Click the "Visit provider portal" button to open the current Oni provider portal in a new tab.
+The tooltip of the selector displays the current provider address.
 
 ### Add provider
 You can add an Oni provider if your data is stored somewhere running an Oni implementation that isn't listed in the dropdown.

@@ -1,6 +1,6 @@
 from panel import Row, Column
 from panel.layout import Divider
-from panel.pane import Markdown
+from panel.pane import Markdown, HTML
 from panel.widgets import Select, TextInput, Button, PasswordInput
 
 from atap_corpus_loader.controller import Controller
@@ -17,7 +17,6 @@ class OniLoaderWidget(AbstractWidget):
         provider_tooltip = self.view_handler.get_tooltip('oni_provider')
         self.provider_selector = Select(name='Provider selector', width=150)
         self.provider_selector.param.watch(self._on_provider_change, ['value'])
-        self.current_provider_portal_button = Markdown()
 
         self.toggle_add_provider_button = Button(name='Add new provider', width=150, button_type='primary', button_style='outline', align='center')
         self.toggle_add_provider_button.on_click(self._toggle_show_add_provider_pane)
@@ -42,12 +41,14 @@ class OniLoaderWidget(AbstractWidget):
 
         self.file_loader: FileLoaderWidget = FileLoaderWidget(view_handler, controller, include_meta_loader)
 
+        self.curr_provider_display = Markdown(stylesheets=["a { margin: 0;}"])
+
         self.panel = Column(
             Row(self.provider_selector,
-                self.current_provider_portal_button,
+                self.curr_provider_display,
                 self.toggle_add_provider_button,
                 provider_tooltip),
-            Row(self.add_provider_panel, align='end'),
+            Row(self.add_provider_panel),
             Row(self.api_key_input,
                 api_key_tooltip),
             Row(self.collection_id_input,
@@ -61,20 +62,17 @@ class OniLoaderWidget(AbstractWidget):
         self.update_display()
 
     def update_display(self):
-        provider_options: list[str] = self.controller.get_providers()
-        curr_provider: str = self.controller.get_curr_provider()
-        self.provider_selector.options = provider_options
-        self.provider_selector.value = curr_provider
-
-        self._update_provider_link()
+        self.provider_selector.options = self.controller.get_providers()
+        self.provider_selector.value = self.controller.get_curr_provider()
+        curr_provider_address = self.controller.get_curr_provider_address()
+        link = f'<a href="{curr_provider_address}" target="_blank">{curr_provider_address}</a>'
+        self.curr_provider_display.object = link
 
     def _on_provider_change(self, *_):
         self.controller.set_curr_provider(self.provider_selector.value)
-        self._update_provider_link()
-
-    def _update_provider_link(self):
-        curr_provider_address: str = self.controller.get_curr_provider_address()
-        self.current_provider_portal_button.object = f'<a href={curr_provider_address} target="_blank">Visit provider portal</a>'
+        curr_provider_address = self.controller.get_curr_provider_address()
+        link = f'<a href="{curr_provider_address}" target="_blank">{curr_provider_address}</a>'
+        self.curr_provider_display.object = link
 
     def _toggle_show_add_provider_pane(self, *_):
         add_provider_style = self.toggle_add_provider_button.button_style
@@ -106,4 +104,5 @@ class OniLoaderWidget(AbstractWidget):
     def _retrieve_collection_information(self, *_):
         collection_id: str = self.collection_id_input.value
         self.controller.set_collection_id(collection_id)
+        self.file_loader.unload_all()
         self.view_handler.update_displays()
