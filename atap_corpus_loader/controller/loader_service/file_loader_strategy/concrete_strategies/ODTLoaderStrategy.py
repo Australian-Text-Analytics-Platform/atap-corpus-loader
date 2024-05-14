@@ -5,7 +5,7 @@ from odf.opendocument import load
 from pandas import DataFrame
 
 from atap_corpus_loader.controller.data_objects import CorpusHeader, DataType
-from atap_corpus_loader.controller.file_loader_strategy.FileLoaderStrategy import FileLoaderStrategy
+from atap_corpus_loader.controller.loader_service.file_loader_strategy.FileLoaderStrategy import FileLoaderStrategy
 
 
 class ODTLoaderStrategy(FileLoaderStrategy):

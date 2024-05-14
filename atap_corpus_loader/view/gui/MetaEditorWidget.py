@@ -25,11 +25,11 @@ class MetaEditorWidget(AbstractWidget):
 
         corpus_table_title = Markdown("## Corpus editor")
         corpus_table_tooltip = self.view_handler.get_tooltip('corpus_editor')
-        self.corpus_table_row: Row = Row(corpus_table_title, corpus_table_tooltip)
+        self.corpus_table_row: Row = Row(corpus_table_tooltip, corpus_table_title)
 
         meta_table_title = Markdown("## Metadata editor")
         meta_table_tooltip = self.view_handler.get_tooltip('meta_editor')
-        self.meta_table_row: Row = Row(meta_table_title, meta_table_tooltip)
+        self.meta_table_row: Row = Row(meta_table_tooltip, meta_table_title)
 
         self.text_header_dropdown = Select(name='Select document label', width=200)
         text_header_fn = bind(self._set_text_header, self.text_header_dropdown)

@@ -12,8 +12,7 @@ The loader currently supports loading a corpus from the following file types:
 - tsv
 - xlsx
 - ods
-- rds
-- RData/RDa
+- xml
 
 ## Installation
 
@@ -27,7 +26,7 @@ python3 -m pip install atap-corpus-loader
 
 ## Documentation
 
-Documentation can be found in [DOCS.md](DOCS.md)
+Documentation can be found [here](https://australian-text-analytics-platform.github.io/atap-corpus-loader/DOCS.html)
 
 ## Tests
 

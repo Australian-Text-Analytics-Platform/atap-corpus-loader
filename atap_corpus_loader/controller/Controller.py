@@ -1,20 +1,21 @@
 import logging
-from datetime import datetime
 from logging.handlers import RotatingFileHandler
 from io import BytesIO
 from os.path import abspath, join, dirname
-from typing import Optional, Callable
+from typing import Optional, Callable, Literal
 
 from atap_corpus.corpus.corpus import DataFrameCorpus
 from pandas import DataFrame
 from panel.widgets import Tqdm
 
 from atap_corpus_loader.controller.CorpusExportService import CorpusExportService
-from atap_corpus_loader.controller.FileLoaderService import FileLoaderService, FileLoadError
-from atap_corpus_loader.controller.OniAPIService import OniAPIService
+from atap_corpus_loader.controller.loader_service import LoaderService
+from atap_corpus_loader.controller.loader_service.FileLoadError import FileLoadError
+from atap_corpus_loader.controller.loader_service.FileLoaderService import FileLoaderService
 from atap_corpus_loader.controller.data_objects import (FileReference, ViewCorpusInfo, CorpusHeader, DataType,
                                                         UniqueNameCorpora)
-from atap_corpus_loader.controller.file_loader_strategy.FileLoaderFactory import ValidFileType
+from atap_corpus_loader.controller.loader_service.OniLoaderService import OniLoaderService
+from atap_corpus_loader.controller.loader_service.file_loader_strategy.FileLoaderFactory import ValidFileType
 from atap_corpus_loader.view.notifications import NotifierService
 
 
@@ -25,11 +26,13 @@ class Controller:
     Holds a reference to the latest corpus built.
     The build_callback_fn will be called when a corpus is built (can be set using set_build_callback()).
     """
+
     def __init__(self, root_directory: str):
         Controller.setup_logger()
 
         self.file_loader_service: FileLoaderService = FileLoaderService(root_directory)
-        self.oni_api_service: OniAPIService = OniAPIService()
+        self.oni_loader_service: OniLoaderService = OniLoaderService()
+        self.loader_service: LoaderService = self.file_loader_service
         self.corpus_export_service: CorpusExportService = CorpusExportService()
         self.notifier_service: NotifierService = NotifierService()
 
@@ -100,47 +103,57 @@ class Controller:
 
         return corpora_dict
 
+    def set_loader_service_type(self, loader_type: Literal['file', 'oni']):
+        if loader_type == 'file':
+            self.loader_service = self.file_loader_service
+        elif loader_type == 'oni':
+            self.loader_service = self.oni_loader_service
+        else:
+            raise ValueError("loader_type specified must be either 'file' or 'oni'")
+
     def load_corpus_from_filepaths(self, filepath_ls: list[str], include_hidden: bool) -> bool:
         Controller.LOGGER.debug(f"Files loaded as corpus: {filepath_ls}")
+        self.build_tqdm.visible = True
         try:
-            self.file_loader_service.add_corpus_files(filepath_ls, include_hidden, self.build_tqdm)
-            self.corpus_headers = self.file_loader_service.get_inferred_corpus_headers()
+            self.loader_service.add_corpus_files(filepath_ls, include_hidden, self.build_tqdm)
+            self.corpus_headers = self.loader_service.get_inferred_corpus_headers()
         except FileLoadError as e:
             self.display_error(str(e))
             self.unload_all()
+            self.build_tqdm.visible = False
             return False
 
+        self.build_tqdm.visible = False
         return True
 
     def load_meta_from_filepaths(self, filepath_ls: list[str], include_hidden: bool) -> bool:
         Controller.LOGGER.debug(f"Files loaded as meta: {filepath_ls}")
+        self.build_tqdm.visible = True
         try:
-            self.file_loader_service.add_meta_files(filepath_ls, include_hidden, self.build_tqdm)
-            self.meta_headers = self.file_loader_service.get_inferred_meta_headers()
+            self.loader_service.add_meta_files(filepath_ls, include_hidden, self.build_tqdm)
+            self.meta_headers = self.loader_service.get_inferred_meta_headers()
         except FileLoadError as e:
             self.display_error(str(e))
             self.unload_all()
+            self.build_tqdm.visible = False
             return False
 
+        self.build_tqdm.visible = False
         return True
 
-    def build_corpus(self, corpus_name: str) -> bool:
-        Controller.LOGGER.debug(f"build_corpus method: Building corpus with name {corpus_name}")
+    def build_corpus(self, corpus_id: str) -> bool:
+        Controller.LOGGER.debug(f"build_corpus method: Building corpus with name: {corpus_id}")
         if self.is_meta_added():
             if (self.corpus_link_header is None) or (self.meta_link_header is None):
                 self.display_error("Cannot build without link headers set. Select a corpus header and a meta header as linking headers in the dropdowns")
                 return False
 
-        if (corpus_name == '') or (corpus_name is None):
-            corpus_name = f"Corpus-{datetime.now()}"
-            Controller.LOGGER.debug(f"build_corpus method: No name provided, so corpus name generated: {corpus_name}")
-
         self.build_tqdm.visible = True
         try:
-            corpus = self.file_loader_service.build_corpus(corpus_name, self.corpus_headers,
-                                                           self.meta_headers, self.text_header,
-                                                           self.corpus_link_header, self.meta_link_header,
-                                                           self.build_tqdm)
+            corpus = self.loader_service.build_corpus(corpus_id, self.corpus_headers,
+                                                      self.meta_headers, self.text_header,
+                                                      self.corpus_link_header, self.meta_link_header,
+                                                      self.build_tqdm)
             Controller.LOGGER.debug(f"build_corpus method: corpus built")
         except FileLoadError as e:
             Controller.LOGGER.exception("Exception while building corpus: ")
@@ -221,8 +234,8 @@ class Controller:
             self.display_error(f"Unexpected error while renaming: {e}")
 
     def get_loaded_file_counts(self) -> dict[str, int]:
-        corpus_file_set = set(self.file_loader_service.get_loaded_corpus_files())
-        meta_file_set = set(self.file_loader_service.get_loaded_meta_files())
+        corpus_file_set = self.loader_service.get_loaded_corpus_files()
+        meta_file_set = self.loader_service.get_loaded_meta_files()
         file_set = corpus_file_set | meta_file_set
 
         file_counts: dict[str, int] = {"Total files": len(file_set)}
@@ -237,20 +250,20 @@ class Controller:
 
     def unload_filepaths(self, filepath_ls: list[str]):
         for filepath in filepath_ls:
-            self.file_loader_service.remove_meta_filepath(filepath)
-            self.file_loader_service.remove_corpus_filepath(filepath)
+            self.loader_service.remove_meta_filepath(filepath)
+            self.loader_service.remove_corpus_filepath(filepath)
 
-        if len(self.file_loader_service.get_loaded_corpus_files()) == 0:
+        if not self.is_corpus_added():
             self.text_header = None
             self.corpus_headers = []
             self.corpus_link_header = None
-        if len(self.file_loader_service.get_loaded_meta_files()) == 0:
+        if not self.is_meta_added():
             self.meta_headers = []
             self.meta_link_header = None
 
     def unload_all(self):
         Controller.LOGGER.debug("All files unloaded")
-        self.file_loader_service.remove_all_files()
+        self.loader_service.remove_all_files()
 
         self.text_header = None
         self.corpus_headers = []
@@ -259,10 +272,10 @@ class Controller:
         self.meta_link_header = None
 
     def get_loaded_corpus_files(self) -> set[FileReference]:
-        return self.file_loader_service.get_loaded_corpus_files_set()
+        return self.loader_service.get_loaded_corpus_files()
 
     def get_loaded_meta_files(self) -> set[FileReference]:
-        return self.file_loader_service.get_loaded_meta_files_set()
+        return self.loader_service.get_loaded_meta_files()
 
     def get_corpus_headers(self) -> list[CorpusHeader]:
         return self.corpus_headers
@@ -289,10 +302,10 @@ class Controller:
         return self.build_tqdm
 
     def is_corpus_added(self) -> bool:
-        return len(self.file_loader_service.get_loaded_corpus_files()) > 0
+        return self.loader_service.is_corpus_loaded()
 
     def is_meta_added(self) -> bool:
-        return len(self.file_loader_service.get_loaded_meta_files()) > 0
+        return self.loader_service.is_meta_loaded()
 
     def update_corpus_header(self, header: CorpusHeader, include: Optional[bool], datatype_name: Optional[str]):
         if include is not None:
@@ -343,7 +356,7 @@ class Controller:
         self.meta_link_header = None
 
     def retrieve_all_files(self, expand_archived: bool) -> list[FileReference]:
-        return self.file_loader_service.get_all_files(expand_archived)
+        return self.loader_service.get_all_files(expand_archived)
 
     def get_export_types(self) -> list[str]:
         return self.corpus_export_service.get_filetypes()
@@ -367,3 +380,49 @@ class Controller:
 
     def get_export_progress_bar(self) -> Tqdm:
         return self.export_tqdm
+
+    # Oni Loader methods
+
+    def set_provider(self, name: str, address: str) -> bool:
+        try:
+            self.oni_loader_service.set_provider(name, address)
+        except FileLoadError as e:
+            self.display_error(str(e))
+            return False
+        except Exception as e:
+            self.display_error(f"Unexpected error while adding provider: {e}")
+        return True
+
+    def get_providers(self) -> list[str]:
+        return self.oni_loader_service.get_providers()
+
+    def set_curr_provider(self, name: str):
+        try:
+            self.oni_loader_service.set_curr_provider(name)
+        except ValueError as e:
+            self.display_error(str(e))
+        except Exception as e:
+            self.display_error(f"Unexpected error while setting provider: {e}")
+
+    def get_curr_provider(self) -> str:
+        return self.oni_loader_service.get_curr_provider()
+
+    def get_curr_provider_address(self) -> str:
+        return self.oni_loader_service.get_curr_provider_address()
+
+    def set_api_key(self, api_key: str):
+        success: bool = self.oni_loader_service.set_api_key(api_key)
+        if success:
+            self.display_success("API key set")
+        else:
+            self.display_error("API key not valid. Please try again")
+
+    def set_collection_id(self, collection_id: str):
+        try:
+            self.oni_loader_service.set_collection_id(collection_id)
+            self.unload_all()
+            self.display_success(f"Collection files retrieved successfully for '{collection_id}'")
+        except FileLoadError as e:
+            self.display_error(str(e))
+        except Exception as e:
+            self.display_error(f"Unexpected error while setting collection ID: {e}")

@@ -4,7 +4,7 @@ from panel import Tabs
 from panel.widgets import TooltipIcon
 
 from atap_corpus_loader.controller import Controller
-from atap_corpus_loader.view.gui import AbstractWidget, FileLoaderWidget, CorpusInfoWidget
+from atap_corpus_loader.view.gui import AbstractWidget, FileLoaderWidget, CorpusInfoWidget, OniLoaderWidget
 from atap_corpus_loader.view.tooltips import TooltipManager
 
 
@@ -18,12 +18,16 @@ class ViewWrapperWidget(AbstractWidget):
         self.tooltip_manager: TooltipManager = TooltipManager()
 
         self.file_loader: FileLoaderWidget = FileLoaderWidget(self, controller, include_meta_loader)
+        self.oni_loader: OniLoaderWidget = OniLoaderWidget(self, controller, include_meta_loader)
         self.corpus_display: CorpusInfoWidget = CorpusInfoWidget(controller)
 
+        # set_load_service_type depends on the order of these tabs
         self.panel = Tabs(("File Loader", self.file_loader),
+                          ("Oni Loader", self.oni_loader),
                           ("Corpus Overview", self.corpus_display))
+        self.panel.param.watch(self.set_load_service_type, parameter_names=['active'])
         self.corpus_info_idx: int = len(self.panel) - 1
-        self.children = [self.file_loader, self.corpus_display]
+        self.children = [self.file_loader, self.oni_loader, self.corpus_display]
 
     def update_display(self):
         pass
@@ -44,16 +48,24 @@ class ViewWrapperWidget(AbstractWidget):
         if success:
             self.controller.display_success("Metadata files loaded successfully")
 
-    def build_corpus(self, corpus_name: str) -> bool:
-        success: bool = self.controller.build_corpus(corpus_name)
+    def build_corpus(self, corpus_id: str) -> bool:
+        success: bool = self.controller.build_corpus(corpus_id)
         if success:
             self.update_displays()
 
             self.panel.active = self.corpus_info_idx
-            corpus_name: str = self.controller.get_latest_corpus().name
-            self.controller.display_success(f"Corpus {corpus_name} built successfully")
+            corpus_id: str = self.controller.get_latest_corpus().name
+            self.controller.display_success(f"Corpus {corpus_id} built successfully")
 
         return success
+
+    def set_load_service_type(self, *_):
+        active_tab: int = self.panel.active
+        if active_tab == 0:
+            self.controller.set_loader_service_type('file')
+        elif active_tab == 1:
+            self.controller.set_loader_service_type('oni')
+        self.file_loader.unload_all()
 
     def get_tooltip(self, tooltip_name: str) -> Optional[TooltipIcon]:
         return self.tooltip_manager.get_tooltip(tooltip_name)

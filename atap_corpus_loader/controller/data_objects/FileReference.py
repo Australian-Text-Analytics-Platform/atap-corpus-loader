@@ -1,19 +1,12 @@
+from abc import ABC, abstractmethod
 from io import BytesIO
 from os.path import join, dirname, basename
-from tempfile import NamedTemporaryFile
 from typing import Optional
 from zipfile import ZipFile, BadZipFile
 
 
-class FileReference:
-    """
-    A general purpose object to hold information regarding a specific file in the file system.
-    Folder structure is preserved as a path-like string
-    """
+class FileReference(ABC):
     def __init__(self, path: str):
-        """
-        :param path: the path to the file. This can be absolute or relative to the root_directory specified in CorpusLoader
-        """
         self.path: str = path
         self.path_hash: int = hash(self.path)
         self.directory_path: str = dirname(path)
@@ -31,6 +24,15 @@ class FileReference:
 
         self.is_ref_archive = self.extension.lower() == 'zip'
 
+    @abstractmethod
+    def get_content_buffer(self) -> BytesIO:
+        """
+        Provides a BytesIO object which contains the contents of the file.
+        :return: The BytesIO object containing the file contents
+        :rtype: BytesIO
+        """
+        raise NotImplementedError()
+
     def __eq__(self, other):
         if not isinstance(other, FileReference):
             return False
@@ -43,27 +45,6 @@ class FileReference:
         return self.get_path()
 
     def __repr__(self):
-        return self.get_path()
-
-    def get_content_buffer(self) -> BytesIO:
-        """
-        Provides a BytesIO object which contains the contents of the file. This is used to avoid writing to a
-        temporary file if the FileReference object is an instance of ZipFileReference,
-        as is done in resolve_real_file_path()
-        :return: The BytesIO object containing the file contents
-        :rtype: BytesIO
-        """
-        with open(self.get_path(), 'rb') as bytes_f:
-            buf = BytesIO(bytes_f.read())
-        return buf
-
-    def resolve_real_file_path(self) -> str:
-        """
-        Provides a real addressable path to the file contents. If the FileReference object is an instance of
-        ZipFileReference, the file is extracted, placed in a temporary file, and the temporary file path will be provided
-        :return: the full addressable path of the file
-        :rtype: str
-        """
         return self.get_path()
 
     def get_path(self) -> str:
@@ -109,16 +90,6 @@ class FileReference:
         """
         return self.extension
 
-    def is_zipped(self) -> bool:
-        """
-        If True, the file is contained within a zip archive. In this case, the path returned by get_full_path()
-        is not a real addressable path, just a string representation of where the file is located. A real addressable
-        path can be obtained from resolve_real_file_path()
-        :return: True if FileReference object is an instance of ZipFileReference, False otherwise
-        :rtype: bool
-        """
-        return False
-
     def is_archive(self) -> bool:
         """
         Returns True if the file is an archive file (e.g. example.zip), False otherwise.
@@ -128,6 +99,32 @@ class FileReference:
         """
         return self.is_ref_archive
 
+    @staticmethod
+    def is_zipped() -> bool:
+        """
+        Returns True if the file is within an archive (e.g. example.zip/text.txt), False otherwise.
+        Returns False if file is an archive (e.g. example.zip)
+        :return: True if the file is within an archive (e.g. example.zip/text.txt), False otherwise.
+        :rtype: bool
+        """
+        return False
+
+
+class DiskFileReference(FileReference):
+    """
+    A general purpose object to hold information regarding a specific file in the file system.
+    Folder structure is preserved as a path-like string
+    """
+    def get_content_buffer(self) -> BytesIO:
+        """
+        Provides a BytesIO object which contains the contents of the file.
+        :return: The BytesIO object containing the file contents
+        :rtype: BytesIO
+        """
+        with open(self.get_path(), 'rb') as bytes_f:
+            buf = BytesIO(bytes_f.read())
+        return buf
+
 
 class ZipFileReference(FileReference):
     def __init__(self, zip_file: ZipFile, zip_file_path: str, internal_path: str):
@@ -136,47 +133,14 @@ class ZipFileReference(FileReference):
         :param zip_file_path: the path to the zip file that holds this zipped file. This can be absolute or relative to the root_directory specified in CorpusLoader
         :param internal_path: the path within the zip file to this zipped file
         """
+        super().__init__(join(zip_file_path, internal_path))
         self.zip_file = zip_file
-        self.path: str = join(zip_file_path, internal_path)
-        self.path_hash: int = hash(self.path)
         self.directory_path: str = zip_file_path
         self.internal_directory: str = dirname(internal_path)
-        self.filename: str = basename(internal_path)
-
-        self.filename_no_ext: str
-        self.extension: str
-        if '.' not in self.filename:
-            self.extension = ''
-            self.filename_no_ext = self.filename
-        else:
-            filename_dot_split = self.filename.split('.')
-            self.extension = filename_dot_split[-1]
-            self.filename_no_ext = '.'.join(filename_dot_split[:-1])
-
-        self.is_ref_archive = self.extension.lower() == 'zip'
-
-    def get_path(self) -> str:
-        """
-        :return: the joined zip_file_path and internal_path to form the full path of the file
-        :rtype: str
-        """
-        return self.path
-
-    def is_zipped(self) -> bool:
-        """
-        If True, the file is contained within a zip archive. In this case, the path returned by get_full_path()
-        is not a real addressable path, just a string representation of where the file is located. A real addressable
-        path can be obtained from resolve_real_file_path()
-        :return: True as FileReference object is an instance of ZipFileReference
-        :rtype: bool
-        """
-        return True
 
     def get_content_buffer(self) -> BytesIO:
         """
-        Provides a BytesIO object which contains the contents of the file. This is used to avoid writing to a
-        temporary file if the FileReference object is an instance of ZipFileReference,
-        as is done in resolve_real_file_path()
+        Provides a BytesIO object which contains the contents of the file.
         :return: The BytesIO object containing the file contents
         :rtype: BytesIO
         """
@@ -186,22 +150,30 @@ class ZipFileReference(FileReference):
 
         return buf
 
-    def resolve_real_file_path(self) -> str:
-        """
-        Provides a real addressable path to the file contents. If the FileReference object is an instance of
-        ZipFileReference, the file is extracted, placed in a temporary file, and the temporary file path will be provided
-        :return: the full addressable path of the file
-        :rtype: str
-        """
-        internal_path = join(self.internal_directory, self.filename)
-        with self.zip_file.open(internal_path, force_zip64=True) as zip_f:
-            file_content = zip_f.read()
+    @staticmethod
+    def is_zipped() -> bool:
+        return True
 
-        with NamedTemporaryFile(delete=False) as temp_f:
-            temp_f.write(file_content)
-            real_path = temp_f.name
 
-        return real_path
+class RemoteFileReference(FileReference):
+    def __init__(self, path: str):
+        super().__init__(path)
+        self.content_buffer: Optional[BytesIO] = None
+
+    def set_content_buffer(self, content_buffer: BytesIO):
+        content_buffer.seek(0)
+        self.content_buffer = content_buffer
+
+    def get_content_buffer(self) -> BytesIO:
+        """
+        Provides a BytesIO object which contains the contents of the file.
+        :return: The BytesIO object containing the file contents
+        :rtype: BytesIO
+        """
+        if self.content_buffer is None:
+            return BytesIO()
+        self.content_buffer.seek(0)
+        return BytesIO(self.content_buffer.read())
 
 
 class FileReferenceFactory:
@@ -238,7 +210,7 @@ class FileReferenceFactory:
     def get_file_ref(self, path: str) -> FileReference:
         cached_ref: Optional[FileReference] = self.file_ref_cache.get(path)
         if cached_ref is None:
-            cached_ref = FileReference(path)
+            cached_ref = DiskFileReference(path)
             self.file_ref_cache[path] = cached_ref
 
         return cached_ref
@@ -268,5 +240,14 @@ class FileReferenceFactory:
         if cached_ref is None:
             cached_ref = ZipFileReference(zip_file, zip_file_path, internal_path)
             self.file_ref_cache[full_path] = cached_ref
+
+        return cached_ref
+
+    def get_oni_file_ref(self, path: str) -> RemoteFileReference:
+        cached_ref: Optional[FileReference] = self.file_ref_cache.get(path)
+        if (cached_ref is None) or (type(cached_ref) is not RemoteFileReference):
+            cached_ref = RemoteFileReference(path)
+            self.file_ref_cache[path] = cached_ref
+        cached_ref: RemoteFileReference
 
         return cached_ref
