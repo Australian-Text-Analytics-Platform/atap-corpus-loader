@@ -37,6 +37,7 @@ class FileSelectorWidget(AbstractWidget):
 
         self.file_type_filter = Select(name='Filter by filetype', width=150)
         self.file_type_filter.options = ['All valid filetypes'] + self.controller.get_valid_filetypes()
+        self.file_type_filter.value = self.file_type_filter.options[0]
         self.file_type_filter.param.watch(self._on_filter_change, ['value'])
 
         self.selector_widget = MultiSelect(size=10, sizing_mode='stretch_width')

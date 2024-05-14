@@ -20,10 +20,6 @@ The loader currently supports loading a corpus from the following file types:
 python3 -m pip install atap-corpus-loader
 ```
 
-### Prerequisites
-
-- [Python 3.10](https://www.python.org/)
-
 ## Documentation
 
 Documentation can be found [here](https://australian-text-analytics-platform.github.io/atap-corpus-loader/DOCS.html)

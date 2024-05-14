@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "atap-corpus-loader"
-version = "1.5.0"
+version = "1.5.1"
 description = " A GUI loader for atap_corpus using the Panel library."
 authors = ["Hamish Croser <hamish.croser@sydney.edu.au>"]
 readme = "README.md"
@@ -8,14 +8,15 @@ documentation = "https://australian-text-analytics-platform.github.io/atap-corpu
 repository = "https://github.com/Australian-Text-Analytics-Platform/atap-corpus-loader"
 license = "MIT"
 packages = [{include = "atap_corpus_loader"}]
+exclude = ["*/.ipynb_checkpoints/*", "*log.txt"]
+
 
 [tool.poetry.dependencies]
 python = ">=3.10.0,<3.12.0"
 pandas = "~=2.1.0"
 atap_corpus = "~=0.1.13"
-odfpy = "~=1.4.0"
 panel = "~=1.4.0"
-pyreadr = "~=0.5.0"
+odfpy = "~=1.4.0"
 python-docx = "~=1.1.0"
 
 [tool.poetry.group.dev]
