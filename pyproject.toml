@@ -8,6 +8,8 @@ documentation = "https://australian-text-analytics-platform.github.io/atap-corpu
 repository = "https://github.com/Australian-Text-Analytics-Platform/atap-corpus-loader"
 license = "MIT"
 packages = [{include = "atap_corpus_loader"}]
+exclude = ["**/.ipynb_checkpoints/**", "**log.txt"]
+
 
 [tool.poetry.dependencies]
 python = ">=3.10.0,<3.12.0"
