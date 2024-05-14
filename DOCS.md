@@ -67,7 +67,7 @@ loader.set_build_callback(corpus_list.append)
 
 ### CorpusLoader.get_latest_corpus
 
-Returns: DataFrameCorpus | None - the last DataFrameCorpus object that was built. If none have been built, returns None.
+Returns: DataFrameCorpus or None - the last DataFrameCorpus object that was built. If none have been built, returns None.
 
 Example
 
@@ -83,7 +83,7 @@ corpus = loader.get_latest_corpus()
 Params
 -  name: str – The name of the DataFrameCorpus to retrieve.
 
-Returns: DataFrameCorpus | None - the DataFrameCorpus object in the corpora with the provided name. If none with the provided name are found, returns None.
+Returns: DataFrameCorpus or None - the DataFrameCorpus object in the corpora with the provided name. If none with the provided name are found, returns None.
 
 Example
 
