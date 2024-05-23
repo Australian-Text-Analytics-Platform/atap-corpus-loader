@@ -142,10 +142,12 @@ class OniLoaderService(LoaderService):
             try:
                 data.raise_for_status()
             except Exception as e:
-                if str(e).startswith('401'):
-                    raise FileLoadError(str(e))
+                if str(e).startswith('404'):
+                    continue
+                elif str(e).startswith('401'):
+                    raise FileLoadError(f"Denied permission to access file: {filepath}<br>Check API Key")
                 else:
-                    raise e
+                    raise FileLoadError(f"Unexpected error loading file: {filepath}<br>{str(e)}")
 
             content_buf = BytesIO(data.text.encode('utf-8'))
             file_ref.set_content_buffer(content_buf)
@@ -171,9 +173,12 @@ class OniLoaderService(LoaderService):
             try:
                 data.raise_for_status()
             except Exception as e:
-                if str(e).startswith('401'):
-                    raise FileLoadError(str(e))
-                continue
+                if str(e).startswith('404'):
+                    continue
+                elif str(e).startswith('401'):
+                    raise FileLoadError(f"Denied permission to access file: {filepath}<br>Check API Key")
+                else:
+                    raise FileLoadError(f"Unexpected error loading file: {filepath}<br>{str(e)}")
 
             content_buf = BytesIO()
             content_buf.write(data.text.encode('utf-8'))
