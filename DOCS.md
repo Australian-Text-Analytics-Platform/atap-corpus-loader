@@ -96,13 +96,13 @@ corpus = loader.get_corpus("example")
 
 ### CorpusLoader.get_corpora
 
-Returns: list[DataFrameCorpus] - a list of DataFrameCorpus objects that have been built using this CorpusLoader
+Returns: dict[str, DataFrameCorpus] - a dictionary that maps Corpus names to DataFrameCorpus objects that have been built using this CorpusLoader
 
 Example
 
 ```python
 loader = CorpusLoader('tests/test_data')
-corpus_list = loader.get_corpora()
+corpus_map = loader.get_corpora()
 ```
 
 ---
