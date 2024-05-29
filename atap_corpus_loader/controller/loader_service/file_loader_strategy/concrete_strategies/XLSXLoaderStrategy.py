@@ -9,7 +9,7 @@ from atap_corpus_loader.controller.loader_service.file_loader_strategy.FileLoade
 class XLSXLoaderStrategy(FileLoaderStrategy):
     def get_inferred_headers(self) -> list[CorpusHeader]:
         file_buf: BytesIO = self.file_ref.get_content_buffer()
-        df: DataFrame = read_excel(file_buf, nrows=2)
+        df: DataFrame = read_excel(file_buf, header=0, nrows=2)
         headers: list[CorpusHeader] = []
         for header_name, dtype_obj in df.dtypes.items():
             dtype: DataType
@@ -24,7 +24,7 @@ class XLSXLoaderStrategy(FileLoaderStrategy):
     def get_dataframe(self, headers: list[CorpusHeader]) -> DataFrame:
         included_headers: list[str] = [header.name for header in headers if header.include]
         file_buf: BytesIO = self.file_ref.get_content_buffer()
-        df: DataFrame = read_excel(file_buf, header=0, names=included_headers)
+        df: DataFrame = read_excel(file_buf, dtype=object, header=0, usecols=included_headers)
         dtypes_applied_df: DataFrame = FileLoaderStrategy._apply_selected_dtypes(df, headers)
 
         return dtypes_applied_df
