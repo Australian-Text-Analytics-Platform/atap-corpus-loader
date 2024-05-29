@@ -123,8 +123,8 @@ class FileLoaderWidget(AbstractWidget):
 
     def build_corpus(self, *_):
         self._set_button_status_on_operation(curr_loading=True)
-        success: bool = self.view_handler.build_corpus(self.corpus_name_input.value)
+        success: bool = self.view_handler.build_corpus(self.corpus_name_input.value_input)
         if success:
-            self.corpus_name_input.value = ""
+            self.corpus_name_input.value_input = ""
             self.unload_all()
         self._set_button_status_on_operation(curr_loading=False)

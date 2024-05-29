@@ -24,7 +24,7 @@ class TSVLoaderStrategy(FileLoaderStrategy):
     def get_dataframe(self, headers: list[CorpusHeader]) -> DataFrame:
         included_headers: list[str] = [header.name for header in headers if header.include]
         file_buf: BytesIO = self.file_ref.get_content_buffer()
-        df: DataFrame = read_csv(file_buf, sep='\t', header=0, usecols=included_headers)
+        df: DataFrame = read_csv(file_buf, sep='\t', dtype=object, header=0, usecols=included_headers)
         dtypes_applied_df: DataFrame = FileLoaderStrategy._apply_selected_dtypes(df, headers)
 
         return dtypes_applied_df
