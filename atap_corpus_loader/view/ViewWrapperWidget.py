@@ -24,7 +24,8 @@ class ViewWrapperWidget(AbstractWidget):
         # set_load_service_type depends on the order of these tabs
         self.panel = Tabs(("File Loader", self.file_loader),
                           ("Oni Loader", self.oni_loader),
-                          ("Corpus Overview", self.corpus_display))
+                          ("Corpus Overview", self.corpus_display),
+                          dynamic=True)
         self.panel.param.watch(self.set_load_service_type, parameter_names=['active'])
         self.corpus_info_idx: int = len(self.panel) - 1
         self.children = [self.file_loader, self.oni_loader, self.corpus_display]
