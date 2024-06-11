@@ -1,4 +1,5 @@
 import logging
+import traceback
 from logging.handlers import RotatingFileHandler
 from io import BytesIO
 from os.path import abspath, join, dirname
@@ -118,6 +119,7 @@ class Controller:
             self.loader_service.add_corpus_files(filepath_ls, include_hidden, self.build_tqdm)
             self.corpus_headers = self.loader_service.get_inferred_corpus_headers()
         except FileLoadError as e:
+            self.LOGGER.error(traceback.format_exc())
             self.display_error(str(e))
             self.unload_all()
             self.build_tqdm.visible = False
@@ -133,6 +135,7 @@ class Controller:
             self.loader_service.add_meta_files(filepath_ls, include_hidden, self.build_tqdm)
             self.meta_headers = self.loader_service.get_inferred_meta_headers()
         except FileLoadError as e:
+            self.LOGGER.error(traceback.format_exc())
             self.display_error(str(e))
             self.unload_all()
             self.build_tqdm.visible = False
