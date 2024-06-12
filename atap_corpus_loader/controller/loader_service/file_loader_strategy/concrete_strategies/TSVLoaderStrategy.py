@@ -1,12 +1,22 @@
 from io import BytesIO
 
-from pandas import DataFrame, read_csv
+from pandas import DataFrame, read_csv, Series, to_datetime
 
 from atap_corpus_loader.controller.data_objects import CorpusHeader, DataType
 from atap_corpus_loader.controller.loader_service.file_loader_strategy.FileLoaderStrategy import FileLoaderStrategy
 
 
 class TSVLoaderStrategy(FileLoaderStrategy):
+    @staticmethod
+    def is_datetime_castable(data_series: Series):
+        if data_series.dtype != "object":
+            return False
+        try:
+            to_datetime(data_series)
+        except (ValueError, TypeError):
+            return False
+        return True
+
     @staticmethod
     def _rename_headers(df: DataFrame):
         df.columns = [f'Data_{c}' for c in df.columns.astype(str)]
@@ -32,7 +42,10 @@ class TSVLoaderStrategy(FileLoaderStrategy):
             self._rename_headers(df)
         headers: list[CorpusHeader] = []
         for header_name, dtype_obj in df.dtypes.items():
-            dtype: DataType
+            if self.is_datetime_castable(df[header_name]):
+                headers.append(CorpusHeader(str(header_name), DataType.DATETIME))
+                continue
+
             try:
                 dtype = DataType(str(dtype_obj))
             except ValueError:
