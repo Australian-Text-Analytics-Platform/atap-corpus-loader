@@ -2,7 +2,7 @@ from typing import Optional
 
 from panel import Column, GridBox, bind, Row, Spacer
 from panel.pane import Markdown, Str
-from panel.widgets import Select, Checkbox
+from panel.widgets import Select, Checkbox, Button
 
 from atap_corpus_loader.controller import Controller
 from atap_corpus_loader.controller.data_objects.CorpusHeader import CorpusHeader
@@ -27,37 +27,46 @@ class MetaEditorWidget(AbstractWidget):
         corpus_table_tooltip = self.view_handler.get_tooltip('corpus_editor')
         self.corpus_table_row: Row = Row(corpus_table_tooltip, corpus_table_title)
 
+        self.text_header_dropdown = Select(name='Select document label', width=200)
+        self.corpus_checkboxes: list[Checkbox] = []
+        self.corpus_include_all_Button = Button(name="Include all", button_style='outline', button_type='primary', align='end')
+        self.corpus_include_all_Button.on_click(self._include_all_corpus)
+
         meta_table_title = Markdown("## Metadata editor")
         meta_table_tooltip = self.view_handler.get_tooltip('meta_editor')
         self.meta_table_row: Row = Row(meta_table_tooltip, meta_table_title)
-
-        self.text_header_dropdown = Select(name='Select document label', width=200)
-        text_header_fn = bind(self._set_text_header, self.text_header_dropdown)
+        self.meta_checkboxes: list[Checkbox] = []
+        self.meta_include_all_button = Button(name="Include all", button_style='outline', button_type='primary')
+        self.meta_include_all_button.on_click(self._include_all_meta)
 
         self.link_row = Row(visible=False, styles=MetaEditorWidget.ERROR_BORDER_STYLE)
         link_row_tooltip = self.view_handler.get_tooltip('linking_selectors')
         self.corpus_link_dropdown = Select(name='Select corpus linking label', width=180)
-        corpus_link_fn = bind(self._set_corpus_link_header, self.corpus_link_dropdown)
         self.meta_link_dropdown = Select(name='Select metadata linking label', width=180)
-        meta_link_fn = bind(self._set_meta_link_header, self.meta_link_dropdown)
         link_emoji = '\U0001F517'
         self.link_markdown = Str(link_emoji, styles={"font-size": "2em", "margin": "auto"})
         self.link_row.objects = [link_row_tooltip,
                                  self.corpus_link_dropdown,
                                  self.link_markdown.clone(),
-                                 self.meta_link_dropdown,
-                                 Column(corpus_link_fn, visible=False),
-                                 Column(meta_link_fn, visible=False)]
+                                 self.meta_link_dropdown]
 
+        self.corpus_editor_control_row = Row(self.text_header_dropdown, self.corpus_include_all_Button, visible=False)
+        self.meta_editor_control_row = Row(self.meta_include_all_button, visible=False)
+
+        text_header_fn = bind(self._set_text_header, self.text_header_dropdown)
+        corpus_link_fn = bind(self._set_corpus_link_header, self.corpus_link_dropdown)
+        meta_link_fn = bind(self._set_meta_link_header, self.meta_link_dropdown)
         self.panel = Column(
             self.corpus_table_row,
-            Row(self.text_header_dropdown, text_header_fn),
+            self.corpus_editor_control_row,
             self.corpus_table_container,
             Spacer(height=20),
             self.link_row,
             Spacer(height=20),
             self.meta_table_row,
-            self.meta_table_container
+            self.meta_editor_control_row,
+            self.meta_table_container,
+            text_header_fn, corpus_link_fn, meta_link_fn
         )
         self.update_display()
 
@@ -65,6 +74,14 @@ class MetaEditorWidget(AbstractWidget):
         self._build_corpus_table()
         self._build_meta_table()
         self._update_dropdowns()
+
+    def _include_all_corpus(self, *_):
+        for checkbox in self.corpus_checkboxes:
+            checkbox.value = True
+
+    def _include_all_meta(self, *_):
+        for checkbox in self.meta_checkboxes:
+            checkbox.value = True
 
     def _set_text_header(self, text_header_name: Optional[str]):
         self.controller.set_text_header(text_header_name)
@@ -81,6 +98,11 @@ class MetaEditorWidget(AbstractWidget):
     def _get_table_cells_list(self, headers: list[CorpusHeader], link_header: CorpusHeader, is_meta_table: bool) -> tuple[int, list]:
         all_datatypes: list[str] = self.controller.get_all_datatypes()
         text_header: Optional[CorpusHeader] = self.controller.get_text_header()
+
+        if is_meta_table:
+            self.meta_checkboxes = []
+        else:
+            self.corpus_checkboxes = []
 
         table_cells: list = [Markdown('**Data label**', align='start'),
                              Markdown('**Datatype**', align='start'),
@@ -107,8 +129,10 @@ class MetaEditorWidget(AbstractWidget):
 
             include_checkbox = Checkbox(value=header.include, align='center', disabled=(is_text or is_link))
             if is_meta_table:
+                self.meta_checkboxes.append(include_checkbox)
                 include_fn = bind(self.controller.update_meta_header, header, include_checkbox, None)
             else:
+                self.corpus_checkboxes.append(include_checkbox)
                 include_fn = bind(self.controller.update_corpus_header, header, include_checkbox, None)
             table_cells.append(Row(include_checkbox, Column(include_fn, visible=False)))
 
@@ -124,6 +148,7 @@ class MetaEditorWidget(AbstractWidget):
     def _build_corpus_table(self):
         is_corpus_added = self.controller.is_corpus_added()
         self.corpus_table_row.visible = is_corpus_added
+        self.corpus_editor_control_row.visible = is_corpus_added
         self.corpus_table_container.visible = is_corpus_added
 
         corpus_headers: list[CorpusHeader] = self.controller.get_corpus_headers()
@@ -137,6 +162,7 @@ class MetaEditorWidget(AbstractWidget):
     def _build_meta_table(self):
         is_meta_added = self.controller.is_meta_added()
         self.meta_table_row.visible = is_meta_added
+        self.meta_editor_control_row.visible = is_meta_added
         self.meta_table_container.visible = is_meta_added
 
         meta_headers: list[CorpusHeader] = self.controller.get_meta_headers()
