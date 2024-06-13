@@ -1,9 +1,10 @@
 from typing import Optional, Callable
 
 import panel
+from atap_corpus._types import TCorpora
 from atap_corpus.corpus.corpus import DataFrameCorpus
 from panel.theme import Fast
-from panel.viewable import Viewer
+from panel.viewable import Viewer, Viewable
 
 from atap_corpus_loader.controller import Controller
 from atap_corpus_loader.view import ViewWrapperWidget
@@ -32,6 +33,16 @@ class CorpusLoader(Viewer):
 
     def __panel__(self):
         return self.view
+
+    def add_tab(self, new_tab_name: str, new_tab_panel: Viewable):
+        """
+        Allows adding a Panel Viewable instance to the tab controls of the loader.
+        :param new_tab_name: The name of the tab that will appear on the tab control bar
+        :type new_tab_name: str
+        :param new_tab_panel: The pane to attach to the new tab
+        :type new_tab_panel: panel.viewable.Viewable
+        """
+        self.view.add_tab(new_tab_name, new_tab_panel)
 
     def set_build_callback(self, callback: Callable):
         """
@@ -62,3 +73,17 @@ class CorpusLoader(Viewer):
         :rtype: dict[str, DataFrameCorpus]
         """
         return self.controller.get_corpora()
+
+    def get_mutable_corpora(self) -> TCorpora:
+        """
+        Returns the corpora object that contains the loaded corpus objects.
+        This allows adding to the corpora from outside the CorpusLoader as the object returned is mutable, not a copy.
+        The Corpora object has a unique name constraint, meaning a corpus object cannot be added to the corpora if another
+        corpus with the same name is already present. The same constraint applies to the rename method of corpus objects
+        added to the corpora.
+        :return: the mutable corpora object that contains the loaded corpus objects
+        :rtype: TCorpora
+        """
+        return self.controller.get_corpora()
+
+

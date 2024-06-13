@@ -1,6 +1,6 @@
 from panel import Row, Column
 from panel.layout import Divider
-from panel.pane import Markdown, HTML
+from panel.pane import Markdown
 from panel.widgets import Select, TextInput, Button, PasswordInput
 
 from atap_corpus_loader.controller import Controller

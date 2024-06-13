@@ -77,11 +77,11 @@ class UniqueNameCorpora(BaseCorpora):
 
     def get(self, name: str) -> Optional[TCorpus]:
         """
-        Returns a copy of the corpus corresponding with the provided name.
+        Returns the corpus object corresponding with the provided name.
         If no corpus exists with the name, returns None.
         :param name: name of the corpus to be retrieved
         :type name: str
-        :return: A copy of the corresponding corpus, or None if not found
+        :return: The corresponding corpus, or None if not found
         :rtype: Optional[TCorpus]
         """
         return self._collection.get(name)

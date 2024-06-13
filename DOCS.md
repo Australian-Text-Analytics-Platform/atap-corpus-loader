@@ -46,8 +46,24 @@ loader.servable()
 
 ---
 
-### CorpusLoader.set_build_callback
+### CorpusLoader.add_tab
 
+Allows adding a Panel Viewable instance to the tab controls of the loader.
+
+Params
+- new_tab_name: str – The name of the tab that will appear on the tab control bar
+- new_tab_panel: Viewable - The pane to attach to the new tab
+
+Example
+
+```python
+loader = CorpusLoader('tests/test_data')
+loader.add_tab("A Panel Column", panel.Column())
+```
+
+---
+
+### CorpusLoader.set_build_callback
 
 Allows a callback function to be set when a corpus has completed building.
 When the function is called, the only argument passed will be the built corpus object.
@@ -103,6 +119,24 @@ Example
 ```python
 loader = CorpusLoader('tests/test_data')
 corpus_map = loader.get_corpora()
+```
+
+---
+
+### CorpusLoader.get_mutable_corpora
+
+Returns the corpora object that contains the loaded corpus objects.
+This allows adding to the corpora from outside the CorpusLoader as the object returned is mutable, not a copy.
+The Corpora object has a unique name constraint, meaning a corpus object cannot be added to the corpora if another corpus with the same name is already present. The same constraint applies to the rename method of corpus objects added to the corpora.
+
+Returns: TCorpora - the mutable corpora object that contains the loaded corpus objects
+
+Example
+
+```python
+loader = CorpusLoader('tests/test_data')
+corpora_object = loader.get_mutable_corpora()
+corpus = corpora_object.get("example")
 ```
 
 ---

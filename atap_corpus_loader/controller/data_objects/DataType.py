@@ -8,6 +8,6 @@ class DataType(Enum):
     TEXT = 'string'
     INTEGER = 'int64'
     DECIMAL = 'float64'
-    BOOLEAN = 'boolean'
+    BOOLEAN = 'bool'
     DATETIME = 'datetime64[ns]'
     CATEGORY = 'category'

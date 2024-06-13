@@ -1,6 +1,7 @@
 from typing import Optional
 
 from panel import Tabs
+from panel.viewable import Viewable
 from panel.widgets import TooltipIcon
 
 from atap_corpus_loader.controller import Controller
@@ -24,13 +25,17 @@ class ViewWrapperWidget(AbstractWidget):
         # set_load_service_type depends on the order of these tabs
         self.panel = Tabs(("File Loader", self.file_loader),
                           ("Oni Loader", self.oni_loader),
-                          ("Corpus Overview", self.corpus_display))
+                          ("Corpus Overview", self.corpus_display),
+                          dynamic=True)
         self.panel.param.watch(self.set_load_service_type, parameter_names=['active'])
         self.corpus_info_idx: int = len(self.panel) - 1
         self.children = [self.file_loader, self.oni_loader, self.corpus_display]
 
     def update_display(self):
         pass
+
+    def add_tab(self, new_tab_name: str, new_tab_panel: Viewable):
+        self.panel.append((new_tab_name, new_tab_panel))
 
     def load_corpus_from_filepaths(self, filepath_ls: list[str], include_hidden: bool):
         if len(filepath_ls) == 0:

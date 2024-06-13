@@ -1,9 +1,11 @@
 import logging
+import traceback
 from logging.handlers import RotatingFileHandler
 from io import BytesIO
 from os.path import abspath, join, dirname
 from typing import Optional, Callable, Literal
 
+from atap_corpus._types import TCorpora
 from atap_corpus.corpus.corpus import DataFrameCorpus
 from pandas import DataFrame
 from panel.widgets import Tqdm
@@ -103,6 +105,9 @@ class Controller:
 
         return corpora_dict
 
+    def get_mutable_corpora(self) -> TCorpora:
+        return self.corpora
+
     def set_loader_service_type(self, loader_type: Literal['file', 'oni']):
         if loader_type == 'file':
             self.loader_service = self.file_loader_service
@@ -118,6 +123,7 @@ class Controller:
             self.loader_service.add_corpus_files(filepath_ls, include_hidden, self.build_tqdm)
             self.corpus_headers = self.loader_service.get_inferred_corpus_headers()
         except FileLoadError as e:
+            self.LOGGER.error(traceback.format_exc())
             self.display_error(str(e))
             self.unload_all()
             self.build_tqdm.visible = False
@@ -133,6 +139,7 @@ class Controller:
             self.loader_service.add_meta_files(filepath_ls, include_hidden, self.build_tqdm)
             self.meta_headers = self.loader_service.get_inferred_meta_headers()
         except FileLoadError as e:
+            self.LOGGER.error(traceback.format_exc())
             self.display_error(str(e))
             self.unload_all()
             self.build_tqdm.visible = False
@@ -196,6 +203,10 @@ class Controller:
         for corpus in reversed(self.corpora.items()):
             corpus_df: DataFrame = corpus.to_dataframe()
 
+            parent_name: Optional[str] = None
+            if corpus.parent is not None:
+                parent_name = corpus.parent.name
+
             name: Optional[str] = corpus.name
             num_rows: int = len(corpus)
             headers: list[str] = []
@@ -212,7 +223,7 @@ class Controller:
             if not corpus_df.empty:
                 first_row_data = [str(x) for x in corpus_df.iloc[0]]
 
-            corpora_info.append(ViewCorpusInfo(name, num_rows, headers, dtypes, first_row_data))
+            corpora_info.append(ViewCorpusInfo(name, num_rows, parent_name, headers, dtypes, first_row_data))
 
         return corpora_info
 
