@@ -35,11 +35,13 @@ class CorpusInfoWidget(AbstractWidget):
         name: Optional[str] = corpus_info.name
         if name is None:
             name = " "
-        row_info: str = f"{corpus_info.num_rows} document"
+        corpus_label: str = f"{name} - {corpus_info.num_rows} document"
         if corpus_info.num_rows != 1:
-            row_info += 's'
+            corpus_label += 's'
+        if corpus_info.parent_name:
+            corpus_label += f" - Parent: {corpus_info.parent_name}"
 
-        return f"{name} - {row_info}"
+        return corpus_label
 
     @staticmethod
     def _build_header_markdown_table(corpus_info: ViewCorpusInfo) -> str:

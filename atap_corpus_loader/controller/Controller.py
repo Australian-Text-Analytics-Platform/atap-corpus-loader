@@ -203,6 +203,10 @@ class Controller:
         for corpus in reversed(self.corpora.items()):
             corpus_df: DataFrame = corpus.to_dataframe()
 
+            parent_name: Optional[str] = None
+            if corpus.parent is not None:
+                parent_name = corpus.parent.name
+
             name: Optional[str] = corpus.name
             num_rows: int = len(corpus)
             headers: list[str] = []
@@ -219,7 +223,7 @@ class Controller:
             if not corpus_df.empty:
                 first_row_data = [str(x) for x in corpus_df.iloc[0]]
 
-            corpora_info.append(ViewCorpusInfo(name, num_rows, headers, dtypes, first_row_data))
+            corpora_info.append(ViewCorpusInfo(name, num_rows, parent_name, headers, dtypes, first_row_data))
 
         return corpora_info
 
