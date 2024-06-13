@@ -84,6 +84,6 @@ class CorpusLoader(Viewer):
         :return: the mutable corpora object that contains the loaded corpus objects
         :rtype: TCorpora
         """
-        return self.controller.get_corpora()
+        return self.controller.get_mutable_corpora()
 
 
