@@ -1,6 +1,7 @@
 from typing import Optional
 
 from panel import Tabs
+from panel.viewable import Viewable
 from panel.widgets import TooltipIcon
 
 from atap_corpus_loader.controller import Controller
@@ -32,6 +33,9 @@ class ViewWrapperWidget(AbstractWidget):
 
     def update_display(self):
         pass
+
+    def add_tab(self, new_tab_name: str, new_tab_panel: Viewable):
+        self.panel.append((new_tab_name, new_tab_panel))
 
     def load_corpus_from_filepaths(self, filepath_ls: list[str], include_hidden: bool):
         if len(filepath_ls) == 0:

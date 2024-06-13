@@ -5,6 +5,7 @@ from io import BytesIO
 from os.path import abspath, join, dirname
 from typing import Optional, Callable, Literal
 
+from atap_corpus._types import TCorpora
 from atap_corpus.corpus.corpus import DataFrameCorpus
 from pandas import DataFrame
 from panel.widgets import Tqdm
@@ -103,6 +104,9 @@ class Controller:
             corpora_dict[corpus.name] = corpus
 
         return corpora_dict
+
+    def get_mutable_corpora(self) -> TCorpora:
+        return self.corpora
 
     def set_loader_service_type(self, loader_type: Literal['file', 'oni']):
         if loader_type == 'file':
