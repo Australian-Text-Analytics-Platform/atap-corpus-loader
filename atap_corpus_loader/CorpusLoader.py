@@ -16,7 +16,7 @@ class CorpusLoader(Viewer):
     """
     Public interface for the CorpusLoader module. Maintains a reference to the logic Controller and the GUI wrapper.
     A CorpusLoader object can be used as a Panel component, i.e. will render in a Panel GUI.
-    The build_callback_fn will be called when a corpus is built (can be set using set_build_callback()).
+    The callbacks added will be called when a corpus is built (can be set using set_build_callback()).
     """
 
     def __init__(self, root_directory: str, include_meta_loader: bool = False, **params):
@@ -48,10 +48,11 @@ class CorpusLoader(Viewer):
         """
         Allows a callback function to be set when a corpus has completed building.
         When the function is called, the only argument passed will be the built corpus object.
+        Multiple callback functions can be added and all will be called upon build (in the order added).
         :param callback: the function to call when a corpus has been built
         :type callback: Callable
         """
-        self.controller.set_build_callback(callback)
+        self.controller.add_build_callback(callback)
 
     def get_latest_corpus(self) -> Optional[DataFrameCorpus]:
         """
@@ -85,5 +86,3 @@ class CorpusLoader(Viewer):
         :rtype: TCorpora
         """
         return self.controller.get_mutable_corpora()
-
-
