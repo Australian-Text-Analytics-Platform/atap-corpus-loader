@@ -76,7 +76,7 @@ Example
 ```python
 corpus_list = []
 loader = CorpusLoader('tests/test_data')
-loader.set_build_callback(corpus_list.append)
+loader.add_build_callback(corpus_list.append)
 ```
 
 ---
@@ -140,6 +140,12 @@ corpus = corpora_object.get("example")
 ```
 
 ---
+
+## Notes
+
+### Document Term Matrix
+
+When a corpus is built using the CorpusLoader, a Term Frequency Document Term Matrix (DTM) is added to the corpus. The key used for this DTM is 'tokens'. Consult the atap_corpus documentation for further details
 
 ## Example usage
 

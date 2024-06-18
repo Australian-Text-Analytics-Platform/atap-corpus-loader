@@ -5,6 +5,7 @@ from io import BytesIO
 from os.path import abspath, join, dirname
 from typing import Optional, Callable, Literal
 
+import atap_corpus
 from atap_corpus._types import TCorpora
 from atap_corpus.corpus.corpus import DataFrameCorpus
 from pandas import DataFrame
@@ -26,7 +27,7 @@ class Controller:
     """
     Provides methods for indirection between the corpus loading logic and the user interface
     Holds a reference to the latest corpus built.
-    The build_callback_fn will be called when a corpus is built (can be set using set_build_callback()).
+    The callbacks will be called when a corpus is built (can be set using set_build_callback()).
     """
 
     def __init__(self, root_directory: str):
@@ -47,7 +48,7 @@ class Controller:
 
         self.corpora: UniqueNameCorpora = UniqueNameCorpora()
 
-        self.build_callback_fn: Optional[Callable] = None
+        self.build_callbacks: list[Callable] = []
 
         self.build_tqdm = Tqdm(visible=False)
         self.export_tqdm = Tqdm(visible=False)
@@ -84,10 +85,10 @@ class Controller:
         Controller.LOGGER.info(f"Success displayed: {success_msg}")
         self.notifier_service.notify_success(success_msg)
 
-    def set_build_callback(self, callback: Callable):
+    def add_build_callback(self, callback: Callable):
         if not callable(callback):
             raise ValueError("Provided callback function must be a callable")
-        self.build_callback_fn = callback
+        self.build_callbacks.append(callback)
 
     def get_latest_corpus(self) -> Optional[DataFrameCorpus]:
         if len(self.corpora) == 0:
@@ -183,8 +184,16 @@ class Controller:
             return False
 
         try:
-            if self.build_callback_fn is not None:
-                self.build_callback_fn(corpus)
+            corpus.add_dtm(atap_corpus.parts.dtm.DTM.from_docs_with_vectoriser(corpus.docs()), 'tokens')
+        except Exception as e:
+            Controller.LOGGER.exception("Exception while building DTM: ")
+            self.display_error(str(e))
+            self.build_tqdm.visible = False
+            return False
+
+        try:
+            for callback in self.build_callbacks:
+                callback(corpus)
                 Controller.LOGGER.debug(f"build_corpus method: callback function called")
         except Exception as e:
             Controller.LOGGER.exception("Exception while calling build callback: ")
