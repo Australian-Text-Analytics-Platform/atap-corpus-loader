@@ -20,7 +20,7 @@ class CorpusInfoWidget(AbstractWidget):
         self.corpus_controls = Accordion(toggle=True, width=600,
                                          header_background="#2675C3",
                                          active_header_background="#56AAFC")
-        self.corpus_controls.param.watch(self._update_corpus_display, 'active', onlychanged=False)
+        self.corpus_controls.param.watch(self._update_corpus_display, 'active', onlychanged=True)
 
         self.corpus_display: Markdown = Markdown()
 
@@ -70,7 +70,7 @@ class CorpusInfoWidget(AbstractWidget):
         self.controller.delete_corpus(corpus_name)
         self.update_display()
 
-    def _update_corpus_display(self, *event):
+    def _update_corpus_display(self, *_):
         corpora_info: list[ViewCorpusInfo] = self.controller.get_corpora_info()
         if len(corpora_info) == 0:
             self.corpus_display.object = ' '
@@ -126,6 +126,5 @@ class CorpusInfoWidget(AbstractWidget):
                                      HSpacer(), delete_button, name=label)
             corpus_controls_objs.append(corpus_control_row)
 
-        self.corpus_controls.objects = []
         self.corpus_controls.objects = corpus_controls_objs
         self._update_corpus_display()
