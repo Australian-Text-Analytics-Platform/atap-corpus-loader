@@ -12,6 +12,7 @@ from pandas import DataFrame
 from panel.widgets import Tqdm
 
 from atap_corpus_loader.controller.CorpusExportService import CorpusExportService
+from atap_corpus_loader.controller.events import EventType, EventManager
 from atap_corpus_loader.controller.loader_service import LoaderService
 from atap_corpus_loader.controller.loader_service.FileLoadError import FileLoadError
 from atap_corpus_loader.controller.loader_service.FileLoaderService import FileLoaderService
@@ -48,7 +49,7 @@ class Controller:
 
         self.corpora: UniqueNameCorpora = UniqueNameCorpora()
 
-        self.build_callbacks: list[Callable] = []
+        self.event_manager: EventManager = EventManager(self.LOGGER)
 
         self.build_tqdm = Tqdm(visible=False)
         self.export_tqdm = Tqdm(visible=False)
@@ -66,14 +67,9 @@ class Controller:
         file_handler.setLevel(logging.DEBUG)
         file_handler.setFormatter(formatter)
 
-        console_handler = logging.StreamHandler()
-        console_handler.setLevel(logging.ERROR)
-        console_handler.setFormatter(formatter)
-
         Controller.LOGGER = logging.getLogger(__name__)
         Controller.LOGGER.setLevel(logging.DEBUG)
         Controller.LOGGER.addHandler(file_handler)
-        Controller.LOGGER.addHandler(console_handler)
 
         Controller.LOGGER.info('Logger started')
 
@@ -85,10 +81,8 @@ class Controller:
         Controller.LOGGER.info(f"Success displayed: {success_msg}")
         self.notifier_service.notify_success(success_msg)
 
-    def add_build_callback(self, callback: Callable):
-        if not callable(callback):
-            raise ValueError("Provided callback function must be a callable")
-        self.build_callbacks.append(callback)
+    def register_event_callback(self, event_type: EventType, callback: Callable):
+        self.event_manager.register_event_callback(event_type, callback)
 
     def get_latest_corpus(self) -> Optional[DataFrameCorpus]:
         if len(self.corpora) == 0:
@@ -130,6 +124,7 @@ class Controller:
             self.build_tqdm.visible = False
             return False
 
+        self.event_manager.trigger_callbacks(EventType.LOAD)
         self.build_tqdm.visible = False
         return True
 
@@ -146,6 +141,7 @@ class Controller:
             self.build_tqdm.visible = False
             return False
 
+        self.event_manager.trigger_callbacks(EventType.LOAD)
         self.build_tqdm.visible = False
         return True
 
@@ -191,15 +187,7 @@ class Controller:
             self.build_tqdm.visible = False
             return False
 
-        try:
-            for callback in self.build_callbacks:
-                callback(corpus)
-                Controller.LOGGER.debug(f"build_corpus method: callback function called")
-        except Exception as e:
-            Controller.LOGGER.exception("Exception while calling build callback: ")
-            self.display_error(f"Build callback error: {e}")
-            self.build_tqdm.visible = False
-            return False
+        self.event_manager.trigger_callbacks(EventType.BUILD, corpus)
 
         self.build_tqdm.visible = False
         Controller.LOGGER.debug(f"build_corpus method: corpus building complete")
@@ -238,6 +226,7 @@ class Controller:
 
     def delete_corpus(self, corpus_name: str):
         self.corpora.remove(corpus_name)
+        self.event_manager.trigger_callbacks(EventType.DELETE)
 
     def rename_corpus(self, corpus_name: str, new_name: str):
         Controller.LOGGER.debug(f"Renaming corpus named '{corpus_name}' to '{new_name}'")
@@ -252,6 +241,8 @@ class Controller:
             self.display_error(str(e))
         except Exception as e:
             self.display_error(f"Unexpected error while renaming: {e}")
+
+        self.event_manager.trigger_callbacks(EventType.RENAME, corpus)
 
     def get_loaded_file_counts(self) -> dict[str, int]:
         corpus_file_set = self.loader_service.get_loaded_corpus_files()
@@ -281,6 +272,8 @@ class Controller:
             self.meta_headers = []
             self.meta_link_header = None
 
+        self.event_manager.trigger_callbacks(EventType.UNLOAD)
+
     def unload_all(self):
         Controller.LOGGER.debug("All files unloaded")
         self.loader_service.remove_all_files()
@@ -290,6 +283,8 @@ class Controller:
         self.meta_headers = []
         self.corpus_link_header = None
         self.meta_link_header = None
+
+        self.event_manager.trigger_callbacks(EventType.UNLOAD)
 
     def get_loaded_corpus_files(self) -> set[FileReference]:
         return self.loader_service.get_loaded_corpus_files()
