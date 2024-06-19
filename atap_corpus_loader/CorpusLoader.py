@@ -7,6 +7,7 @@ from panel.theme import Fast
 from panel.viewable import Viewer, Viewable
 
 from atap_corpus_loader.controller import Controller
+from atap_corpus_loader.controller.events import EventType
 from atap_corpus_loader.view import ViewWrapperWidget
 
 panel.extension(notifications=True, design=Fast)
@@ -44,15 +45,18 @@ class CorpusLoader(Viewer):
         """
         self.view.add_tab(new_tab_name, new_tab_panel)
 
-    def set_build_callback(self, callback: Callable):
+    def register_event_callback(self, event_type: EventType, callback: Callable):
         """
-        Allows a callback function to be set when a corpus has completed building.
-        When the function is called, the only argument passed will be the built corpus object.
-        Multiple callback functions can be added and all will be called upon build (in the order added).
-        :param callback: the function to call when a corpus has been built
+        Registers a callback function to execute when the event specified by event_type occurs.
+        Multiple callback functions can be registered and all will be called in order when the event occurs.
+        When a callback raises an exception, the exception will be logged and the subsequent callbacks will be executed.
+        The relevant corpus object will be passed as an argument for the BUILD and RENAME events.
+        :param event_type: an enum with the possible values: LOAD, UNLOAD, BUILD, RENAME, DELETE
+        :type event_type: EventType
+        :param callback: the function to call when the event occurs
         :type callback: Callable
         """
-        self.controller.add_build_callback(callback)
+        self.controller.register_event_callback(event_type, callback)
 
     def get_latest_corpus(self) -> Optional[DataFrameCorpus]:
         """
