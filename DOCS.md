@@ -4,9 +4,9 @@
 
 ## Docs
 
-### atap_corpus_loader.CorpusLoader.CorpusLoader
+### atap_corpus_loader.CorpusLoader
 
-Public interface for the CorpusLoader module. Maintains a reference to the logic Controller and the GUI wrapper. A CorpusLoader object can be used as a Panel component, i.e. will render in a Panel GUI. The build_callback_fn will be called when a corpus is built (can be set using set_build_callback()).
+Public interface for the CorpusLoader module. Maintains a reference to the logic Controller and the GUI wrapper. A CorpusLoader object can be used as a Panel component, i.e. will render in a Panel GUI. Callbacks can be registered using the register_event_callback() method
 
 Can be imported using:
 
@@ -63,20 +63,23 @@ loader.add_tab("A Panel Column", panel.Column())
 
 ---
 
-### CorpusLoader.set_build_callback
+### CorpusLoader.register_event_callback
 
-Allows a callback function to be set when a corpus has completed building.
-When the function is called, the only argument passed will be the built corpus object.
+Registers a callback function to execute when the event specified by event_type occurs.
+Multiple callback functions can be registered and all will be called in order when the event occurs.
+When a callback raises an exception, the exception will be logged and the subsequent callbacks will be executed.
+The relevant corpus object will be passed as an argument for the BUILD and RENAME events.
 
 Params
-- callback: Callable – the function to call when a corpus has been built
+- event_type: EventType - an enum with the possible values: LOAD, UNLOAD, BUILD, RENAME, DELETE
+- callback: Callable - the function to call when the event occurs
 
 Example
 
 ```python
 corpus_list = []
 loader = CorpusLoader('tests/test_data')
-loader.add_build_callback(corpus_list.append)
+loader.register_event_callback(EventType.BUILD, corpus_list.append)
 ```
 
 ---
@@ -147,15 +150,28 @@ corpus = corpora_object.get("example")
 
 When a corpus is built using the CorpusLoader, a Term Frequency Document Term Matrix (DTM) is added to the corpus. The key used for this DTM is 'tokens'. Consult the atap_corpus documentation for further details
 
+### Callbacks
+
+Callback functions can be registered with CorpusLoader.register_event_callback(), which registers a callback function to execute when the event specified by event_type occurs.
+Multiple callback functions can be registered and all will be called in order when the event occurs.
+When a callback raises an exception, the exception will be logged and the subsequent callbacks will be executed.
+The relevant corpus object will be passed as an argument for the BUILD and RENAME events. The other event callbacks will pass no arguments.
+
+The EventType enum can be imported using:
+
+```python
+from atap_corpus_loader import EventType
+```
+
 ## Example usage
 
 The following snippet could be used as a cell in a Jupyter notebook. Each time the user builds a corpus, the built corpus will be added to the list.
 
 ```python
-from atap_corpus_loader import CorpusLoader
+from atap_corpus_loader import CorpusLoader, EventType
 
 corpus_list = []
 loader = CorpusLoader('tests/test_data')
-loader.set_build_callback(corpus_list.append)
+loader.register_event_callback(EventType.BUILD, corpus_list.append)
 loader.servable()
 ```
