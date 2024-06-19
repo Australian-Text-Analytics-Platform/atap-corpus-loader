@@ -126,5 +126,6 @@ class FileLoaderWidget(AbstractWidget):
         success: bool = self.view_handler.build_corpus(self.corpus_name_input.value_input)
         if success:
             self.corpus_name_input.value_input = ""
+            self.corpus_name_input.value = ""
             self.unload_all()
         self._set_button_status_on_operation(curr_loading=False)
