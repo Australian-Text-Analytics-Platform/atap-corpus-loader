@@ -126,5 +126,6 @@ class CorpusInfoWidget(AbstractWidget):
                                      HSpacer(), delete_button, name=label)
             corpus_controls_objs.append(corpus_control_row)
 
+        self.corpus_controls.objects = []
         self.corpus_controls.objects = corpus_controls_objs
         self._update_corpus_display()

@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "atap-corpus-loader"
-version = "1.6.0"
+version = "1.6.1"
 description = " A GUI loader for atap_corpus using the Panel library."
 authors = ["Hamish Croser <hamish.croser@sydney.edu.au>"]
 readme = "README.md"
