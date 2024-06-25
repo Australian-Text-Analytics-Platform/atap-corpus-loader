@@ -23,6 +23,7 @@ CorpusLoader constructor
 Params
 -  root_directory: str – The root directory that the file selector will search for files to load. The argument must be a string. The directory may be non-existent at initialisation time, but no files will be displayed until it exists.
 - include_meta_loader: bool - If True, the Corpus Loader will include additional metadata joining functionality. False by default
+- run_logger: bool - If True, a log will be kept in the atap_corpus_loader directory. False by default
 - params: Any – passed onto the panel.viewable.Viewer super-class
 
 Example
