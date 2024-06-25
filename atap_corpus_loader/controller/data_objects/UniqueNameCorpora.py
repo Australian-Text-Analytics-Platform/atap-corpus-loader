@@ -5,8 +5,6 @@ from atap_corpus._types import TCorpus
 from atap_corpus.corpus.base import BaseCorpora, BaseCorpus
 from atap_corpus.utils import format_dunder_str
 
-logger = logging.getLogger(__name__)
-
 
 class UniqueNameCorpora(BaseCorpora):
     """
@@ -15,8 +13,9 @@ class UniqueNameCorpora(BaseCorpora):
     that ensures the new name is unique.
     """
 
-    def __init__(self, corpus: Optional[BaseCorpus | Iterable[BaseCorpus]] = None):
+    def __init__(self, logger_name: str, corpus: Optional[BaseCorpus | Iterable[BaseCorpus]] = None):
         super().__init__(corpus)
+        logger = logging.getLogger(logger_name)
         self._collection = dict()
         if corpus is None:
             return

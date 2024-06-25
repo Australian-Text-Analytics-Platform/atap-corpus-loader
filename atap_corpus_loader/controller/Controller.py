@@ -24,16 +24,41 @@ from atap_corpus_loader.view.notifications import NotifierService
 
 
 class Controller:
-    LOGGER: logging.Logger = None
+    LOGGER_NAME: str = "corpus-loader"
     """
     Provides methods for indirection between the corpus loading logic and the user interface
     Holds a reference to the latest corpus built.
     The callbacks will be called when a corpus is built (can be set using set_build_callback()).
     """
+    @staticmethod
+    def setup_logger(logger_name: str):
+        logger = logging.getLogger(logger_name)
+        for handler in logger.handlers[:]:
+            logger.removeHandler(handler)
+        logger.addHandler(logging.NullHandler())
+
+        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        log_file_location = abspath(join(dirname(__file__), '..', 'log.txt'))
+        # Max size is ~10MB with 1 backup, so a max size of ~20MB for log files
+        max_bytes: int = 10000000
+        backup_count: int = 1
+        file_handler = RotatingFileHandler(log_file_location, maxBytes=max_bytes, backupCount=backup_count)
+        file_handler.setLevel(logging.DEBUG)
+        file_handler.setFormatter(formatter)
+
+        logger.setLevel(logging.DEBUG)
+        logger.addHandler(file_handler)
+
+        logger.info('Logger started')
+
+    @staticmethod
+    def log(msg: str, level: int):
+        logger = logging.getLogger(Controller.LOGGER_NAME)
+        logger.log(level, msg)
+
+    setup_logger(LOGGER_NAME)
 
     def __init__(self, root_directory: str):
-        Controller.setup_logger()
-
         self.file_loader_service: FileLoaderService = FileLoaderService(root_directory)
         self.oni_loader_service: OniLoaderService = OniLoaderService()
         self.loader_service: LoaderService = self.file_loader_service
@@ -47,38 +72,18 @@ class Controller:
         self.corpus_headers: list[CorpusHeader] = []
         self.meta_headers: list[CorpusHeader] = []
 
-        self.corpora: UniqueNameCorpora = UniqueNameCorpora()
-
-        self.event_manager: EventManager = EventManager(self.LOGGER)
+        self.corpora: UniqueNameCorpora = UniqueNameCorpora(self.LOGGER_NAME)
+        self.event_manager: EventManager = EventManager(self.LOGGER_NAME)
 
         self.build_tqdm = Tqdm(visible=False)
         self.export_tqdm = Tqdm(visible=False)
 
-    @staticmethod
-    def setup_logger():
-        if Controller.LOGGER is not None:
-            return
-        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-        log_file_location = abspath(join(dirname(__file__), '..', 'log.txt'))
-        # Max size is ~10MB with 1 backup, so a max size of ~20MB for log files
-        max_bytes: int = 10000000
-        backup_count: int = 1
-        file_handler = RotatingFileHandler(log_file_location, maxBytes=max_bytes, backupCount=backup_count)
-        file_handler.setLevel(logging.DEBUG)
-        file_handler.setFormatter(formatter)
-
-        Controller.LOGGER = logging.getLogger(__name__)
-        Controller.LOGGER.setLevel(logging.DEBUG)
-        Controller.LOGGER.addHandler(file_handler)
-
-        Controller.LOGGER.info('Logger started')
-
     def display_error(self, error_msg: str):
-        Controller.LOGGER.error(f"Error displayed: {error_msg}")
+        self.log(f"Error displayed: {error_msg}", logging.ERROR)
         self.notifier_service.notify_error(error_msg)
 
     def display_success(self, success_msg: str):
-        Controller.LOGGER.info(f"Success displayed: {success_msg}")
+        self.log(f"Success displayed: {success_msg}", logging.INFO)
         self.notifier_service.notify_success(success_msg)
 
     def register_event_callback(self, event_type: EventType, callback: Callable):
@@ -112,13 +117,13 @@ class Controller:
             raise ValueError("loader_type specified must be either 'file' or 'oni'")
 
     def load_corpus_from_filepaths(self, filepath_ls: list[str], include_hidden: bool) -> bool:
-        Controller.LOGGER.debug(f"Files loaded as corpus: {filepath_ls}")
+        self.log(f"Files loaded as corpus: {filepath_ls}", logging.DEBUG)
         self.build_tqdm.visible = True
         try:
             self.loader_service.add_corpus_files(filepath_ls, include_hidden, self.build_tqdm)
             self.corpus_headers = self.loader_service.get_inferred_corpus_headers()
         except FileLoadError as e:
-            self.LOGGER.error(traceback.format_exc())
+            self.log(traceback.format_exc(), logging.ERROR)
             self.display_error(str(e))
             self.unload_all()
             self.build_tqdm.visible = False
@@ -129,13 +134,13 @@ class Controller:
         return True
 
     def load_meta_from_filepaths(self, filepath_ls: list[str], include_hidden: bool) -> bool:
-        Controller.LOGGER.debug(f"Files loaded as meta: {filepath_ls}")
+        self.log(f"Files loaded as meta: {filepath_ls}", logging.DEBUG)
         self.build_tqdm.visible = True
         try:
             self.loader_service.add_meta_files(filepath_ls, include_hidden, self.build_tqdm)
             self.meta_headers = self.loader_service.get_inferred_meta_headers()
         except FileLoadError as e:
-            self.LOGGER.error(traceback.format_exc())
+            self.log(traceback.format_exc(), logging.ERROR)
             self.display_error(str(e))
             self.unload_all()
             self.build_tqdm.visible = False
@@ -146,7 +151,7 @@ class Controller:
         return True
 
     def build_corpus(self, corpus_id: str) -> bool:
-        Controller.LOGGER.debug(f"build_corpus method: Building corpus with name: {corpus_id}")
+        self.log(f"build_corpus method: Building corpus with name: {corpus_id}", logging.DEBUG)
         if self.is_meta_added():
             if (self.corpus_link_header is None) or (self.meta_link_header is None):
                 self.display_error("Cannot build without link headers set. Select a corpus header and a meta header as linking headers in the dropdowns")
@@ -158,23 +163,23 @@ class Controller:
                                                       self.meta_headers, self.text_header,
                                                       self.corpus_link_header, self.meta_link_header,
                                                       self.build_tqdm)
-            Controller.LOGGER.debug(f"build_corpus method: corpus built")
+            self.log("build_corpus method: corpus built", logging.DEBUG)
         except FileLoadError as e:
-            Controller.LOGGER.exception("Exception while building corpus: ")
+            self.log("Exception while building corpus: " + traceback.format_exc(), logging.ERROR)
             self.display_error(str(e))
             self.build_tqdm.visible = False
             return False
         except Exception as e:
-            Controller.LOGGER.exception("Exception while building corpus: ")
+            self.log("Exception while building corpus: " + traceback.format_exc(), logging.ERROR)
             self.display_error(f"Unexpected error building corpus: {e}")
             self.build_tqdm.visible = False
             return False
 
         try:
             self.corpora.add(corpus)
-            Controller.LOGGER.debug(f"build_corpus method: corpus added to corpora")
+            self.log("build_corpus method: corpus added to corpora", logging.DEBUG)
         except Exception as e:
-            Controller.LOGGER.exception("Exception while adding corpus to corpora: ")
+            self.log("Exception while adding corpus to corpora: " + traceback.format_exc(), logging.ERROR)
             self.display_error(str(e))
             self.build_tqdm.visible = False
             return False
@@ -182,7 +187,7 @@ class Controller:
         try:
             corpus.add_dtm(atap_corpus.parts.dtm.DTM.from_docs_with_vectoriser(corpus.docs()), 'tokens')
         except Exception as e:
-            Controller.LOGGER.exception("Exception while building DTM: ")
+            self.log("Exception while building DTM: " + traceback.format_exc(), logging.ERROR)
             self.display_error(str(e))
             self.build_tqdm.visible = False
             return False
@@ -190,7 +195,7 @@ class Controller:
         self.event_manager.trigger_callbacks(EventType.BUILD, corpus)
 
         self.build_tqdm.visible = False
-        Controller.LOGGER.debug(f"build_corpus method: corpus building complete")
+        self.log("build_corpus method: corpus building complete", logging.DEBUG)
 
         return True
 
@@ -229,7 +234,7 @@ class Controller:
         self.event_manager.trigger_callbacks(EventType.DELETE)
 
     def rename_corpus(self, corpus_name: str, new_name: str):
-        Controller.LOGGER.debug(f"Renaming corpus named '{corpus_name}' to '{new_name}'")
+        self.log(f"Renaming corpus named '{corpus_name}' to '{new_name}'", logging.DEBUG)
         corpus: Optional[DataFrameCorpus] = self.corpora.get(corpus_name)
         if corpus is None:
             self.display_error(f"No corpus with name {corpus_name} found")
@@ -275,7 +280,7 @@ class Controller:
         self.event_manager.trigger_callbacks(EventType.UNLOAD)
 
     def unload_all(self):
-        Controller.LOGGER.debug("All files unloaded")
+        self.log("All files unloaded", logging.DEBUG)
         self.loader_service.remove_all_files()
 
         self.text_header = None
