@@ -20,16 +20,18 @@ class CorpusLoader(Viewer):
     The callbacks added will be called when a corpus is built (can be set using set_build_callback()).
     """
 
-    def __init__(self, root_directory: str, include_meta_loader: bool = False, **params):
+    def __init__(self, root_directory: str, include_meta_loader: bool = False, run_logger: bool = False, **params):
         """
         :param root_directory: The root directory that the file selector will search for files to load. The argument must be a string. The directory may be non-existent at initialisation time, but no files will be displayed until it exists.
         :param include_meta_loader: If True, the Corpus Loader will include additional metadata joining functionality. False by default
+        :param run_logger: If True, a log will be kept in the atap_corpus_loader directory. False by default
         :param params: passed onto the panel.viewable.Viewer super-class
         :type root_directory: str
         :type include_meta_loader: bool
+        :type run_logger: bool
         """
         super().__init__(**params)
-        self.controller: Controller = Controller(root_directory)
+        self.controller: Controller = Controller(root_directory, run_logger)
         self.view: ViewWrapperWidget = ViewWrapperWidget(self.controller, include_meta_loader)
 
     def __panel__(self):

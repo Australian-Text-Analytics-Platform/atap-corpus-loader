@@ -31,11 +31,13 @@ class Controller:
     The callbacks will be called when a corpus is built (can be set using set_build_callback()).
     """
     @staticmethod
-    def setup_logger(logger_name: str):
+    def setup_logger(logger_name: str, run_logger: bool):
         logger = logging.getLogger(logger_name)
         for handler in logger.handlers[:]:
             logger.removeHandler(handler)
-        logger.addHandler(logging.NullHandler())
+        if not run_logger:
+            logger.addHandler(logging.NullHandler())
+            return
 
         formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
         log_file_location = abspath(join(dirname(__file__), '..', 'log.txt'))
@@ -56,9 +58,9 @@ class Controller:
         logger = logging.getLogger(Controller.LOGGER_NAME)
         logger.log(level, msg)
 
-    setup_logger(LOGGER_NAME)
+    def __init__(self, root_directory: str, run_logger: bool):
+        self.setup_logger(self.LOGGER_NAME, run_logger)
 
-    def __init__(self, root_directory: str):
         self.file_loader_service: FileLoaderService = FileLoaderService(root_directory)
         self.oni_loader_service: OniLoaderService = OniLoaderService()
         self.loader_service: LoaderService = self.file_loader_service
