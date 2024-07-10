@@ -1,3 +1,4 @@
+import logging
 from io import BytesIO
 from typing import Optional
 
@@ -13,10 +14,7 @@ from atap_corpus_loader.controller.loader_service.FileLoadError import FileLoadE
 class OniLoaderService(LoaderService):
     def __init__(self):
         super().__init__()
-        self.providers: dict[str, str] = {
-            "LDaCA": "https://data.ldaca.edu.au",
-            "ATAP": "https://data.atap.edu.au"
-        }
+        self.providers: dict[str, str] = {"LDaCA": "https://data.ldaca.edu.au"}
         self.curr_provider: str = "LDaCA"
         self.api_key: Optional[str] = None
         self.collection_id: str = ''
@@ -81,6 +79,7 @@ class OniLoaderService(LoaderService):
         self.retrieve_collection_files()
 
     def retrieve_collection_files(self):
+        logger = logging.getLogger("corpus-loader")
         if self.api_key is None:
             self.collection_files = []
             raise FileLoadError("No API key set")
@@ -91,6 +90,12 @@ class OniLoaderService(LoaderService):
             api_root + "object/meta",
             params={"id": self.collection_id, "noUrid": "1"},
         )
+
+        logger.log(logging.DEBUG, f"Final URL: {r.url}")
+
+        # Print the history of the request to see if there were any redirects
+        for response in r.history:
+            logger.log(logging.DEBUG, f"Redirected from: {response.url}")
 
         try:
             r.raise_for_status()
