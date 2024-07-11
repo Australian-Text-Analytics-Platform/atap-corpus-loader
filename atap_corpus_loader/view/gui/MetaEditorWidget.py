@@ -27,17 +27,21 @@ class MetaEditorWidget(AbstractWidget):
         corpus_table_tooltip = self.view_handler.get_tooltip('corpus_editor')
         self.corpus_table_row: Row = Row(corpus_table_tooltip, corpus_table_title)
 
-        self.text_header_dropdown = Select(name='Select document label', width=200)
+        self.text_header_dropdown = Select(name='Select document label', width=150)
         self.corpus_checkboxes: list[Checkbox] = []
-        self.corpus_include_all_Button = Button(name="Include all", button_style='outline', button_type='primary', align='end')
-        self.corpus_include_all_Button.on_click(self._include_all_corpus)
+        self.corpus_include_all_Button = Button(name="Include all", button_style='outline', button_type='success', align='end')
+        self.corpus_include_all_Button.on_click(lambda e: self._toggle_all_corpus(True))
+        self.corpus_exclude_all_Button = Button(name="Exclude all", button_style='outline', button_type='primary', align='end')
+        self.corpus_exclude_all_Button.on_click(lambda e: self._toggle_all_corpus(False))
 
         meta_table_title = Markdown("## Metadata editor")
         meta_table_tooltip = self.view_handler.get_tooltip('meta_editor')
         self.meta_table_row: Row = Row(meta_table_tooltip, meta_table_title)
         self.meta_checkboxes: list[Checkbox] = []
-        self.meta_include_all_button = Button(name="Include all", button_style='outline', button_type='primary')
-        self.meta_include_all_button.on_click(self._include_all_meta)
+        self.meta_include_all_button = Button(name="Include all", button_style='outline', button_type='success')
+        self.meta_include_all_button.on_click(lambda e: self._toggle_all_meta(True))
+        self.meta_exclude_all_button = Button(name="Exclude all", button_style='outline', button_type='primary')
+        self.meta_exclude_all_button.on_click(lambda e: self._toggle_all_meta(False))
 
         self.link_row = Row(visible=False, styles=MetaEditorWidget.ERROR_BORDER_STYLE)
         link_row_tooltip = self.view_handler.get_tooltip('linking_selectors')
@@ -50,8 +54,8 @@ class MetaEditorWidget(AbstractWidget):
                                  self.link_markdown.clone(),
                                  self.meta_link_dropdown]
 
-        self.corpus_editor_control_row = Row(self.text_header_dropdown, self.corpus_include_all_Button, visible=False)
-        self.meta_editor_control_row = Row(self.meta_include_all_button, visible=False)
+        self.corpus_editor_control_row = Row(self.corpus_include_all_Button, self.corpus_exclude_all_Button, self.text_header_dropdown, visible=False)
+        self.meta_editor_control_row = Row(self.meta_include_all_button, self.meta_exclude_all_button, visible=False)
 
         text_header_fn = bind(self._set_text_header, self.text_header_dropdown)
         corpus_link_fn = bind(self._set_corpus_link_header, self.corpus_link_dropdown)
@@ -75,13 +79,15 @@ class MetaEditorWidget(AbstractWidget):
         self._build_meta_table()
         self._update_dropdowns()
 
-    def _include_all_corpus(self, *_):
+    def _toggle_all_corpus(self, state: bool, *_):
         for checkbox in self.corpus_checkboxes:
-            checkbox.value = True
+            if not checkbox.disabled:
+                checkbox.value = state
 
-    def _include_all_meta(self, *_):
+    def _toggle_all_meta(self, state: bool, *_):
         for checkbox in self.meta_checkboxes:
-            checkbox.value = True
+            if not checkbox.disabled:
+                checkbox.value = state
 
     def _set_text_header(self, text_header_name: Optional[str]):
         self.controller.set_text_header(text_header_name)
