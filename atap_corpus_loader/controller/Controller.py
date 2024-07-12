@@ -33,6 +33,7 @@ class Controller:
     @staticmethod
     def setup_logger(logger_name: str, run_logger: bool):
         logger = logging.getLogger(logger_name)
+        logger.propagate = False
         for handler in logger.handlers[:]:
             logger.removeHandler(handler)
         if not run_logger:
