@@ -14,7 +14,7 @@ exclude = ["*/.ipynb_checkpoints/*", "*log.txt"]
 [tool.poetry.dependencies]
 python = ">=3.10.0,<3.12.0"
 pandas = ">2.0"
-atap_corpus = "~=0.1.13"
+atap-corpus = "~=0.1.13"
 panel = "~=1.4.4"
 odfpy = "~=1.4.0"
 python-docx = "~=1.1.0"
