@@ -12,6 +12,14 @@ from atap_corpus_loader.view.gui import AbstractWidget
 
 
 class FileSelectorWidget(AbstractWidget):
+    @staticmethod
+    def _get_short_path(long_path: str, threshold_len: int = 70):
+        buffer_len: int = threshold_len // 2
+        if len(long_path) < threshold_len:
+            return long_path
+        else:
+            return f"{long_path[:buffer_len]}...{long_path[-buffer_len:]}"
+
     def __init__(self, view_handler: ViewWrapperWidget, controller: Controller, width: int):
         super().__init__()
         self.view_handler: ViewWrapperWidget = view_handler
@@ -70,7 +78,7 @@ class FileSelectorWidget(AbstractWidget):
         filtered_files_dict: dict[str, str] = {}
         checkmark_symbol = "\U00002714"
         for ref in filtered_refs:
-            file_repr = ref.get_path()
+            file_repr = self._get_short_path(ref.get_path())
             if ref in loaded_corpus_files:
                 file_repr += f" {checkmark_symbol} [corpus]"
             if ref in loaded_meta_files:
