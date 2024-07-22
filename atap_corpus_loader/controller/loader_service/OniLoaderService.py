@@ -74,7 +74,7 @@ class OniLoaderService(LoaderService):
     def set_collection_id(self, collection_id: str):
         collection_id = collection_id.strip()
         if not self._validate_collection_id(collection_id):
-            raise FileLoadError("Collection ID is malformed")
+            raise FileLoadError("Collection ID is missing")
         self.collection_id = collection_id
         self.retrieve_collection_files()
 
@@ -87,8 +87,8 @@ class OniLoaderService(LoaderService):
         api_root: str = self._get_api_root()
 
         r = requests.get(
-            api_root + "object/meta",
-            params={"id": self.collection_id, "noUrid": "1"},
+            api_root + "object/open",
+            params={"id": self.collection_id, "noUrid": None, "resolve-parts": None},
         )
 
         logger.log(logging.DEBUG, f"Final URL: {r.url}")
@@ -115,11 +115,18 @@ class OniLoaderService(LoaderService):
         all_file_refs: list[FileReference] = []
         for item in metadata_items:
             item_type = item.get("@type")
-            if item_type == "RepositoryObject":
-                filepath = item["indexableText"]["@id"]
+            if "File" in item_type:
+                filepath = item["@id"]
 
                 file_refs: list[FileReference] = self.file_ref_factory.get_file_refs_from_path(filepath, False)
                 all_file_refs.extend(file_refs)
+            elif "Dataset" in item_type:
+                dataset_parts = item["hasPart"]
+                for dataset_item in dataset_parts:
+                    filepath = dataset_item["@id"]
+
+                    file_refs: list[FileReference] = self.file_ref_factory.get_file_refs_from_path(filepath, False)
+                    all_file_refs.extend(file_refs)
 
         all_file_refs.sort(key=lambda ref: ref.get_path())
 
@@ -135,14 +142,9 @@ class OniLoaderService(LoaderService):
                 continue
             if not include_hidden and file_ref.is_hidden():
                 continue
-            data = requests.get(
-                self._get_api_root() + "stream",
-                params={
-                    "id": self.collection_id,
-                    "path": filepath,
-                },
-                headers=self._get_auth_header()
-            )
+            data = requests.get(file_ref.get_path(),
+                                headers=self._get_auth_header()
+                                )
 
             try:
                 data.raise_for_status()
@@ -166,14 +168,9 @@ class OniLoaderService(LoaderService):
                 continue
             if not include_hidden and file_ref.is_hidden():
                 continue
-            data = requests.get(
-                self._get_api_root() + "stream",
-                params={
-                    "id": self.collection_id,
-                    "path": filepath,
-                },
-                headers=self._get_auth_header()
-            )
+            data = requests.get(file_ref.get_path(),
+                                headers=self._get_auth_header()
+                                )
 
             try:
                 data.raise_for_status()
