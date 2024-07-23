@@ -67,13 +67,16 @@ loader.add_tab("A Panel Column", panel.Column())
 ### CorpusLoader.register_event_callback
 
 Registers a callback function to execute when the event specified by event_type occurs.
-Multiple callback functions can be registered and all will be called in order when the event occurs.
+Multiple callback functions can be registered and will be called in the order added when the event occurs.
+If the first argument is True, the callback will be added to the start of the callback chain rather than the end.
+Subsequent callbacks registered with first=True will supersede the previous callback's position.
 When a callback raises an exception, the exception will be logged and the subsequent callbacks will be executed.
 The relevant corpus object will be passed as an argument for the BUILD and RENAME events.
 
 Params
 - event_type: EventType - an enum with the possible values: LOAD, UNLOAD, BUILD, RENAME, DELETE
 - callback: Callable - the function to call when the event occurs
+- first: bool - whether to insert the callback at the start of the callback chain for this event type. False by default
 
 Example
 
