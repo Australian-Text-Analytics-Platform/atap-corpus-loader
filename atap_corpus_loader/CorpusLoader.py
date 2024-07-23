@@ -23,12 +23,12 @@ class CorpusLoader(Viewer):
     def __init__(self, root_directory: str, include_meta_loader: bool = False, run_logger: bool = False, **params):
         """
         :param root_directory: The root directory that the file selector will search for files to load. The argument must be a string. The directory may be non-existent at initialisation time, but no files will be displayed until it exists.
-        :param include_meta_loader: If True, the Corpus Loader will include additional metadata joining functionality. False by default
-        :param run_logger: If True, a log will be kept in the atap_corpus_loader directory. False by default
-        :param params: passed onto the panel.viewable.Viewer super-class
         :type root_directory: str
+        :param include_meta_loader: If True, the Corpus Loader will include additional metadata joining functionality. False by default
         :type include_meta_loader: bool
+        :param run_logger: If True, a log will be kept in the atap_corpus_loader directory. False by default
         :type run_logger: bool
+        :param params: passed onto the panel.viewable.Viewer super-class
         """
         super().__init__(**params)
         self.controller: Controller = Controller(root_directory, run_logger)
@@ -47,18 +47,22 @@ class CorpusLoader(Viewer):
         """
         self.view.add_tab(new_tab_name, new_tab_panel)
 
-    def register_event_callback(self, event_type: EventType, callback: Callable):
+    def register_event_callback(self, event_type: EventType, callback: Callable, first: bool = False):
         """
         Registers a callback function to execute when the event specified by event_type occurs.
-        Multiple callback functions can be registered and all will be called in order when the event occurs.
+        Multiple callback functions can be registered and will be called in the order added when the event occurs.
+        If the first argument is True, the callback will be added to the start of the callback chain rather than the end.
+        Subsequent callbacks registered with first=True will supersede the previous callback's position.
         When a callback raises an exception, the exception will be logged and the subsequent callbacks will be executed.
         The relevant corpus object will be passed as an argument for the BUILD and RENAME events.
         :param event_type: an enum with the possible values: LOAD, UNLOAD, BUILD, RENAME, DELETE
         :type event_type: EventType
         :param callback: the function to call when the event occurs
         :type callback: Callable
+        :param first: whether to insert the callback at the start of the callback chain for this event type. False by default
+        :type first: bool
         """
-        self.controller.register_event_callback(event_type, callback)
+        self.controller.register_event_callback(event_type, callback, first)
 
     def get_latest_corpus(self) -> Optional[DataFrameCorpus]:
         """

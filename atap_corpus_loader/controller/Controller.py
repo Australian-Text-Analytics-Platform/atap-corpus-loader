@@ -89,8 +89,8 @@ class Controller:
         self.log(f"Success displayed: {success_msg}", logging.INFO)
         self.notifier_service.notify_success(success_msg)
 
-    def register_event_callback(self, event_type: EventType, callback: Callable):
-        self.event_manager.register_event_callback(event_type, callback)
+    def register_event_callback(self, event_type: EventType, callback: Callable, first: bool):
+        self.event_manager.register_event_callback(event_type, callback, first)
 
     def get_latest_corpus(self) -> Optional[DataFrameCorpus]:
         if len(self.corpora) == 0:

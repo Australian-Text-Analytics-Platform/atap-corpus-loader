@@ -19,10 +19,14 @@ class EventManager:
     def reset_callbacks(self):
         self.callback_mapping = {e: [] for e in EventType}
 
-    def register_event_callback(self, event_type: EventType, callback: Callable):
+    def register_event_callback(self, event_type: EventType, callback: Callable, first: bool):
         if not callable(callback):
             raise TypeError("Provided callback function must be callable")
-        self.callback_mapping[event_type].append(callback)
+        callback_ls = self.callback_mapping[event_type]
+        position = len(callback_ls)
+        if first:
+            position = 0
+        self.callback_mapping[event_type].insert(position, callback)
         self.log(f"New callback registered for event '{event_type.name}'. Callback: {callback}", logging.INFO)
 
     def trigger_callbacks(self, event_type: EventType, *callback_args):
