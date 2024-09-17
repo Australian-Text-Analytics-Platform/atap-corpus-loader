@@ -12,7 +12,7 @@ class CSVLoaderStrategy(FileLoaderStrategy):
         if data_series.dtype != "object":
             return False
         try:
-            to_datetime(data_series)
+            to_datetime(data_series, format='mixed')
         except (ValueError, TypeError):
             return False
         return True

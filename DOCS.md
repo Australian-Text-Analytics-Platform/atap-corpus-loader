@@ -23,6 +23,7 @@ CorpusLoader constructor
 Params
 -  root_directory: str – The root directory that the file selector will search for files to load. The argument must be a string. The directory may be non-existent at initialisation time, but no files will be displayed until it exists.
 - include_meta_loader: bool - If True, the Corpus Loader will include additional metadata joining functionality. False by default
+- include_oni_loader: bool - If True, the Corpus Loader will include additional Oni integration functionality. False by default
 - run_logger: bool - If True, a log will be kept in the atap_corpus_loader directory. False by default
 - params: Any – passed onto the panel.viewable.Viewer super-class
 
@@ -67,13 +68,16 @@ loader.add_tab("A Panel Column", panel.Column())
 ### CorpusLoader.register_event_callback
 
 Registers a callback function to execute when the event specified by event_type occurs.
-Multiple callback functions can be registered and all will be called in order when the event occurs.
+Multiple callback functions can be registered and will be called in the order added when the event occurs.
+If the first argument is True, the callback will be added to the start of the callback chain rather than the end.
+Subsequent callbacks registered with first=True will supersede the previous callback's position.
 When a callback raises an exception, the exception will be logged and the subsequent callbacks will be executed.
 The relevant corpus object will be passed as an argument for the BUILD and RENAME events.
 
 Params
-- event_type: EventType - an enum with the possible values: LOAD, UNLOAD, BUILD, RENAME, DELETE
+- event_type: EventType or str - an enum with the possible values: LOAD, UNLOAD, BUILD, RENAME, DELETE. String equivalents also accepted
 - callback: Callable - the function to call when the event occurs
+- first: bool - whether to insert the callback at the start of the callback chain for this event type. False by default
 
 Example
 
