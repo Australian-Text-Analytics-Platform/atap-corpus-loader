@@ -23,6 +23,7 @@ CorpusLoader constructor
 Params
 -  root_directory: str – The root directory that the file selector will search for files to load. The argument must be a string. The directory may be non-existent at initialisation time, but no files will be displayed until it exists.
 - include_meta_loader: bool - If True, the Corpus Loader will include additional metadata joining functionality. False by default
+- include_oni_loader: bool - If True, the Corpus Loader will include additional Oni integration functionality. False by default
 - run_logger: bool - If True, a log will be kept in the atap_corpus_loader directory. False by default
 - params: Any – passed onto the panel.viewable.Viewer super-class
 
@@ -74,7 +75,7 @@ When a callback raises an exception, the exception will be logged and the subseq
 The relevant corpus object will be passed as an argument for the BUILD and RENAME events.
 
 Params
-- event_type: EventType - an enum with the possible values: LOAD, UNLOAD, BUILD, RENAME, DELETE
+- event_type: EventType or str - an enum with the possible values: LOAD, UNLOAD, BUILD, RENAME, DELETE. String equivalents also accepted
 - callback: Callable - the function to call when the event occurs
 - first: bool - whether to insert the callback at the start of the callback chain for this event type. False by default
 
