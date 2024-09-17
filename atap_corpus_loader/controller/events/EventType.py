@@ -1,9 +1,9 @@
-from enum import Enum, auto
+from enum import Enum
 
 
 class EventType(Enum):
-    LOAD = auto()
-    UNLOAD = auto()
-    BUILD = auto()
-    RENAME = auto()
-    DELETE = auto()
+    LOAD = "LOAD"
+    UNLOAD = "UNLOAD"
+    BUILD = "BUILD"
+    RENAME = "RENAME"
+    DELETE = "DELETE"

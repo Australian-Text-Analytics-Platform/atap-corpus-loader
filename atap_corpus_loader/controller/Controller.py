@@ -3,7 +3,7 @@ import traceback
 from logging.handlers import RotatingFileHandler
 from io import BytesIO
 from os.path import abspath, join, dirname
-from typing import Optional, Callable, Literal
+from typing import Optional, Callable, Literal, Union
 
 import atap_corpus
 from atap_corpus._types import TCorpora
@@ -89,7 +89,7 @@ class Controller:
         self.log(f"Success displayed: {success_msg}", logging.INFO)
         self.notifier_service.notify_success(success_msg)
 
-    def register_event_callback(self, event_type: EventType, callback: Callable, first: bool):
+    def register_event_callback(self, event_type: Union[str, EventType], callback: Callable, first: bool):
         self.event_manager.register_event_callback(event_type, callback, first)
 
     def get_latest_corpus(self) -> Optional[DataFrameCorpus]:

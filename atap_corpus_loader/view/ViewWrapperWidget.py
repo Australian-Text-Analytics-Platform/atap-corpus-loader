@@ -13,7 +13,7 @@ class ViewWrapperWidget(AbstractWidget):
     """
     A wrapper class that holds different loading method interfaces within a Tab
     """
-    def __init__(self, controller: Controller, include_meta_loader: bool):
+    def __init__(self, controller: Controller, include_meta_loader: bool, include_oni_loader: bool):
         super().__init__()
         self.controller: Controller = controller
         self.tooltip_manager: TooltipManager = TooltipManager()
@@ -23,10 +23,11 @@ class ViewWrapperWidget(AbstractWidget):
         self.corpus_display: CorpusInfoWidget = CorpusInfoWidget(controller)
 
         # set_load_service_type depends on the order of these tabs
-        self.panel = Tabs(("File Loader", self.file_loader),
-                          ("Oni Loader", self.oni_loader),
-                          ("Corpus Overview", self.corpus_display),
-                          dynamic=True)
+        tab_components = [("File Loader", self.file_loader)]
+        if include_oni_loader:
+            tab_components.append(("Oni Loader", self.oni_loader))
+        tab_components.append(("Corpus Overview", self.corpus_display))
+        self.panel = Tabs(*tab_components, dynamic=True)
         self.panel.param.watch(self.set_load_service_type, parameter_names=['active'])
         self.corpus_info_idx: int = len(self.panel) - 1
         self.children = [self.file_loader, self.oni_loader, self.corpus_display]
