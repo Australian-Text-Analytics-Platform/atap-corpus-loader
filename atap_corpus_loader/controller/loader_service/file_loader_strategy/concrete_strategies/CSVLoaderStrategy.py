@@ -29,6 +29,15 @@ class CSVLoaderStrategy(FileLoaderStrategy):
         file_buf.seek(0)
         df_header = read_csv(file_buf, nrows=read_rows)
         file_buf.seek(0)
+
+        # A temporary patchy solution to check the header lengths when all datatypes are detected as object.
+        # max_header_length = 100 # Assuming a header will not exceed 100 characters in length.
+        if tuple(df_no_header.dtypes) == tuple(df_header.dtypes): # If inferred dtypes are the same with or without header row
+            if len(df_header.dtypes.unique()) == 1 and str(df_header.dtypes.unique()[0]) == 'object': 
+                for col in df_header.columns:
+                    if not 0.5*df_header[col].str.len().min() <= len(col) <= min(max_header_length, 2*df_header[col].str.len().max()):
+                        return True 
+                    
         return tuple(df_no_header.dtypes) != tuple(df_header.dtypes)
 
     def get_inferred_headers(self) -> list[CorpusHeader]:
