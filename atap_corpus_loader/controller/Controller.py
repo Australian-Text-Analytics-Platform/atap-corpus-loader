@@ -17,7 +17,7 @@ from atap_corpus_loader.controller.loader_service import LoaderService
 from atap_corpus_loader.controller.loader_service.FileLoadError import FileLoadError
 from atap_corpus_loader.controller.loader_service.FileLoaderService import FileLoaderService
 from atap_corpus_loader.controller.data_objects import (FileReference, ViewCorpusInfo, CorpusHeader, DataType,
-                                                        UniqueNameCorpora)
+                                                        UniqueNameCorpora, HeaderStrategy)
 from atap_corpus_loader.controller.loader_service.OniLoaderService import OniLoaderService
 from atap_corpus_loader.controller.loader_service.file_loader_strategy.FileLoaderFactory import ValidFileType
 from atap_corpus_loader.view.notifications import NotifierService
@@ -219,7 +219,7 @@ class Controller:
             dtype: str
             for header_name, dtype_obj in corpus_df.dtypes.items():
                 try:
-                    dtype = DataType(str(dtype_obj).lower()).name
+                    dtype = DataType(str(dtype_obj)).name
                 except ValueError:
                     dtype = DataType.TEXT.name
                 dtypes.append(dtype)
@@ -377,6 +377,12 @@ class Controller:
                 header.include = True
                 return
         self.meta_link_header = None
+
+    def set_header_strategy(self, strategy: str):
+        try:
+            self.loader_service.set_header_strategy(strategy)
+        except Exception as e:
+            self.display_error(str(e))
 
     def retrieve_all_files(self, expand_archived: bool) -> list[FileReference]:
         return self.loader_service.get_all_files(expand_archived)
