@@ -1,8 +1,9 @@
 from abc import ABC, abstractmethod
 
-from pandas import DataFrame
+from pandas import DataFrame, to_datetime
 
-from atap_corpus_loader.controller.data_objects import CorpusHeader, FileReference
+from atap_corpus_loader.controller.data_objects import CorpusHeader, FileReference, DataType
+from atap_corpus_loader.controller.loader_service.FileLoadError import FileLoadError
 
 
 class FileLoaderStrategy(ABC):
@@ -25,9 +26,23 @@ class FileLoaderStrategy(ABC):
         include as False will be ignored.
         :return: the DataFrame with columns cast to the given data types
         """
-        dtypes = {h.name: h.datatype.value for h in headers if h.include}
 
-        return df.astype(dtype=dtypes)
+        for header in headers:
+            if not header.include:
+                continue
+            if header.datatype == DataType.DATETIME:
+                # Datetimes require handling timezone aware and timezone naive cases
+                col = to_datetime(df[header.name], errors='coerce')
+                if col.dt.tz is not None:
+                    col = col.dt.tz_convert(None)
+                df[header.name] = col
+            else:
+                try:
+                    df[header.name] = df[header.name].astype(header.datatype.value)
+                except ValueError:
+                    raise FileLoadError(f"Could not cast value from {header.name} to {header.datatype.name}. Try modifying the selected datatype")
+
+        return df
 
     @abstractmethod
     def get_inferred_headers(self) -> list[CorpusHeader]:
@@ -48,3 +63,4 @@ class FileLoaderStrategy(ABC):
         :return: a DataFrame object corresponding to the loaded file and its provided CorpusHeader list
         """
         raise NotImplementedError()
+
