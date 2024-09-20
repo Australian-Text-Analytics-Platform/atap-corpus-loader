@@ -94,7 +94,9 @@ class FileLoaderWidget(AbstractWidget):
         self.build_button_row.visible = files_added
         self.unload_selected_button.disabled = not files_added
         self.unload_all_button.disabled = not files_added
-        self.file_selector.header_strategy_selector.disabled = files_added
+        # self.file_selector.header_strategy_selector.disabled = files_added 
+        # # This setting should stay active, or reactivate when a new file is selected? Maybe it should be per-file option? Don't want to make it too complicated.
+        # # However, this option should at least stay activated for both corpus and meta-data loading.
 
     def _set_button_status_on_operation(self, curr_loading: bool, *_):
         self.file_selector.selector_widget.disabled = curr_loading
