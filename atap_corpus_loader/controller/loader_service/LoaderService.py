@@ -1,12 +1,12 @@
 from abc import abstractmethod, ABC
 from datetime import datetime
-from typing import Optional
+from typing import Optional, Union
 
 from atap_corpus.corpus.corpus import DataFrameCorpus
 from pandas import DataFrame, merge, concat
 from panel.widgets import Tqdm
 
-from atap_corpus_loader.controller.data_objects import FileReference, CorpusHeader, FileReferenceFactory
+from atap_corpus_loader.controller.data_objects import FileReference, CorpusHeader, FileReferenceFactory, HeaderStrategy
 from atap_corpus_loader.controller.loader_service.FileLoadError import FileLoadError
 from atap_corpus_loader.controller.loader_service.file_loader_strategy import FileLoaderStrategy, FileLoaderFactory
 
@@ -23,6 +23,7 @@ class LoaderService(ABC):
         self.loaded_meta_files: set[FileReference] = set()
         # Utilise FileReferenceFactory.clear_cache() if memory overhead is raised as an issue.
         self.file_ref_factory: FileReferenceFactory = FileReferenceFactory()
+        self.header_strategy: HeaderStrategy = HeaderStrategy.INFER
 
     @abstractmethod
     def get_all_files(self, expand_archived: bool) -> list[FileReference]:
@@ -35,6 +36,20 @@ class LoaderService(ABC):
     @abstractmethod
     def add_meta_files(self, meta_filepaths: list[str], include_hidden: bool, tqdm_obj: Tqdm):
         raise NotImplementedError()
+
+    def get_header_strategy(self) -> HeaderStrategy:
+        return self.header_strategy
+
+    def set_header_strategy(self, strategy: Union[HeaderStrategy, str]):
+        if isinstance(strategy, HeaderStrategy):
+            self.header_strategy = strategy
+        elif isinstance(strategy, str):
+            try:
+                self.header_strategy = HeaderStrategy(strategy)
+            except ValueError:
+                raise ValueError(f'strategy argument should be a value in the HeaderStrategy enum, instead got {strategy}')
+        else:
+            TypeError(f"strategy argument should be either str or HeaderStrategy, instead got {type(strategy)}")
 
     def is_corpus_loaded(self) -> bool:
         return len(self.loaded_corpus_files) > 0
@@ -79,7 +94,7 @@ class LoaderService(ABC):
         for ref in file_refs:
             file_loader: FileLoaderStrategy = FileLoaderFactory.get_file_loader(ref)
             try:
-                path_headers: list[CorpusHeader] = file_loader.get_inferred_headers()
+                path_headers: list[CorpusHeader] = file_loader.get_inferred_headers(self.header_strategy)
             except UnicodeDecodeError:
                 self.remove_corpus_filepath(ref.get_path())
                 self.remove_meta_filepath(ref.get_path())
@@ -111,10 +126,10 @@ class LoaderService(ABC):
         corpus_files: list[FileReference] = sorted(self.get_loaded_corpus_files(), key=lambda f: f.get_path())
         meta_files: list[FileReference] = sorted(self.get_loaded_meta_files(), key=lambda f: f.get_path())
 
-        corpus_df: DataFrame = self._get_concatenated_dataframe(corpus_files, corpus_headers,
-                                                                tqdm_obj, "Building corpus")
-        meta_df: DataFrame = self._get_concatenated_dataframe(meta_files, meta_headers,
-                                                              tqdm_obj, "Building metadata")
+        corpus_df: DataFrame = self._get_concatenated_dataframe(corpus_files, corpus_headers, self.header_strategy,
+                                                                tqdm_obj, "Reading corpus files")
+        meta_df: DataFrame = self._get_concatenated_dataframe(meta_files, meta_headers, self.header_strategy,
+                                                              tqdm_obj, "Reading metadata files")
 
         load_corpus: bool = len(corpus_headers) > 0
         load_meta: bool = len(meta_headers) > 0
@@ -139,6 +154,7 @@ class LoaderService(ABC):
     @staticmethod
     def _get_concatenated_dataframe(file_refs: list[FileReference],
                                     headers: list[CorpusHeader],
+                                    header_strategy: HeaderStrategy,
                                     tqdm_obj: Tqdm,
                                     loading_msg: str) -> DataFrame:
         if len(file_refs) == 0:
@@ -147,7 +163,7 @@ class LoaderService(ABC):
         for ref in tqdm_obj(file_refs, desc=loading_msg, unit="files", leave=False):
             file_loader: FileLoaderStrategy = FileLoaderFactory.get_file_loader(ref)
             try:
-                path_df: DataFrame = file_loader.get_dataframe(headers)
+                path_df: DataFrame = file_loader.get_dataframe(headers, header_strategy)
             except UnicodeDecodeError:
                 raise FileLoadError(f"Error loading file at {ref.get_path()}: file is not UTF-8 encoded")
             except Exception as e:
