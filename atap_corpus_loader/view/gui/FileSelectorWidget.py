@@ -32,7 +32,7 @@ class FileSelectorWidget(AbstractWidget):
         self.select_all_button.on_click(self.select_all)
 
         header_options = {'Yes': 'header', 'Auto': 'infer', 'No': 'no_header'}
-        self.header_strategy_selector = Select(name='', options=header_options, width=150, height=15)
+        self.header_strategy_selector = Select(options=header_options, width=60, height=12)
         self.header_strategy_selector.param.watch(self._on_header_strategy_update, ['value'])
 
         self.filter_input = TextInput(placeholder="Filter displayed files\t\t\t\N{DOWNWARDS ARROW WITH CORNER LEFTWARDS}",
@@ -41,13 +41,14 @@ class FileSelectorWidget(AbstractWidget):
         filter_input_tooltip = self.view_handler.get_tooltip('file_filter_input')
         self.filter_row: Row = Row(self.filter_input, filter_input_tooltip)
 
-        self.show_hidden_files_checkbox = Checkbox(name="Show hidden", value=False, align="start")
+        self.show_hidden_files_checkbox = Checkbox(name="Show hidden", value=False, align="start", height=10)
         self.show_hidden_files_checkbox.param.watch(self._on_filter_change, ['value'])
 
-        self.expand_archive_checkbox = Checkbox(name="Expand archives", value=False, align="start")
+        self.expand_archive_checkbox = Checkbox(name="Expand archives", value=False, align="start", height=10)
         self.expand_archive_checkbox.param.watch(self._on_filter_change, ['value'])
 
-        self.file_type_filter = Select(name='Filter by filetype', width=150)
+        # self.file_type_filter = Select(name='Filter by filetype', width=150)
+        self.file_type_filter = Select(width=150)
         self.file_type_filter.options = ['All valid filetypes'] + self.controller.get_valid_filetypes()
         self.file_type_filter.value = self.file_type_filter.options[0]
         self.file_type_filter.param.watch(self._on_filter_change, ['value'])
@@ -57,13 +58,18 @@ class FileSelectorWidget(AbstractWidget):
         self.panel = Column(
             Row(Column(
                 self.filter_row,
-                Row(self.select_all_button, StaticText(value="1st row as headers"), self.header_strategy_selector)
-            ),
+                self.select_all_button,
+                ),
+                Column(
+                    self.file_type_filter,
+                    StaticText(value='First row as header:', align="end")
+                    ),
                 Column(
                     self.show_hidden_files_checkbox,
-                    self.expand_archive_checkbox
+                    self.expand_archive_checkbox,
+                    self.header_strategy_selector
                 ),
-                self.file_type_filter),
+            ),
             Row(self.selector_widget),
             width=width)
 
