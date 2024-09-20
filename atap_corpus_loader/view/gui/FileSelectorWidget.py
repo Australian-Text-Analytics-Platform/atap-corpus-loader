@@ -3,7 +3,7 @@ from typing import Callable
 
 import panel
 from panel import Row, Column
-from panel.widgets import Button, MultiSelect, TextInput, Select, Checkbox
+from panel.widgets import Button, MultiSelect, TextInput, Select, Checkbox, StaticText
 
 from atap_corpus_loader.controller import Controller
 from atap_corpus_loader.controller.data_objects import FileReference
@@ -31,6 +31,10 @@ class FileSelectorWidget(AbstractWidget):
                                         button_style="solid", button_type="primary")
         self.select_all_button.on_click(self.select_all)
 
+        header_options = {'Yes': 'header', 'Auto': 'infer', 'No': 'no_header'}
+        self.header_strategy_selector = Select(name='', options=header_options, width=150, height=15)
+        self.header_strategy_selector.param.watch(self._on_header_strategy_update, ['value'])
+
         self.filter_input = TextInput(placeholder="Filter displayed files\t\t\t\N{DOWNWARDS ARROW WITH CORNER LEFTWARDS}",
                                       sizing_mode='stretch_width')
         self.filter_input.param.watch(self._on_filter_change, ['value'])
@@ -53,7 +57,7 @@ class FileSelectorWidget(AbstractWidget):
         self.panel = Column(
             Row(Column(
                 self.filter_row,
-                self.select_all_button
+                Row(self.select_all_button, StaticText(value="1st row as headers"), self.header_strategy_selector)
             ),
                 Column(
                     self.show_hidden_files_checkbox,
@@ -68,6 +72,10 @@ class FileSelectorWidget(AbstractWidget):
 
     def set_button_operation_fn(self, _set_button_status_on_operation: Callable):
         self._set_button_status_on_operation = _set_button_status_on_operation
+
+    def _on_header_strategy_update(self, *_):
+        strategy_value: str = self.header_strategy_selector.value
+        self.controller.set_header_strategy(strategy_value)
 
     def update_display(self):
         loaded_corpus_files: set[FileReference] = self.controller.get_loaded_corpus_files()

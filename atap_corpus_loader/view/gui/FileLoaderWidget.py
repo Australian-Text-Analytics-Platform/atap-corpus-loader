@@ -39,9 +39,9 @@ class FileLoaderWidget(AbstractWidget):
 
         self.loaded_file_info = Markdown()
 
-        header_options = {'Infer header': 'infer', 'Assume header': 'header', 'Assume no header': 'no_header'}
-        self.header_strategy_selector = Select(name='Header row', options=header_options, width=150)
-        self.header_strategy_selector.param.watch(self._on_header_strategy_update, ['value'])
+        # header_options = {'Yes': 'header', 'Auto': 'infer', 'No': 'no_header'}
+        # self.header_strategy_selector = Select(name='1st row as headers', options=header_options, width=150, height=15)
+        # self.header_strategy_selector.param.watch(self._on_header_strategy_update, ['value'])
 
         self.corpus_name_input = TextInput(placeholder='Corpus name', width=150)
         self.build_button: Button = Button(name='Build corpus', button_style='solid', button_type='success')
@@ -59,7 +59,7 @@ class FileLoaderWidget(AbstractWidget):
                 self.file_selector,
                 Row(Column(
                     Row(self.load_as_corpus_row, self.load_as_meta_row),
-                    Row(self.header_strategy_selector),
+                    # Row(self.header_strategy_selector),
                     self.build_button_row
                 ),
                     self.loaded_file_info,
@@ -85,16 +85,16 @@ class FileLoaderWidget(AbstractWidget):
 
         return count_str
 
-    def _on_header_strategy_update(self, *_):
-        strategy_value: str = self.header_strategy_selector.value
-        self.controller.set_header_strategy(strategy_value)
+    # def _on_header_strategy_update(self, *_):
+    #     strategy_value: str = self.file_selector.header_strategy_selector.value
+    #     self.controller.set_header_strategy(strategy_value)
 
     def _set_build_buttons_status(self, *_):
         files_added: bool = self.controller.is_meta_added() or self.controller.is_corpus_added()
         self.build_button_row.visible = files_added
         self.unload_selected_button.disabled = not files_added
         self.unload_all_button.disabled = not files_added
-        self.header_strategy_selector.disabled = files_added
+        self.file_selector.header_strategy_selector.disabled = files_added
 
     def _set_button_status_on_operation(self, curr_loading: bool, *_):
         self.file_selector.selector_widget.disabled = curr_loading
