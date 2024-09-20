@@ -2,7 +2,7 @@ from io import BytesIO
 
 from pandas import DataFrame, read_csv, Series, to_datetime
 
-from atap_corpus_loader.controller.data_objects import CorpusHeader, DataType
+from atap_corpus_loader.controller.data_objects import CorpusHeader, DataType, HeaderStrategy
 from atap_corpus_loader.controller.loader_service.file_loader_strategy.FileLoaderStrategy import FileLoaderStrategy
 
 
@@ -31,12 +31,12 @@ class TSVLoaderStrategy(FileLoaderStrategy):
         file_buf.seek(0)
         return tuple(df_no_header.dtypes) != tuple(df_header.dtypes)
 
-    def get_inferred_headers(self) -> list[CorpusHeader]:
+    def get_inferred_headers(self, header_strategy: HeaderStrategy) -> list[CorpusHeader]:
         read_rows = 10
         file_buf: BytesIO = self.file_ref.get_content_buffer()
-        contains_header_row: bool = self._detect_headers(file_buf)
-        if contains_header_row:
-            df = read_csv(file_buf, nrows=read_rows, sep='\t')
+        header_detected: bool = self._detect_headers(file_buf)
+        if (header_strategy == header_strategy.HEADERS) or ((header_strategy == header_strategy.INFER) and header_detected):
+            df = read_csv(file_buf, header=0, nrows=read_rows, sep='\t')
         else:
             df = read_csv(file_buf, header=None, nrows=read_rows, sep='\t')
             self._rename_headers(df)
@@ -54,10 +54,11 @@ class TSVLoaderStrategy(FileLoaderStrategy):
 
         return headers
 
-    def get_dataframe(self, headers: list[CorpusHeader]) -> DataFrame:
+    def get_dataframe(self, headers: list[CorpusHeader], header_strategy: HeaderStrategy) -> DataFrame:
         file_buf: BytesIO = self.file_ref.get_content_buffer()
         included_headers: list[str] = [header.name for header in headers if header.include]
-        if self._detect_headers(file_buf):
+        header_detected: bool = self._detect_headers(file_buf)
+        if (header_strategy == header_strategy.HEADERS) or ((header_strategy == header_strategy.INFER) and header_detected):
             df = read_csv(file_buf, header=0, dtype=object, usecols=included_headers, sep='\t')
         else:
             df = read_csv(file_buf, header=None, dtype=object, sep='\t')
