@@ -41,6 +41,8 @@ class ODSLoaderStrategy(FileLoaderStrategy):
             df = read_excel(file_buf, engine='odf', header=None, nrows=read_rows)
             self._rename_headers(df)
         headers: list[CorpusHeader] = []
+        empty_columns = df.columns[df.isna().all()]
+        df[empty_columns] = df[empty_columns].astype('string')
         for header_name, dtype_obj in df.dtypes.items():
             dtype: DataType
             try:

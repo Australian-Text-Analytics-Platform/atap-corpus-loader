@@ -41,6 +41,8 @@ class CSVLoaderStrategy(FileLoaderStrategy):
             df = read_csv(file_buf, header=None, nrows=read_rows)
             self._rename_headers(df)
         headers: list[CorpusHeader] = []
+        empty_columns = df.columns[df.isna().all()]
+        df[empty_columns] = df[empty_columns].astype('string')
         for header_name, dtype_obj in df.dtypes.items():
             if self.is_datetime_castable(df[header_name]):
                 headers.append(CorpusHeader(str(header_name), DataType.DATETIME))
