@@ -23,7 +23,7 @@ class LoaderService(ABC):
         self.loaded_meta_files: set[FileReference] = set()
         # Utilise FileReferenceFactory.clear_cache() if memory overhead is raised as an issue.
         self.file_ref_factory: FileReferenceFactory = FileReferenceFactory()
-        self.header_strategy: HeaderStrategy = HeaderStrategy.INFER
+        self.header_strategy: HeaderStrategy = HeaderStrategy.HEADERS
 
     @abstractmethod
     def get_all_files(self, expand_archived: bool) -> list[FileReference]:

@@ -13,7 +13,8 @@ from atap_corpus_loader.view.gui import AbstractWidget
 class MetaEditorWidget(AbstractWidget):
     TABLE_BORDER_STYLE = {'border': '1px dashed black', 'border-radius': '5px'}
     ERROR_BORDER_STYLE = {'border': '1px solid red', 'border-radius': '5px'}
-    HEADER_STYLE = {'margin-top': '0', 'margin-bottom': '0'}
+    HEADER_STYLE = {'margin-top': '0', 'margin-bottom': '0', 'max-width': '150px'}
+    MAX_HEADER_LENGTH: int = 80
 
     def __init__(self, view_handler: ViewWrapperWidget, controller: Controller):
         super().__init__()
@@ -27,7 +28,7 @@ class MetaEditorWidget(AbstractWidget):
         corpus_table_tooltip = self.view_handler.get_tooltip('corpus_editor')
         self.corpus_table_row: Row = Row(corpus_table_tooltip, corpus_table_title)
 
-        self.text_header_dropdown = Select(name='Select document label', width=150)
+        self.text_header_dropdown = Select(name='Document label', width=130)
         self.corpus_checkboxes: list[Checkbox] = []
         self.corpus_include_all_Button = Button(name="Include all", button_style='outline', button_type='success', align='end')
         self.corpus_include_all_Button.on_click(lambda e: self._toggle_all_corpus(True))
@@ -45,8 +46,8 @@ class MetaEditorWidget(AbstractWidget):
 
         self.link_row = Row(visible=False, styles=MetaEditorWidget.ERROR_BORDER_STYLE)
         link_row_tooltip = self.view_handler.get_tooltip('linking_selectors')
-        self.corpus_link_dropdown = Select(name='Select corpus linking label', width=180)
-        self.meta_link_dropdown = Select(name='Select metadata linking label', width=180)
+        self.corpus_link_dropdown = Select(name='Corpus linking label', width=150)
+        self.meta_link_dropdown = Select(name='Metadata linking label', width=150)
         link_emoji = '\U0001F517'
         self.link_markdown = Str(link_emoji, styles={"font-size": "2em", "margin": "auto"})
         self.link_row.objects = [link_row_tooltip,
@@ -124,9 +125,10 @@ class MetaEditorWidget(AbstractWidget):
             if is_link:
                 header.include = True
 
-            table_cells.append(Markdown(header.name, align='start', styles=MetaEditorWidget.HEADER_STYLE))
+            header_name_truncated: str = header.name[:MetaEditorWidget.MAX_HEADER_LENGTH]
+            table_cells.append(Markdown(header_name_truncated, align='start', styles=MetaEditorWidget.HEADER_STYLE))
 
-            datatype_selector = Select(options=all_datatypes, value=header.datatype.name, width=120, disabled=is_text)
+            datatype_selector = Select(options=all_datatypes, value=header.datatype.name, width=100, disabled=is_text)
             if is_meta_table:
                 dtype_fn = bind(self.controller.update_meta_header, header, None, datatype_selector)
             else:
