@@ -13,7 +13,8 @@ from atap_corpus_loader.view.gui import AbstractWidget
 class MetaEditorWidget(AbstractWidget):
     TABLE_BORDER_STYLE = {'border': '1px dashed black', 'border-radius': '5px'}
     ERROR_BORDER_STYLE = {'border': '1px solid red', 'border-radius': '5px'}
-    HEADER_STYLE = {'margin-top': '0', 'margin-bottom': '0'}
+    HEADER_STYLE = {'margin-top': '0', 'margin-bottom': '0', 'max-width': '150px'}
+    MAX_HEADER_LENGTH: int = 80
 
     def __init__(self, view_handler: ViewWrapperWidget, controller: Controller):
         super().__init__()
@@ -124,7 +125,8 @@ class MetaEditorWidget(AbstractWidget):
             if is_link:
                 header.include = True
 
-            table_cells.append(Markdown(header.name, align='start', styles=MetaEditorWidget.HEADER_STYLE))
+            header_name_truncated: str = header.name[:MetaEditorWidget.MAX_HEADER_LENGTH]
+            table_cells.append(Markdown(header_name_truncated, align='start', styles=MetaEditorWidget.HEADER_STYLE))
 
             datatype_selector = Select(options=all_datatypes, value=header.datatype.name, width=100, disabled=is_text)
             if is_meta_table:
