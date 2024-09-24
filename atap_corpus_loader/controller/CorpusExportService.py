@@ -53,11 +53,19 @@ class CorpusExportService:
         df: DataFrame = corpus.to_dataframe()
         chunks = np.array_split(df.index, min(len(df), 1000))
         with tqdm_obj(total=len(df), desc="Exporting to Excel", unit="documents", leave=False) as pbar:
-            with ExcelWriter(excel_object) as writer:
-                df.loc[chunks[0]].to_excel(writer, index=False, header=True, sheet_name='Sheet1')
+            with ExcelWriter(excel_object, engine="xlsxwriter") as writer:
+                sheet_name: str = 'Sheet1'
+                df.loc[chunks[0]].to_excel(writer, index=False, header=True, sheet_name=sheet_name)
+
+                workbook = writer.book
+                worksheet = writer.sheets[sheet_name]
+
+                text_format = workbook.add_format({'num_format': '@'})
+                worksheet.set_column(0, len(df.columns) - 1, None, text_format)
+
                 pbar.update(len(chunks[0]))
                 for chunk, subset in enumerate(chunks[1:]):
-                    df.loc[subset].to_excel(writer, startrow=subset[0]+1, index=False, header=False, sheet_name='Sheet1')
+                    df.loc[subset].to_excel(writer, startrow=subset[0]+1, index=False, header=False, sheet_name=sheet_name)
                     pbar.update(len(subset))
 
         return excel_object
