@@ -20,14 +20,14 @@ class FileLoaderWidget(AbstractWidget):
         self.load_as_corpus_button: Button = Button(name='Load as corpus', width=130, button_style='outline',
                                                     button_type='success')
         self.load_as_corpus_button.on_click(self.load_as_corpus)
-        load_corpus_tooltip = self.view_handler.get_tooltip('load_corpus_button')
-        load_corpus_tooltip.visible = not include_meta_loader
-        self.load_as_corpus_row: Row = Row(self.load_as_corpus_button, load_corpus_tooltip)
+        if include_meta_loader:
+            load_buttons_tooltip = self.view_handler.get_tooltip('load_buttons')
+        else:
+            load_buttons_tooltip = self.view_handler.get_tooltip('load_corpus_button')
+        load_as_corpus_row: Row = Row(self.load_as_corpus_button, load_buttons_tooltip)
         self.load_as_meta_button: Button = Button(name='Load as metadata', width=130, button_style='outline',
-                                                  button_type='success')
+                                                  button_type='success', visible=include_meta_loader)
         self.load_as_meta_button.on_click(self.load_as_meta)
-        load_buttons_tooltip = self.view_handler.get_tooltip('load_buttons')
-        self.load_as_meta_row: Row = Row(self.load_as_meta_button, load_buttons_tooltip, visible=include_meta_loader)
 
         self.unload_selected_button: Button = Button(name="Unload selected", width=130, button_style='outline',
                                                      button_type='danger', disabled=True, align='end')
@@ -39,16 +39,17 @@ class FileLoaderWidget(AbstractWidget):
 
         self.loaded_file_info = Markdown()
 
-        header_options = {'Infer header': 'infer', 'Assume header': 'header', 'Assume no header': 'no_header'}
-        self.header_strategy_selector = Select(name='Header row', options=header_options, width=150)
+        header_options = {'Yes': 'header', 'No': 'no_header', 'Infer': 'infer'}
+        self.header_strategy_selector = Select(name='First row is header', options=header_options, width=100)
         self.header_strategy_selector.param.watch(self._on_header_strategy_update, ['value'])
+        header_dropdown_tooltip = self.view_handler.get_tooltip('header_dropdown')
 
-        self.corpus_name_input = TextInput(placeholder='Corpus name', width=150)
-        self.build_button: Button = Button(name='Build corpus', button_style='solid', button_type='success')
+        self.corpus_name_input = TextInput(placeholder='Corpus name', width=130)
+        self.build_button: Button = Button(name='Build corpus', button_style='solid', button_type='success', width=100)
         self.build_button.on_click(self.build_corpus)
         build_tool_tip: TooltipIcon = self.view_handler.get_tooltip('build_button')
-        self.build_button_row: Row = Row(self.corpus_name_input, self.build_button, build_tool_tip, visible=False,
-                                         align='end')
+        self.build_button_row: Row = Row(self.corpus_name_input, self.build_button, build_tool_tip,
+                                         visible=False, align='start')
 
         self.file_selector = FileSelectorWidget(view_handler, controller, width=self.LOADER_WIDTH)
         self.file_selector.set_button_operation_fn(self._set_button_status_on_operation)
@@ -58,14 +59,17 @@ class FileLoaderWidget(AbstractWidget):
             Column(
                 self.file_selector,
                 Row(Column(
-                    Row(self.load_as_corpus_row, self.load_as_meta_row),
-                    Row(self.header_strategy_selector),
-                    self.build_button_row
+                    load_as_corpus_row,
+                    self.load_as_meta_button
                 ),
+                    Row(self.header_strategy_selector,
+                        header_dropdown_tooltip
+                        ),
                     self.loaded_file_info,
                     HSpacer(),
                     self.unload_col,
                     width=self.LOADER_WIDTH),
+                self.build_button_row,
                 Row(self.controller.get_build_progress_bar())
             ),
             Spacer(width=50),

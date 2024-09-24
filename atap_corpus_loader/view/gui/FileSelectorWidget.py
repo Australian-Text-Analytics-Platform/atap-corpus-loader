@@ -55,11 +55,12 @@ class FileSelectorWidget(AbstractWidget):
                 self.filter_row,
                 self.select_all_button
             ),
+                self.file_type_filter,
                 Column(
                     self.show_hidden_files_checkbox,
                     self.expand_archive_checkbox
-                ),
-                self.file_type_filter),
+                )
+            ),
             Row(self.selector_widget),
             width=width)
 
