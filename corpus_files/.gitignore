@@ -1,4 +1,6 @@
 # Ignore everything in this directory
 *
-# Except this file
+# Except this file and the example data
 !.gitignore
+!txt_corpus.zip
+!xlsx_meta.zip
