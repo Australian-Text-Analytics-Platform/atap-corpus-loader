@@ -2,6 +2,10 @@
 
 A GUI loader for atap_corpus using the Panel library. Provides a single Panel-compatible widget in which a user can construct a corpus object for use by the client code.
 
+Click below for the demo
+
+[![Binder](https://binderhub.atap-binder.cloud.edu.au/badge_logo.svg)](https://binderhub.atap-binder.cloud.edu.au/v2/gh/Australian-Text-Analytics-Platform/atap-corpus-loader/chore/demo/v1.7.3?labpath=corpusloader.ipynb)
+
 ### File Type support
 
 The loader currently supports loading a corpus from the following file types:
