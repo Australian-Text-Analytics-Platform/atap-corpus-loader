@@ -3,6 +3,7 @@ from typing import Callable
 from zipfile import ZipFile
 
 import numpy as np
+import pandas as pd
 from atap_corpus.corpus.corpus import DataFrameCorpus
 from pandas import DataFrame, ExcelWriter
 from panel.widgets import Tqdm
@@ -13,7 +14,8 @@ class CorpusExportService:
         self.export_type_mapping: dict[str, Callable] = {
             'csv': self.export_csv,
             'xlsx': self.export_xlsx,
-            'zip': self.export_zip
+            'zip': self.export_zip,
+            'atap': self.export_serialised_corpus
         }
 
     def get_filetypes(self) -> list[str]:
@@ -28,12 +30,16 @@ class CorpusExportService:
         return file_object
 
     @staticmethod
+    def _get_normalised_dataframe(corpus: DataFrameCorpus) -> DataFrame:
+        return corpus.to_dataframe().astype('string').replace([pd.NA, np.nan, None], '')
+
+    @staticmethod
     def export_csv(corpus: DataFrameCorpus, tqdm_obj: Tqdm) -> BytesIO:
         csv_object = BytesIO()
         if len(corpus) == 0:
             return csv_object
 
-        df: DataFrame = corpus.to_dataframe()
+        df: DataFrame = CorpusExportService._get_normalised_dataframe(corpus)
         chunks = np.array_split(df.index, min(len(df), 1000))
         with tqdm_obj(total=len(df), desc="Exporting to CSV", unit="documents", leave=False) as pbar:
             df.loc[chunks[0]].to_csv(csv_object, mode='w', index=False)
@@ -50,22 +56,14 @@ class CorpusExportService:
         if len(corpus) == 0:
             return excel_object
 
-        df: DataFrame = corpus.to_dataframe()
+        df: DataFrame = CorpusExportService._get_normalised_dataframe(corpus)
         chunks = np.array_split(df.index, min(len(df), 1000))
         with tqdm_obj(total=len(df), desc="Exporting to Excel", unit="documents", leave=False) as pbar:
             with ExcelWriter(excel_object, engine="xlsxwriter") as writer:
-                sheet_name: str = 'Sheet1'
-                df.loc[chunks[0]].to_excel(writer, index=False, header=True, sheet_name=sheet_name)
-
-                workbook = writer.book
-                worksheet = writer.sheets[sheet_name]
-
-                text_format = workbook.add_format({'num_format': '@'})
-                worksheet.set_column(0, len(df.columns) - 1, None, text_format)
-
+                df.loc[chunks[0]].to_excel(writer, index=False, header=True)
                 pbar.update(len(chunks[0]))
                 for chunk, subset in enumerate(chunks[1:]):
-                    df.loc[subset].to_excel(writer, startrow=subset[0]+1, index=False, header=False, sheet_name=sheet_name)
+                    df.loc[subset].to_excel(writer, startrow=subset[0]+1, index=False, header=False)
                     pbar.update(len(subset))
 
         return excel_object
@@ -76,7 +74,7 @@ class CorpusExportService:
         if len(corpus) == 0:
             return zipped_object
 
-        df: DataFrame = corpus.to_dataframe()
+        df: DataFrame = CorpusExportService._get_normalised_dataframe(corpus)
         metas_df: DataFrame = df[corpus.metas]
         filename_col = 'filename'
         while filename_col in metas_df.columns:
@@ -99,3 +97,11 @@ class CorpusExportService:
             zip_file.close()
 
         return zipped_object
+
+    @staticmethod
+    def export_serialised_corpus(corpus: DataFrameCorpus, tqdm_obj: Tqdm) -> BytesIO:
+        serialised_object = BytesIO()
+        for corpus_obj in tqdm_obj([corpus], desc="Exporting to atap file", unit="files", leave=False):
+            corpus_obj.serialise(serialised_object)
+
+        return serialised_object
