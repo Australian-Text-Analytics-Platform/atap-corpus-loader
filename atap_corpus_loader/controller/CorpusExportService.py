@@ -3,9 +3,8 @@ from typing import Callable
 from zipfile import ZipFile
 
 import numpy as np
-import pandas as pd
 from atap_corpus.corpus.corpus import DataFrameCorpus
-from pandas import DataFrame, ExcelWriter
+from pandas import DataFrame, ExcelWriter, Series
 from panel.widgets import Tqdm
 
 
@@ -31,7 +30,7 @@ class CorpusExportService:
 
     @staticmethod
     def _get_normalised_dataframe(corpus: DataFrameCorpus) -> DataFrame:
-        return corpus.to_dataframe().astype('string').replace([pd.NA, np.nan, None], '')
+        return corpus.to_dataframe().astype('string').fillna('')
 
     @staticmethod
     def export_csv(corpus: DataFrameCorpus, tqdm_obj: Tqdm) -> BytesIO:
@@ -69,6 +68,35 @@ class CorpusExportService:
         return excel_object
 
     @staticmethod
+    def _sanitise_filenames(current_filenames: Series) -> Series:
+        remove_chars: list[str] = "\\/:*?\"'<>|".split()
+        added_basenames: set[str] = set()
+        new_filenames: list[str] = []
+        for filename in current_filenames:
+            dot_split = filename.split('.')
+            if len(dot_split) == 1:
+                filename_no_ext = filename
+            else:
+                filename_no_ext = ''.join(dot_split[:-1])
+            sanitised_basename = filename_no_ext
+            for char in remove_chars:
+                sanitised_basename = sanitised_basename.replace(char, '')
+            basename = sanitised_basename
+            i = 0
+            while basename in added_basenames:
+                basename = f"{sanitised_basename}-{i}"
+                i += 1
+            added_basenames.add(basename)
+            filename = f"{basename}.txt"
+            new_filenames.append(filename)
+
+        return Series(new_filenames)
+
+    @staticmethod
+    def _generate_filenames(root_name: str, num_files: int) -> Series:
+        return Series([f"{root_name}-{i}.txt" for i in range(num_files)])
+
+    @staticmethod
     def export_zip(corpus: DataFrameCorpus, tqdm_obj: Tqdm) -> BytesIO:
         zipped_object = BytesIO()
         if len(corpus) == 0:
@@ -77,18 +105,24 @@ class CorpusExportService:
         df: DataFrame = CorpusExportService._get_normalised_dataframe(corpus)
         metas_df: DataFrame = df[corpus.metas]
         filename_col = 'filename'
-        while filename_col in metas_df.columns:
-            filename_col = filename_col + '_'
-        metas_df.rename({'filename': filename_col})
-        metas_df['filename'] = ''
+        if filename_col in metas_df.columns:
+            # If the filename metadata exists, preserve it but create a new column with unique filenames
+            orig_filename_col = 'original_filename'
+            while orig_filename_col in metas_df.columns:
+                orig_filename_col += '_'
+            orig_filenames = metas_df[filename_col]
+            metas_df[filename_col] = CorpusExportService._sanitise_filenames(orig_filenames)
+            if not (metas_df[filename_col] == orig_filenames).all():
+                # If the old and new filename columns are different, preserve the old column
+                metas_df[orig_filename_col] = orig_filenames
+        else:
+            metas_df[filename_col] = CorpusExportService._generate_filenames(corpus.name, len(corpus))
 
         zip_file = ZipFile(zipped_object, mode='w')
         for i in tqdm_obj(range(len(corpus)), desc="Exporting to zipped file", unit="documents", leave=False):
-            sanitised_name = "".join(c for c in corpus.name if c.isalpha() or c.isdigit() or c == ' ').rstrip()
-            filename = f"{sanitised_name}-{i + 1}.txt"
+            filename = metas_df.loc[i, 'filename']
             document = str(corpus[i])
             zip_file.writestr(filename, document)
-            metas_df.loc[i, 'filename'] = filename
 
         if len(corpus.metas) > 0:
             metadata_buffer = StringIO()
