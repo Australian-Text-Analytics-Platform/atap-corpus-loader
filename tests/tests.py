@@ -30,7 +30,7 @@ class TestFileTypes(unittest.TestCase):
     EXPECTED_DATA_TYPES: dict = {
         "document_": "string",
         "philosopher_name": "string",
-        "birth_year": "int64",
+        "birth_year": "Int64",
         "teacher": "string"
     }
 
