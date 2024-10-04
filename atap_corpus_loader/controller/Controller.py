@@ -241,8 +241,7 @@ class Controller:
             self.build_tqdm.visible = False
             return False
 
-        for corpus in corpus_ls:
-            self.event_manager.trigger_callbacks(EventType.BUILD, corpus)
+        self.event_manager.trigger_callbacks(EventType.IMPORT, corpus_ls)
 
         self.build_tqdm.visible = False
         self.log("import_corpus method: corpus importing complete", logging.DEBUG)

@@ -73,9 +73,10 @@ If the first argument is True, the callback will be added to the start of the ca
 Subsequent callbacks registered with first=True will supersede the previous callback's position.
 When a callback raises an exception, the exception will be logged and the subsequent callbacks will be executed.
 The relevant corpus object will be passed as an argument for the BUILD and RENAME events.
+A list of added corpus objects will be passed as an argument for the IMPORT event.
 
 Params
-- event_type: EventType or str - an enum with the possible values: LOAD, UNLOAD, BUILD, RENAME, DELETE. String equivalents also accepted
+- event_type: EventType or str - an enum with the possible values: LOAD, UNLOAD, BUILD, IMPORT, RENAME, DELETE. String equivalents also accepted
 - callback: Callable - the function to call when the event occurs
 - first: bool - whether to insert the callback at the start of the callback chain for this event type. False by default
 
