@@ -25,6 +25,7 @@ from atap_corpus_loader.view.notifications import NotifierService
 
 class Controller:
     LOGGER_NAME: str = "corpus-loader"
+    LOG_FILE_LOCATION: str = abspath(join(dirname(__file__), '..', 'log.txt'))
     """
     Provides methods for indirection between the corpus loading logic and the user interface
     Holds a reference to the latest corpus built.
@@ -41,11 +42,10 @@ class Controller:
             return
 
         formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-        log_file_location = abspath(join(dirname(__file__), '..', 'log.txt'))
         # Max size is ~10MB with 1 backup, so a max size of ~20MB for log files
         max_bytes: int = 10000000
         backup_count: int = 1
-        file_handler = RotatingFileHandler(log_file_location, maxBytes=max_bytes, backupCount=backup_count)
+        file_handler = RotatingFileHandler(Controller.LOG_FILE_LOCATION, maxBytes=max_bytes, backupCount=backup_count)
         file_handler.setLevel(logging.DEBUG)
         file_handler.setFormatter(formatter)
 
@@ -58,6 +58,17 @@ class Controller:
     def log(msg: str, level: int):
         logger = logging.getLogger(Controller.LOGGER_NAME)
         logger.log(level, msg)
+
+    @staticmethod
+    def get_log_history() -> str:
+        log_history: str
+        try:
+            with open(Controller.LOG_FILE_LOCATION) as f:
+                log_history = f.read()
+        except (FileNotFoundError, PermissionError):
+            log_history = ''
+
+        return log_history
 
     def __init__(self, root_directory: str, run_logger: bool):
         self.setup_logger(self.LOGGER_NAME, run_logger)

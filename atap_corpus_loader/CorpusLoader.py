@@ -98,3 +98,12 @@ class CorpusLoader(Viewer):
         :rtype: TCorpora
         """
         return self.controller.get_mutable_corpora()
+
+    def get_logs(self) -> str:
+        """
+        Returns the log history as read from the log file as a string.
+        If the log file is inaccessible, returns empty string.
+        :return: the recent log history as read from the log file
+        :rtype: str
+        """
+        return self.controller.get_log_history()
