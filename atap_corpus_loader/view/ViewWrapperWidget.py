@@ -71,8 +71,7 @@ class ViewWrapperWidget(AbstractWidget):
             self.update_displays()
 
             self.panel.active = self.corpus_info_idx
-            corpus_id: str = self.controller.get_latest_corpus().name
-            self.controller.display_success(f"Corpus {corpus_id} imported successfully")
+            self.controller.display_success(f"Corpus imported successfully")
 
         return success
 
