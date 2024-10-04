@@ -51,6 +51,16 @@ class TestFileTypes(unittest.TestCase):
         # Rows can be in any order
         self.expected_df = self._sort_df(self.expected_df)
 
+    def _test_dataframe_equivalence(self, expected_df: DataFrame, tested_df: DataFrame):
+        # Drop filename and filepath columns as these are too changeable to test easily
+        corpus_df = tested_df.drop(labels=['filename', 'filepath'],
+                                   axis='columns', errors='ignore')
+        # Rows can be in any order
+        corpus_df = self._sort_df(corpus_df)
+
+        if not expected_df.equals(corpus_df):
+            assert False, "Expected corpus differs from built corpus"
+
     def _test_file_filter(self, corpus_filter: str, meta_filter: Optional[str]):
         file_loader_widget: FileLoaderWidget = self.corpus_loader.view.file_loader
         file_selector_widget: FileSelectorWidget = file_loader_widget.file_selector
@@ -94,14 +104,7 @@ class TestFileTypes(unittest.TestCase):
         corpus: DataFrameCorpus = self.corpus_loader.get_latest_corpus()
         self.assertIsNotNone(corpus)
         corpus_df: DataFrame = corpus.to_dataframe()
-        # Drop filename and filepath columns as these are too changeable to test easily
-        corpus_df = corpus_df.drop(labels=['filename', 'filepath'],
-                                   axis='columns', errors='ignore')
-        # Rows can be in any order
-        corpus_df = self._sort_df(corpus_df)
-
-        if not self.expected_df.equals(corpus_df):
-            assert False, "Expected corpus differs from built corpus"
+        self._test_dataframe_equivalence(self.expected_df, corpus_df)
 
     def test_csv_corpus(self):
         corpus_filter: str = "test_data/csv_corpus/philosophers.csv"
@@ -176,6 +179,30 @@ class TestFileTypes(unittest.TestCase):
         corpus_filter: str = "test_data/*xml_corpus.zip"
         meta_filter: str = "test_data/csv_split_meta/*"
         self._test_file_filter(corpus_filter, meta_filter)
+
+    def _test_serialised_corpus(self, corpus_filter: str, corpus_names: list[str]):
+        file_loader_widget: FileLoaderWidget = self.corpus_loader.view.file_loader
+        file_selector_widget: FileSelectorWidget = file_loader_widget.file_selector
+
+        file_selector_widget.filter_input.value = corpus_filter
+        file_selector_widget.update_display()
+        file_selector_widget.select_all()
+        file_loader_widget.import_corpus()
+        file_loader_widget.update_displays()
+
+        for corpus_name in corpus_names:
+            corpus: DataFrameCorpus = self.corpus_loader.get_corpus(corpus_name)
+            self.assertIsNotNone(corpus)
+            corpus_df: DataFrame = corpus.to_dataframe()
+            self._test_dataframe_equivalence(self.expected_df, corpus_df)
+
+    def test_single_serialised(self):
+        corpus_filter: str = "test_data/philosophers.atap"
+        self._test_serialised_corpus(corpus_filter, ["philosophers"])
+
+    def test_multiple_serialised(self):
+        corpus_filter: str = "test_data/philosophers*.atap"
+        self._test_serialised_corpus(corpus_filter, ["philosophers", "philosophers"])
 
 
 if __name__ == '__main__':
