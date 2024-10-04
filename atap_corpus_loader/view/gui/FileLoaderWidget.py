@@ -45,11 +45,17 @@ class FileLoaderWidget(AbstractWidget):
         header_dropdown_tooltip = self.view_handler.get_tooltip('header_dropdown')
 
         self.corpus_name_input = TextInput(placeholder='Corpus name', width=130)
-        self.build_button: Button = Button(name='Build corpus', button_style='solid', button_type='success', width=100)
+        self.build_button: Button = Button(name='Build corpus', button_style='solid', button_type='success', width=110)
         self.build_button.on_click(self.build_corpus)
-        build_tool_tip: TooltipIcon = self.view_handler.get_tooltip('build_button')
-        self.build_button_row: Row = Row(self.corpus_name_input, self.build_button, build_tool_tip,
+        build_tooltip: TooltipIcon = self.view_handler.get_tooltip('build_button')
+        self.build_button_row: Row = Row(self.corpus_name_input, self.build_button, build_tooltip,
                                          visible=False, align='start')
+
+        importable_filetypes: str = ', '.join(controller.get_importable_filetypes())
+        self.import_button: Button = Button(name=f'Import corpus ({importable_filetypes})', button_style='outline', button_type='primary')
+        self.import_button.on_click(self.import_corpus)
+        import_tooltip: TooltipIcon = self.view_handler.get_tooltip('import_button')
+        self.import_button_row: Row = Row(self.import_button, import_tooltip, align='start')
 
         self.file_selector = FileSelectorWidget(view_handler, controller, width=self.LOADER_WIDTH)
         self.file_selector.set_button_operation_fn(self._set_button_status_on_operation)
@@ -70,6 +76,7 @@ class FileLoaderWidget(AbstractWidget):
                     self.unload_col,
                     width=self.LOADER_WIDTH),
                 self.build_button_row,
+                self.import_button_row,
                 Row(self.controller.get_build_progress_bar())
             ),
             Spacer(width=50),
@@ -96,6 +103,7 @@ class FileLoaderWidget(AbstractWidget):
     def _set_build_buttons_status(self, *_):
         files_added: bool = self.controller.is_meta_added() or self.controller.is_corpus_added()
         self.build_button_row.visible = files_added
+        self.import_button_row.visible = not files_added
         self.unload_selected_button.disabled = not files_added
         self.unload_all_button.disabled = not files_added
         self.header_strategy_selector.disabled = files_added
@@ -111,6 +119,7 @@ class FileLoaderWidget(AbstractWidget):
         self.load_as_corpus_button.disabled = curr_loading
         self.load_as_meta_button.disabled = curr_loading
         self.build_button.disabled = curr_loading
+        self.import_button.disabled = curr_loading
 
     def load_as_corpus(self, *_):
         self._set_button_status_on_operation(curr_loading=True)
@@ -142,6 +151,17 @@ class FileLoaderWidget(AbstractWidget):
     def build_corpus(self, *_):
         self._set_button_status_on_operation(curr_loading=True)
         success: bool = self.view_handler.build_corpus(self.corpus_name_input.value_input)
+        if success:
+            self.corpus_name_input.value_input = ""
+            self.corpus_name_input.value = ""
+            self.unload_all()
+        self._set_button_status_on_operation(curr_loading=False)
+
+    def import_corpus(self, *_):
+        self._set_button_status_on_operation(curr_loading=True)
+        file_ls: list[str] = self.file_selector.get_selector_value()
+        include_hidden: bool = self.file_selector.get_show_hidden_value()
+        success: bool = self.view_handler.import_corpus(file_ls, include_hidden)
         if success:
             self.corpus_name_input.value_input = ""
             self.corpus_name_input.value = ""

@@ -65,6 +65,17 @@ class ViewWrapperWidget(AbstractWidget):
 
         return success
 
+    def import_corpus(self, filepath_ls: list[str], include_hidden: bool) -> bool:
+        success: bool = self.controller.import_corpus(filepath_ls, include_hidden)
+        if success:
+            self.update_displays()
+
+            self.panel.active = self.corpus_info_idx
+            corpus_id: str = self.controller.get_latest_corpus().name
+            self.controller.display_success(f"Corpus {corpus_id} imported successfully")
+
+        return success
+
     def set_load_service_type(self, *_):
         active_tab: int = self.panel.active
         if active_tab == 0:

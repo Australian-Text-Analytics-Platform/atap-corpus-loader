@@ -4,6 +4,7 @@ from os.path import normpath, sep, isdir, exists
 from typing import Iterator
 from zipfile import BadZipFile
 
+from atap_corpus.corpus.corpus import DataFrameCorpus
 from panel.widgets import Tqdm
 
 from atap_corpus_loader.controller.data_objects import FileReference
@@ -72,6 +73,30 @@ class FileLoaderService(LoaderService):
                 for zip_ref in zip_refs:
                     if not zip_ref.is_hidden() or include_hidden:
                         self.loaded_meta_files.add(zip_ref)
+
+    def import_files_as_corpus(self, corpus_filepaths: list[str],
+                               include_hidden: bool, tqdm_obj: Tqdm) -> list[DataFrameCorpus]:
+        if len(self.loaded_corpus_files) or len(self.loaded_meta_files):
+            raise FileLoadError("Can't import while files are loaded. Unload all files and then try importing again.")
+
+        corpus_ls: list[DataFrameCorpus] = []
+        for filepath in tqdm_obj(corpus_filepaths, desc="Importing corpus files", unit="files", leave=False):
+            file_ref: FileReference = self.file_ref_factory.get_file_ref(filepath)
+            if file_ref.get_extension().upper() != LoaderService.IMPORTABLE_FILETYPE:
+                raise FileLoadError(f'Only {LoaderService.IMPORTABLE_FILETYPE} files can be imported.')
+            if not include_hidden and file_ref.is_hidden():
+                continue
+            FileLoaderService._check_filepath_permissions(file_ref)
+
+            file_content = file_ref.get_content_buffer()
+            try:
+                corpus = DataFrameCorpus.deserialise(file_content)
+            except FileNotFoundError as e:
+                raise FileLoadError(str(e))
+
+            corpus_ls.append(corpus)
+
+        return corpus_ls
 
     @staticmethod
     def _sanitise_root_dir(root_directory: str) -> str:

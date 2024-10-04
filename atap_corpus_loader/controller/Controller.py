@@ -17,7 +17,7 @@ from atap_corpus_loader.controller.loader_service import LoaderService
 from atap_corpus_loader.controller.loader_service.FileLoadError import FileLoadError
 from atap_corpus_loader.controller.loader_service.FileLoaderService import FileLoaderService
 from atap_corpus_loader.controller.data_objects import (FileReference, ViewCorpusInfo, CorpusHeader, DataType,
-                                                        UniqueNameCorpora, HeaderStrategy)
+                                                        UniqueNameCorpora)
 from atap_corpus_loader.controller.loader_service.OniLoaderService import OniLoaderService
 from atap_corpus_loader.controller.loader_service.file_loader_strategy.FileLoaderFactory import ValidFileType
 from atap_corpus_loader.view.notifications import NotifierService
@@ -202,6 +202,42 @@ class Controller:
 
         return True
 
+    def import_corpus(self, filepath_ls: list[str], include_hidden: bool) -> bool:
+        self.log(f"import_corpus method: Importing corpus files: {filepath_ls}", logging.DEBUG)
+
+        self.build_tqdm.visible = True
+        try:
+            corpus_ls: list[DataFrameCorpus] = self.loader_service.import_files_as_corpus(filepath_ls, include_hidden, self.build_tqdm)
+            self.log("import_corpus method: corpus imported", logging.DEBUG)
+        except FileLoadError as e:
+            self.log("Exception while importing corpus: " + traceback.format_exc(), logging.ERROR)
+            self.display_error(str(e))
+            self.build_tqdm.visible = False
+            return False
+        except Exception as e:
+            self.log("Exception while importing corpus: " + traceback.format_exc(), logging.ERROR)
+            self.display_error(f"Unexpected error importing corpus: {e}")
+            self.build_tqdm.visible = False
+            return False
+
+        try:
+            for corpus in corpus_ls:
+                self.corpora.add(corpus)
+            self.log("import_corpus method: corpuses added to corpora", logging.DEBUG)
+        except Exception as e:
+            self.log("Exception while adding corpus to corpora: " + traceback.format_exc(), logging.ERROR)
+            self.display_error(str(e))
+            self.build_tqdm.visible = False
+            return False
+
+        for corpus in corpus_ls:
+            self.event_manager.trigger_callbacks(EventType.BUILD, corpus)
+
+        self.build_tqdm.visible = False
+        self.log("import_corpus method: corpus importing complete", logging.DEBUG)
+
+        return True
+
     def get_corpora_info(self) -> list[ViewCorpusInfo]:
         corpora_info: list[ViewCorpusInfo] = []
 
@@ -318,8 +354,11 @@ class Controller:
     def get_all_datatypes(self) -> list[str]:
         return [d.name for d in DataType]
 
-    def get_valid_filetypes(self) -> list[str]:
+    def get_loadable_filetypes(self) -> list[str]:
         return [ft.name for ft in ValidFileType]
+
+    def get_importable_filetypes(self) -> list[str]:
+        return [LoaderService.IMPORTABLE_FILETYPE]
 
     def get_build_progress_bar(self) -> Tqdm:
         return self.build_tqdm

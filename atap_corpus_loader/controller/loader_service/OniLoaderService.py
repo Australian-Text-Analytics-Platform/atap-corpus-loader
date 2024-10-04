@@ -3,6 +3,7 @@ from io import BytesIO
 from typing import Optional
 
 import requests
+from atap_corpus.corpus.corpus import DataFrameCorpus
 from panel.widgets import Tqdm
 
 from atap_corpus_loader.controller.data_objects import FileReference
@@ -187,3 +188,41 @@ class OniLoaderService(LoaderService):
             file_ref.set_content_buffer(content_buf)
 
             self.loaded_meta_files.add(file_ref)
+
+    def import_files_as_corpus(self, corpus_filepaths: list[str],
+                               include_hidden: bool, tqdm_obj: Tqdm) -> list[DataFrameCorpus]:
+        if len(self.loaded_corpus_files) or len(self.loaded_meta_files):
+            raise FileLoadError("Can't import while files are loaded. Unload all files and then try importing again.")
+
+        corpus_ls: list[DataFrameCorpus] = []
+        for filepath in tqdm_obj(corpus_filepaths, desc="Importing corpus files", unit="files", leave=False):
+            file_ref: RemoteFileReference = self.file_ref_factory.get_oni_file_ref(filepath)
+            if file_ref.get_extension().upper() != LoaderService.IMPORTABLE_FILETYPE:
+                raise FileLoadError(f'Only {LoaderService.IMPORTABLE_FILETYPE} files can be imported.')
+            if not include_hidden and file_ref.is_hidden():
+                continue
+            data = requests.get(file_ref.get_path(),
+                                headers=self._get_auth_header()
+                                )
+
+            try:
+                data.raise_for_status()
+            except Exception as e:
+                if str(e).startswith('404'):
+                    continue
+                elif str(e).startswith('401'):
+                    raise FileLoadError(f"Denied permission to access file: {filepath}<br>Check API Key")
+                else:
+                    raise FileLoadError(f"Unexpected error loading file: {filepath}<br>{str(e)}")
+
+            content_buf = BytesIO()
+            content_buf.write(data.text.encode('utf-8'))
+            content_buf.seek(0)
+            try:
+                corpus = DataFrameCorpus.deserialise(content_buf)
+            except FileNotFoundError as e:
+                raise FileLoadError(str(e))
+
+            corpus_ls.append(corpus)
+
+        return corpus_ls

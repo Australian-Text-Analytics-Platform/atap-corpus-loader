@@ -18,6 +18,8 @@ The panel Tqdm is a wrapper for the standard tqdm module and can be replaced if 
 
 
 class LoaderService(ABC):
+    IMPORTABLE_FILETYPE: str = 'ATAP'
+
     def __init__(self):
         self.loaded_corpus_files: set[FileReference] = set()
         self.loaded_meta_files: set[FileReference] = set()
@@ -35,6 +37,11 @@ class LoaderService(ABC):
 
     @abstractmethod
     def add_meta_files(self, meta_filepaths: list[str], include_hidden: bool, tqdm_obj: Tqdm):
+        raise NotImplementedError()
+
+    @abstractmethod
+    def import_files_as_corpus(self, corpus_filepaths: list[str],
+                               include_hidden: bool, tqdm_obj: Tqdm) -> list[DataFrameCorpus]:
         raise NotImplementedError()
 
     def get_header_strategy(self) -> HeaderStrategy:

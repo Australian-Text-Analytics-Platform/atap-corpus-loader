@@ -44,7 +44,7 @@ class FileSelectorWidget(AbstractWidget):
         self.expand_archive_checkbox.param.watch(self._on_filter_change, ['value'])
 
         self.file_type_filter = Select(name='Filter by filetype', width=150)
-        self.file_type_filter.options = ['All valid filetypes'] + self.controller.get_valid_filetypes()
+        self.file_type_filter.options = ['All valid filetypes'] + controller.get_loadable_filetypes() + controller.get_importable_filetypes()
         self.file_type_filter.value = self.file_type_filter.options[0]
         self.file_type_filter.param.watch(self._on_filter_change, ['value'])
 
@@ -89,7 +89,7 @@ class FileSelectorWidget(AbstractWidget):
         self.selector_widget.options = filtered_files_dict
 
     def _get_filtered_file_refs(self) -> list[FileReference]:
-        valid_file_types: list[str] = self.controller.get_valid_filetypes()
+        valid_file_types: list[str] = self.controller.get_loadable_filetypes() + self.controller.get_importable_filetypes()
         selected_file_types: set[str]
         if self.file_type_filter.value in valid_file_types:
             selected_file_types = {self.file_type_filter.value.upper()}
