@@ -79,6 +79,9 @@ class FileLoaderService(LoaderService):
         if len(self.loaded_corpus_files) or len(self.loaded_meta_files):
             raise FileLoadError("Can't import while files are loaded. Unload all files and then try importing again.")
 
+        if len(corpus_filepaths) == 0:
+            raise FileLoadError("No files selected for import.")
+
         corpus_ls: list[DataFrameCorpus] = []
         for filepath in tqdm_obj(corpus_filepaths, desc="Importing corpus files", unit="files", leave=False):
             file_ref: FileReference = self.file_ref_factory.get_file_ref(filepath)
