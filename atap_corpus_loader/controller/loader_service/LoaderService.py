@@ -160,6 +160,9 @@ class LoaderService(ABC):
         meta_df: DataFrame = self._get_concatenated_dataframe(meta_files, meta_headers, self.header_strategy,
                                                               tqdm_obj, "Reading metadata files")
 
+        if (corpus_df.shape[0] == 0) and (meta_df.shape[0] == 0):
+            raise FileLoadError("No corpus documents loaded. Corpus cannot be empty")
+
         load_corpus: bool = len(corpus_headers) > 0
         load_meta: bool = len(meta_headers) > 0
 
@@ -173,7 +176,7 @@ class LoaderService(ABC):
         elif load_meta:
             final_df = meta_df
         else:
-            raise ValueError("No corpus headers or metadata headers provided")
+            raise FileLoadError("No corpus headers or metadata headers provided")
 
         col_doc: str = text_header.name
         for header_name in final_df.columns:
