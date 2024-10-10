@@ -1,5 +1,6 @@
 from abc import abstractmethod, ABC
 from datetime import datetime
+from keyword import iskeyword
 from typing import Optional, Union
 
 from atap_corpus.corpus.corpus import DataFrameCorpus
@@ -116,6 +117,34 @@ class LoaderService(ABC):
 
         return headers
 
+    @staticmethod
+    def _is_valid_header_name(header_name: str) -> bool:
+        if len(header_name) == 0:
+            return False
+        start_char = header_name[0]
+        if start_char.isdigit() or (start_char == '_'):
+            return False
+        if iskeyword(header_name):
+            return False
+        return True
+
+    @staticmethod
+    def _get_valid_header_name(header_name: str, existing_headers: list[str]) -> str:
+        existing_headers.remove(header_name)
+        # Replace all spaces in the meta name with underscores
+        header_name = header_name.strip().replace(' ', '_')
+        # Remove all special characters from the meta name.
+        header_name = ''.join([c for c in header_name if c.isalnum() or c == '_'])
+        while not LoaderService._is_valid_header_name(header_name):
+            header_name = 'M_' + header_name
+        i = 1
+        orig_name = header_name
+        while header_name in existing_headers:
+            header_name = f'{orig_name}_{i}'
+            i += 1
+
+        return header_name
+
     def build_corpus(self, corpus_name: str,
                      corpus_headers: list[CorpusHeader],
                      meta_headers: list[CorpusHeader],
@@ -131,6 +160,9 @@ class LoaderService(ABC):
         meta_df: DataFrame = self._get_concatenated_dataframe(meta_files, meta_headers, self.header_strategy,
                                                               tqdm_obj, "Reading metadata files")
 
+        if (corpus_df.shape[0] == 0) and (meta_df.shape[0] == 0):
+            raise FileLoadError("No corpus documents loaded. Corpus cannot be empty")
+
         load_corpus: bool = len(corpus_headers) > 0
         load_meta: bool = len(meta_headers) > 0
 
@@ -144,12 +176,21 @@ class LoaderService(ABC):
         elif load_meta:
             final_df = meta_df
         else:
-            raise ValueError("No corpus headers or metadata headers provided")
+            raise FileLoadError("No corpus headers or metadata headers provided")
+
+        col_doc: str = text_header.name
+        for header_name in final_df.columns:
+            curr_headers = [str(c) for c in final_df.columns]
+            renamed = LoaderService._get_valid_header_name(header_name, curr_headers)
+            if header_name != renamed:
+                if header_name == col_doc:
+                    col_doc = renamed
+                final_df = final_df.rename({header_name: renamed}, axis=1)
 
         if (corpus_name == '') or (corpus_name is None):
             corpus_name = f"Corpus-{datetime.now()}"
 
-        return DataFrameCorpus.from_dataframe(final_df, text_header.name, corpus_name)
+        return DataFrameCorpus.from_dataframe(final_df, col_doc, corpus_name)
 
     @staticmethod
     def _get_concatenated_dataframe(file_refs: list[FileReference],

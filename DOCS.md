@@ -30,7 +30,7 @@ Params
 Example
 
 ```python
-loader = CorpusLoader('tests/test_data', include_meta_loader=True)
+loader = CorpusLoader('tests/test_data', include_meta_loader=True, include_oni_loader=True, run_logger=True)
 ```
 
 ---
@@ -145,6 +145,22 @@ Example
 loader = CorpusLoader('tests/test_data')
 corpora_object = loader.get_mutable_corpora()
 corpus = corpora_object.get("example")
+```
+
+---
+
+### CorpusLoader.get_logs
+
+Returns the log history as read from the log file as a string.
+If the log file is inaccessible, returns empty string.
+
+Returns: str - the recent log history as read from the log file
+
+Example
+
+```python
+loader = CorpusLoader('tests/test_data', run_logger=True)
+log_str = loader.get_logs()
 ```
 
 ---
