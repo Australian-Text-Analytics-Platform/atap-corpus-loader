@@ -3,14 +3,13 @@ from typing import Optional, Callable, Union
 import panel
 from atap_corpus._types import TCorpora
 from atap_corpus.corpus.corpus import DataFrameCorpus
-from panel.theme import Fast
 from panel.viewable import Viewer, Viewable
 
 from atap_corpus_loader.controller import Controller
 from atap_corpus_loader.controller.events import EventType
 from atap_corpus_loader.view import ViewWrapperWidget
 
-panel.extension(notifications=True, design=Fast)
+panel.extension(notifications=True)
 
 
 class CorpusLoader(Viewer):
@@ -37,7 +36,7 @@ class CorpusLoader(Viewer):
         self.view: ViewWrapperWidget = ViewWrapperWidget(self.controller, include_meta_loader, include_oni_loader)
 
     def __panel__(self):
-        return self.view
+        return self.view.__panel__()
 
     def add_tab(self, new_tab_name: str, new_tab_panel: Viewable):
         """

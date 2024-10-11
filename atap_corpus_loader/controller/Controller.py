@@ -12,6 +12,7 @@ from pandas import DataFrame
 from panel.widgets import Tqdm
 
 from atap_corpus_loader.controller.CorpusExportService import CorpusExportService
+from atap_corpus_loader.controller.FileUploaderService import FileUploaderService, FileUploadError
 from atap_corpus_loader.controller.events import EventType, EventManager
 from atap_corpus_loader.controller.loader_service import LoaderService
 from atap_corpus_loader.controller.loader_service.FileLoadError import FileLoadError
@@ -75,6 +76,7 @@ class Controller:
         self.file_loader_service: FileLoaderService = FileLoaderService(root_directory)
         self.oni_loader_service: OniLoaderService = OniLoaderService()
         self.loader_service: LoaderService = self.file_loader_service
+        self.uploader_service: FileUploaderService = FileUploaderService(root_directory)
         self.corpus_export_service: CorpusExportService = CorpusExportService()
         self.notifier_service: NotifierService = NotifierService()
 
@@ -128,6 +130,16 @@ class Controller:
             self.loader_service = self.oni_loader_service
         else:
             raise ValueError("loader_type specified must be either 'file' or 'oni'")
+
+    def upload_files(self, file_data: dict[str, str | bytes]):
+        self.log(f"Files uploaded: {list(file_data.keys())}", logging.DEBUG)
+        try:
+            self.uploader_service.upload_files(file_data)
+        except FileUploadError as e:
+            self.log(traceback.format_exc(), logging.ERROR)
+            self.display_error(str(e))
+            return
+        self.display_success("Files uploaded successfully")
 
     def load_corpus_from_filepaths(self, filepath_ls: list[str], include_hidden: bool) -> bool:
         self.log(f"Files loaded as corpus: {filepath_ls}", logging.DEBUG)
