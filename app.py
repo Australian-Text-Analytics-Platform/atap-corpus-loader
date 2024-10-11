@@ -1,6 +1,8 @@
-import panel as pn
 import os
+import shutil
 import uuid
+
+import panel as pn
 
 from atap_corpus_loader import CorpusLoader
 
@@ -30,5 +32,12 @@ def user_view():
     return corpus_loader.servable()
 
 
+def cleanup(session_context):
+    user_dir = session_context.user_dir
+    if os.path.exists(user_dir):
+        shutil.rmtree(user_dir)
+
+
 if __name__ == "__main__":
+    pn.state.on_session_destroyed(cleanup)
     pn.serve(user_view)
