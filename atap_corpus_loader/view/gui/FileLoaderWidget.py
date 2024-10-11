@@ -101,6 +101,8 @@ class FileLoaderWidget(AbstractWidget):
         self.header_strategy_selector.disabled = files_added
 
     def _set_button_status_on_operation(self, curr_loading: bool, *_):
+        curr_loading = False  # TODO: Remove this line - temporary fix for https://github.com/holoviz/panel/issues/7389
+
         self.file_selector.selector_widget.disabled = curr_loading
         self.file_selector.show_hidden_files_checkbox.disabled = curr_loading
         self.file_selector.expand_archive_checkbox.disabled = curr_loading
