@@ -1,2 +1,5 @@
-rm -rf ./user_root
-mkdir -p ./user_root
+#!/bin/bash
+
+ROOT_DIR="corpus_files"
+rm -rf $ROOT_DIR
+mkdir -p $ROOT_DIR
