@@ -32,12 +32,18 @@ def user_view():
     return corpus_loader.servable()
 
 
+def cleanup_dir(directory):
+    if os.path.exists(directory):
+        shutil.rmtree(directory)
+
+
 def cleanup(session_context):
     user_dir = session_context.user_dir
-    if os.path.exists(user_dir):
-        shutil.rmtree(user_dir)
+    cleanup_dir(user_dir)
 
 
 if __name__ == "__main__":
     pn.state.on_session_destroyed(cleanup)
+    cleanup_dir(ROOT_DIR)
+    os.makedirs(ROOT_DIR, exist_ok=True)
     pn.serve(user_view)
