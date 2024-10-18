@@ -34,8 +34,9 @@ def cleanup(session_context):
 
 def user_view():
     pn.state.on_session_destroyed(cleanup)
-    session_context = pn.state.curdoc.session_context
-    user_dir = get_user_directory(session_context)
+    # session_context = pn.state.curdoc.session_context
+    # user_dir = get_user_directory(session_context)
+    user_dir = ROOT_DIR
 
     corpus_loader: CorpusLoader = CorpusLoader(user_dir, include_meta_loader=True, include_oni_loader=True,
                                                run_logger=True)
