@@ -1,0 +1,2 @@
+rm -rf ./user_root
+mkdir -p ./user_root
