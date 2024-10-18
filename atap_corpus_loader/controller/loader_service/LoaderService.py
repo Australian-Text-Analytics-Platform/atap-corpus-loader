@@ -193,6 +193,20 @@ class LoaderService(ABC):
         return DataFrameCorpus.from_dataframe(final_df, col_doc, corpus_name)
 
     @staticmethod
+    def _dataframe_generator(file_refs: list[FileReference],
+                             headers: list[CorpusHeader],
+                             header_strategy: HeaderStrategy,
+                             tqdm_obj: Tqdm, loading_msg: str):
+        for ref in tqdm_obj(file_refs, desc=loading_msg, unit="files", leave=False):
+            file_loader: FileLoaderStrategy = FileLoaderFactory.get_file_loader(ref)
+            try:
+                yield file_loader.get_dataframe(headers, header_strategy, tqdm_obj)
+            except UnicodeDecodeError:
+                raise FileLoadError(f"Error loading file at {ref.get_path()}: file is not UTF-8 encoded")
+            except Exception as e:
+                raise FileLoadError(f"Error loading file at {ref.get_path()}: {e}")
+
+    @staticmethod
     def _get_concatenated_dataframe(file_refs: list[FileReference],
                                     headers: list[CorpusHeader],
                                     header_strategy: HeaderStrategy,
@@ -200,16 +214,6 @@ class LoaderService(ABC):
                                     loading_msg: str) -> DataFrame:
         if len(file_refs) == 0:
             return DataFrame()
-        df_list: list[DataFrame] = []
-        for ref in tqdm_obj(file_refs, desc=loading_msg, unit="files", leave=False):
-            file_loader: FileLoaderStrategy = FileLoaderFactory.get_file_loader(ref)
-            try:
-                path_df: DataFrame = file_loader.get_dataframe(headers, header_strategy)
-            except UnicodeDecodeError:
-                raise FileLoadError(f"Error loading file at {ref.get_path()}: file is not UTF-8 encoded")
-            except Exception as e:
-                raise FileLoadError(f"Error loading file at {ref.get_path()}: {e}")
 
-            df_list.append(path_df)
-
-        return concat(df_list, ignore_index=True)
+        df_generator = LoaderService._dataframe_generator(file_refs, headers, header_strategy, tqdm_obj, loading_msg)
+        return concat(df_generator, ignore_index=True)

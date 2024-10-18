@@ -19,7 +19,11 @@ class CorpusLoader(Viewer):
     The callbacks added will be called when a corpus is built (can be set using set_build_callback()).
     """
 
-    def __init__(self, root_directory: str, include_meta_loader: bool = False, include_oni_loader: bool = False, run_logger: bool = False, **params):
+    def __init__(self, root_directory: str,
+                 include_meta_loader: bool = False,
+                 include_oni_loader: bool = False,
+                 build_dtms: bool = False,
+                 run_logger: bool = False, **params):
         """
         :param root_directory: The root directory that the file selector will search for files to load. The argument must be a string. The directory may be non-existent at initialisation time, but no files will be displayed until it exists.
         :type root_directory: str
@@ -27,12 +31,14 @@ class CorpusLoader(Viewer):
         :type include_meta_loader: bool
         :param include_oni_loader: If True, the Corpus Loader will include additional Oni integration functionality. False by default
         :type include_oni_loader: bool
+        :param build_dtms: If True, the Corpus Loader will construct a Document Term Matrix for each corpus added. False by default
+        :type build_dtms: bool
         :param run_logger: If True, a log will be kept in the atap_corpus_loader directory. False by default
         :type run_logger: bool
         :param params: passed onto the panel.viewable.Viewer super-class
         """
         super().__init__(**params)
-        self.controller: Controller = Controller(root_directory, run_logger)
+        self.controller: Controller = Controller(root_directory, build_dtms, run_logger)
         self.view: ViewWrapperWidget = ViewWrapperWidget(self.controller, include_meta_loader, include_oni_loader)
 
     def __panel__(self):

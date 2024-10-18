@@ -70,8 +70,9 @@ class Controller:
 
         return log_history
 
-    def __init__(self, root_directory: str, run_logger: bool):
+    def __init__(self, root_directory: str, build_dtms: bool, run_logger: bool):
         self.setup_logger(self.LOGGER_NAME, run_logger)
+        self.build_dtms: bool = build_dtms
 
         self.file_loader_service: FileLoaderService = FileLoaderService(root_directory)
         self.oni_loader_service: OniLoaderService = OniLoaderService()
@@ -182,6 +183,11 @@ class Controller:
                 self.display_error("Cannot build without link headers set. Select a corpus header and a meta header as linking headers in the dropdowns")
                 return False
 
+        if self.corpora.get(corpus_id) is not None:
+            # Check for name uniqueness before build process
+            self.display_error(f"Corpus with name '{corpus_id}' already exists. Select a different name")
+            return False
+
         self.build_tqdm.visible = True
         try:
             corpus = self.loader_service.build_corpus(corpus_id, self.corpus_headers,
@@ -209,13 +215,15 @@ class Controller:
             self.build_tqdm.visible = False
             return False
 
-        try:
-            corpus.add_dtm(atap_corpus.parts.dtm.DTM.from_docs_with_vectoriser(corpus.docs()), 'tokens')
-        except Exception as e:
-            self.log("Exception while building DTM: " + traceback.format_exc(), logging.ERROR)
-            self.display_error(str(e))
-            self.build_tqdm.visible = False
-            return False
+        if self.build_dtms:
+            try:
+                corpus.add_dtm(atap_corpus.parts.dtm.DTM.from_docs_with_vectoriser(corpus.docs()), 'tokens')
+                self.log("build_corpus method: corpus dtm created", logging.DEBUG)
+            except Exception as e:
+                self.log("Exception while building DTM: " + traceback.format_exc(), logging.ERROR)
+                self.display_error(str(e))
+                self.build_tqdm.visible = False
+                return False
 
         self.event_manager.trigger_callbacks(EventType.BUILD, corpus)
 

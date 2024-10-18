@@ -20,7 +20,7 @@ class FileLoaderWidget(AbstractWidget):
         self.view_handler: ViewWrapperWidget = view_handler
         self.controller: Controller = controller
 
-        self.file_dropper = FileDropper(multiple=True, chunk_size=5000000, max_file_size='100MB', max_files=1000, max_total_file_size='1000MB')
+        self.file_dropper = FileDropper(multiple=True, chunk_size=5000000)
         self.file_dropper.param.watch(self._upload_file, ['value'])
 
         self.load_as_corpus_button: Button = Button(name='Load as corpus', width=130, button_style='outline',
