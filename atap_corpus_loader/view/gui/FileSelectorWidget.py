@@ -20,7 +20,7 @@ class FileSelectorWidget(AbstractWidget):
         else:
             return f"{long_path[:buffer_len]}...{long_path[-buffer_len:]}"
 
-    def __init__(self, view_handler: ViewWrapperWidget, controller: Controller, width: int):
+    def __init__(self, view_handler: ViewWrapperWidget, controller: Controller):
         super().__init__()
         self.view_handler: ViewWrapperWidget = view_handler
         self.controller: Controller = controller
@@ -61,8 +61,7 @@ class FileSelectorWidget(AbstractWidget):
                     self.expand_archive_checkbox
                 )
             ),
-            Row(self.selector_widget),
-            width=width)
+            Row(self.selector_widget))
 
         panel.state.add_periodic_callback(self.update_display, period=2000)
         self.update_display()

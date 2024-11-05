@@ -13,7 +13,6 @@ pn.extension('filedropper')
 
 
 class FileLoaderWidget(AbstractWidget):
-    LOADER_WIDTH: int = 600
 
     def __init__(self, view_handler: ViewWrapperWidget, controller: Controller, include_meta_loader: bool):
         super().__init__()
@@ -57,7 +56,7 @@ class FileLoaderWidget(AbstractWidget):
         self.build_button_row: Row = Row(self.corpus_name_input, self.build_button, build_tool_tip,
                                          visible=False, align='start')
 
-        self.file_selector = FileSelectorWidget(view_handler, controller, width=self.LOADER_WIDTH)
+        self.file_selector = FileSelectorWidget(view_handler, controller)
         self.file_selector.set_button_operation_fn(self._set_button_status_on_operation)
         self.meta_editor = MetaEditorWidget(view_handler, controller)
 
@@ -74,8 +73,7 @@ class FileLoaderWidget(AbstractWidget):
                         ),
                     self.loaded_file_info,
                     HSpacer(),
-                    self.unload_col,
-                    width=self.LOADER_WIDTH),
+                    self.unload_col),
                 self.build_button_row,
                 Row(self.controller.get_build_progress_bar())
             ),
