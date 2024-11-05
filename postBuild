@@ -1,5 +1,0 @@
-#!/bin/bash
-
-ROOT_DIR="corpus_files"
-rm -rf $ROOT_DIR
-mkdir -p $ROOT_DIR
