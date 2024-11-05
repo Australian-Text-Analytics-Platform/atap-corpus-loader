@@ -3,13 +3,14 @@ from typing import Optional, Callable, Union
 import panel
 from atap_corpus._types import TCorpora
 from atap_corpus.corpus.corpus import DataFrameCorpus
+from panel.theme import Fast
 from panel.viewable import Viewer, Viewable
 
 from atap_corpus_loader.controller import Controller
 from atap_corpus_loader.controller.events import EventType
 from atap_corpus_loader.view import ViewWrapperWidget
 
-panel.extension(notifications=True)
+panel.extension(notifications=True, design=Fast)
 
 
 class CorpusLoader(Viewer):

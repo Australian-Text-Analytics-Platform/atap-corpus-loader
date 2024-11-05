@@ -1,15 +1,12 @@
-import panel as pn
 from panel import Row, Spacer, Column, HSpacer
 from panel.pane import Markdown
-from panel.widgets import Button, TextInput, TooltipIcon, Select, FileDropper
+from panel.widgets import Button, TextInput, TooltipIcon, Select
 
 from atap_corpus_loader.controller import Controller
 from atap_corpus_loader.view import ViewWrapperWidget
 from atap_corpus_loader.view.gui import AbstractWidget
 from atap_corpus_loader.view.gui.FileSelectorWidget import FileSelectorWidget
 from atap_corpus_loader.view.gui.MetaEditorWidget import MetaEditorWidget
-
-pn.extension('filedropper')
 
 
 class FileLoaderWidget(AbstractWidget):
@@ -18,9 +15,6 @@ class FileLoaderWidget(AbstractWidget):
         super().__init__()
         self.view_handler: ViewWrapperWidget = view_handler
         self.controller: Controller = controller
-
-        self.file_dropper = FileDropper(multiple=True, chunk_size=5000000)
-        self.file_dropper.param.watch(self._upload_file, ['value'])
 
         self.load_as_corpus_button: Button = Button(name='Load as corpus', width=130, button_style='outline',
                                                     button_type='success')
@@ -62,7 +56,6 @@ class FileLoaderWidget(AbstractWidget):
 
         self.panel = Row(
             Column(
-                self.file_dropper,
                 self.file_selector,
                 Row(Column(
                     load_as_corpus_row,
@@ -93,15 +86,6 @@ class FileLoaderWidget(AbstractWidget):
             count_str += f"{filetype}: {file_counts[filetype]}\n"
 
         return count_str
-
-    def _upload_file(self, *_):
-        file_data: dict[str, str | bytes] = self.file_dropper.value
-        if len(file_data) == 0:
-            return
-
-        self.controller.upload_files(file_data)
-        self.file_dropper.value = {}
-        self.file_selector.update_display()
 
     def _on_header_strategy_update(self, *_):
         strategy_value: str = self.header_strategy_selector.value
