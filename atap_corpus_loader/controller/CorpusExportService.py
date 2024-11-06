@@ -13,8 +13,7 @@ class CorpusExportService:
         self.export_type_mapping: dict[str, Callable] = {
             'csv': self.export_csv,
             'xlsx': self.export_xlsx,
-            'zip': self.export_zip,
-            'atap': self.export_serialised_corpus
+            'zip': self.export_zip
         }
 
     def get_filetypes(self) -> list[str]:
@@ -131,11 +130,3 @@ class CorpusExportService:
             zip_file.close()
 
         return zipped_object
-
-    @staticmethod
-    def export_serialised_corpus(corpus: DataFrameCorpus, tqdm_obj: Tqdm) -> BytesIO:
-        serialised_object = BytesIO()
-        for corpus_obj in tqdm_obj([corpus], desc="Exporting to atap file", unit="files", leave=False):
-            corpus_obj.serialise(serialised_object)
-
-        return serialised_object
