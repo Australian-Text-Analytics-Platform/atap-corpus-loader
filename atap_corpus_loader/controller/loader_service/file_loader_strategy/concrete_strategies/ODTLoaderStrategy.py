@@ -1,8 +1,10 @@
 from io import BytesIO
+from typing import Optional
 
 from odf import text, teletype
 from odf.opendocument import load
 from pandas import DataFrame
+from panel.widgets import Tqdm
 
 from atap_corpus_loader.controller.data_objects import CorpusHeader, DataType, HeaderStrategy
 from atap_corpus_loader.controller.loader_service.file_loader_strategy.FileLoaderStrategy import FileLoaderStrategy
@@ -18,7 +20,7 @@ class ODTLoaderStrategy(FileLoaderStrategy):
 
         return headers
 
-    def get_dataframe(self, headers: list[CorpusHeader], header_strategy: HeaderStrategy) -> DataFrame:
+    def get_dataframe(self, headers: list[CorpusHeader], header_strategy: HeaderStrategy, tqdm_obj: Optional[Tqdm] = None) -> DataFrame:
         included_headers: list[str] = [header.name for header in headers if header.include]
         file_data = {}
         if 'document' in included_headers:

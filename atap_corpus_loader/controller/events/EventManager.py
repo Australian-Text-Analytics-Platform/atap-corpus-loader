@@ -34,7 +34,13 @@ class EventManager:
         self.callback_mapping[event_type].insert(position, callback)
         self.log(f"New callback registered for event '{event_type.name}'. Callback: {callback}", logging.INFO)
 
-    def trigger_callbacks(self, event_type: EventType, *callback_args):
+    def trigger_callbacks(self, event_type: Union[str, EventType], *callback_args):
+        if isinstance(event_type, str):
+            try:
+                event_type = EventType[event_type.upper()]
+            except KeyError:
+                raise ValueError(f"Provided event_type string does not correspond to an EventType value: {event_type}")
+
         callback_list: Optional[list[Callable]] = self.callback_mapping.get(event_type)
         if callback_list is None:
             raise ValueError(f"No callbacks registered for event type: {event_type.name}")

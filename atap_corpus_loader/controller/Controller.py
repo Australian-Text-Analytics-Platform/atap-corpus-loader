@@ -69,8 +69,9 @@ class Controller:
 
         return log_history
 
-    def __init__(self, root_directory: str, run_logger: bool):
+    def __init__(self, root_directory: str, build_dtms: bool, run_logger: bool):
         self.setup_logger(self.LOGGER_NAME, run_logger)
+        self.build_dtms: bool = build_dtms
 
         self.file_loader_service: FileLoaderService = FileLoaderService(root_directory)
         self.oni_loader_service: OniLoaderService = OniLoaderService()
@@ -101,6 +102,9 @@ class Controller:
 
     def register_event_callback(self, event_type: Union[str, EventType], callback: Callable, first: bool):
         self.event_manager.register_event_callback(event_type, callback, first)
+
+    def trigger_event(self, event_type: Union[str, EventType], *callback_args):
+        self.event_manager.trigger_callbacks(event_type, *callback_args)
 
     def get_latest_corpus(self) -> Optional[DataFrameCorpus]:
         if len(self.corpora) == 0:
@@ -170,6 +174,11 @@ class Controller:
                 self.display_error("Cannot build without link headers set. Select a corpus header and a meta header as linking headers in the dropdowns")
                 return False
 
+        if self.corpora.get(corpus_id) is not None:
+            # Check for name uniqueness before build process
+            self.display_error(f"Corpus with name '{corpus_id}' already exists. Select a different name")
+            return False
+
         self.build_tqdm.visible = True
         try:
             corpus = self.loader_service.build_corpus(corpus_id, self.corpus_headers,
@@ -197,15 +206,18 @@ class Controller:
             self.build_tqdm.visible = False
             return False
 
-        try:
-            corpus.add_dtm(atap_corpus.parts.dtm.DTM.from_docs_with_vectoriser(corpus.docs()), 'tokens')
-        except Exception as e:
-            self.log("Exception while building DTM: " + traceback.format_exc(), logging.ERROR)
-            self.display_error(str(e))
-            self.build_tqdm.visible = False
-            return False
+        if self.build_dtms:
+            try:
+                corpus.add_dtm(atap_corpus.parts.dtm.DTM.from_docs_with_vectoriser(corpus.docs()), 'tokens')
+                self.log("build_corpus method: corpus dtm created", logging.DEBUG)
+            except Exception as e:
+                self.log("Exception while building DTM: " + traceback.format_exc(), logging.ERROR)
+                self.display_error(str(e))
+                self.build_tqdm.visible = False
+                return False
 
         self.event_manager.trigger_callbacks(EventType.BUILD, corpus)
+        self.event_manager.trigger_callbacks(EventType.UPDATE)
 
         self.build_tqdm.visible = False
         self.log("build_corpus method: corpus building complete", logging.DEBUG)
@@ -245,6 +257,7 @@ class Controller:
     def delete_corpus(self, corpus_name: str):
         self.corpora.remove(corpus_name)
         self.event_manager.trigger_callbacks(EventType.DELETE)
+        self.event_manager.trigger_callbacks(EventType.UPDATE)
 
     def rename_corpus(self, corpus_name: str, new_name: str):
         self.log(f"Renaming corpus named '{corpus_name}' to '{new_name}'", logging.DEBUG)
@@ -261,6 +274,7 @@ class Controller:
             self.display_error(f"Unexpected error while renaming: {e}")
 
         self.event_manager.trigger_callbacks(EventType.RENAME, corpus)
+        self.event_manager.trigger_callbacks(EventType.UPDATE)
 
     def get_loaded_file_counts(self) -> dict[str, int]:
         corpus_file_set = self.loader_service.get_loaded_corpus_files()

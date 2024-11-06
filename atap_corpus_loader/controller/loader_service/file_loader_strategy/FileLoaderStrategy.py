@@ -1,6 +1,8 @@
 from abc import ABC, abstractmethod
+from typing import Optional
 
 from pandas import DataFrame, to_datetime
+from panel.widgets import Tqdm
 
 from atap_corpus_loader.controller.data_objects import CorpusHeader, FileReference, DataType, HeaderStrategy
 from atap_corpus_loader.controller.loader_service.FileLoadError import FileLoadError
@@ -57,11 +59,13 @@ class FileLoaderStrategy(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def get_dataframe(self, headers: list[CorpusHeader], header_strategy: HeaderStrategy) -> DataFrame:
+    def get_dataframe(self, headers: list[CorpusHeader], header_strategy: HeaderStrategy, tqdm_obj: Optional[Tqdm] = None) -> DataFrame:
         """
         Provides a DataFrame object containing the data from the loaded file.
         Columns of the DataFrame will be cast to the data types specified in the headers parameter.
         The DataFrame will exclude a column of data if its corresponding CorpusHeader object has include set to False
+        :param tqdm_obj: the progress indicator object that tracks the progress of the DataFrame construction. Can be ignored in implementation, i.e. for text files
+        :type tqdm_obj: Optional[panel.widgets.Tqdm]
         :param headers: a list of CorpusHeader objects corresponding to the data found within the file
         :type headers: list[CorpusHeader]
         :param header_strategy: the method by which reading headers from tabular data will be handled
