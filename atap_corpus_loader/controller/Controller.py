@@ -103,6 +103,9 @@ class Controller:
     def register_event_callback(self, event_type: Union[str, EventType], callback: Callable, first: bool):
         self.event_manager.register_event_callback(event_type, callback, first)
 
+    def trigger_event(self, event_type: Union[str, EventType], *callback_args):
+        self.event_manager.trigger_callbacks(event_type, *callback_args)
+
     def get_latest_corpus(self) -> Optional[DataFrameCorpus]:
         if len(self.corpora) == 0:
             return
@@ -214,6 +217,7 @@ class Controller:
                 return False
 
         self.event_manager.trigger_callbacks(EventType.BUILD, corpus)
+        self.event_manager.trigger_callbacks(EventType.UPDATE)
 
         self.build_tqdm.visible = False
         self.log("build_corpus method: corpus building complete", logging.DEBUG)
@@ -253,6 +257,7 @@ class Controller:
     def delete_corpus(self, corpus_name: str):
         self.corpora.remove(corpus_name)
         self.event_manager.trigger_callbacks(EventType.DELETE)
+        self.event_manager.trigger_callbacks(EventType.UPDATE)
 
     def rename_corpus(self, corpus_name: str, new_name: str):
         self.log(f"Renaming corpus named '{corpus_name}' to '{new_name}'", logging.DEBUG)
@@ -269,6 +274,7 @@ class Controller:
             self.display_error(f"Unexpected error while renaming: {e}")
 
         self.event_manager.trigger_callbacks(EventType.RENAME, corpus)
+        self.event_manager.trigger_callbacks(EventType.UPDATE)
 
     def get_loaded_file_counts(self) -> dict[str, int]:
         corpus_file_set = self.loader_service.get_loaded_corpus_files()

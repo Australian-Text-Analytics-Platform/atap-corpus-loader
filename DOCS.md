@@ -74,9 +74,10 @@ If the first argument is True, the callback will be added to the start of the ca
 Subsequent callbacks registered with first=True will supersede the previous callback's position.
 When a callback raises an exception, the exception will be logged and the subsequent callbacks will be executed.
 The relevant corpus object will be passed as an argument for the BUILD and RENAME events.
+The UPDATE event represents a modification to the corpora through corpus addition, deletion, or renaming.
 
 Params
-- event_type: EventType or str - an enum with the possible values: LOAD, UNLOAD, BUILD, RENAME, DELETE. String equivalents also accepted
+- event_type: EventType or str - an enum with the possible values: LOAD, UNLOAD, BUILD, RENAME, DELETE, UPDATE. String equivalents also accepted
 - callback: Callable - the function to call when the event occurs
 - first: bool - whether to insert the callback at the start of the callback chain for this event type. False by default
 
@@ -86,6 +87,27 @@ Example
 corpus_list = []
 loader = CorpusLoader('tests/test_data')
 loader.register_event_callback(EventType.BUILD, corpus_list.append)
+```
+
+---
+
+### CorpusLoader.trigger_event
+
+Triggers all callbacks registered with the given event. Only the specified event will be triggered
+
+Params
+- event_type: EventType or str - an enum with the possible values: LOAD, UNLOAD, BUILD, RENAME, DELETE, UPDATE. String equivalents also accepted
+- callback_args: Any - arguments to pass on to the callbacks being triggered
+
+Example
+
+```python
+def my_callback():
+    pass
+
+loader = CorpusLoader('tests/test_data')
+loader.register_event_callback(EventType.UPDATE, my_callback)
+loader.trigger_event(EventType.UPDATE))
 ```
 
 ---

@@ -63,7 +63,7 @@ class CorpusLoader(Viewer):
         Subsequent callbacks registered with first=True will supersede the previous callback's position.
         When a callback raises an exception, the exception will be logged and the subsequent callbacks will be executed.
         The relevant corpus object will be passed as an argument for the BUILD and RENAME events.
-        :param event_type: an enum with the possible values: LOAD, UNLOAD, BUILD, RENAME, DELETE. String equivalents also accepted
+        :param event_type: an enum with the possible values: LOAD, UNLOAD, BUILD, RENAME, DELETE, UPDATE. String equivalents also accepted
         :type event_type: Union[str, EventType]
         :param callback: the function to call when the event occurs
         :type callback: Callable
@@ -71,6 +71,16 @@ class CorpusLoader(Viewer):
         :type first: bool
         """
         self.controller.register_event_callback(event_type, callback, first)
+
+    def trigger_event(self, event_type: Union[str, EventType], *callback_args):
+        """
+        Triggers all callbacks registered with the given event. Only the specified event will be triggered
+        :param event_type: an enum with the possible values: LOAD, UNLOAD, BUILD, RENAME, DELETE, UPDATE. String equivalents also accepted
+        :type event_type: Union[str, EventType]
+        :param callback_args: arguments to pass on to the callbacks being triggered
+        :type callback_args: Any
+        """
+        self.controller.trigger_event(event_type, *callback_args)
 
     def get_latest_corpus(self) -> Optional[DataFrameCorpus]:
         """
