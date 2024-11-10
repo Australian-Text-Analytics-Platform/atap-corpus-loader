@@ -12,6 +12,7 @@ from pandas import DataFrame
 from panel.widgets import Tqdm
 
 from atap_corpus_loader.controller.CorpusExportService import CorpusExportService
+from atap_corpus_loader.controller.GoogleDownloadService import GoogleDownloadService
 from atap_corpus_loader.controller.events import EventType, EventManager
 from atap_corpus_loader.controller.loader_service import LoaderService
 from atap_corpus_loader.controller.loader_service.FileLoadError import FileLoadError
@@ -75,6 +76,7 @@ class Controller:
 
         self.file_loader_service: FileLoaderService = FileLoaderService(root_directory)
         self.oni_loader_service: OniLoaderService = OniLoaderService()
+        self.google_download_service: GoogleDownloadService = GoogleDownloadService(root_directory)
         self.loader_service: LoaderService = self.file_loader_service
         self.corpus_export_service: CorpusExportService = CorpusExportService()
         self.notifier_service: NotifierService = NotifierService()
@@ -479,3 +481,21 @@ class Controller:
             self.display_error(str(e))
         except Exception as e:
             self.display_error(f"Unexpected error while setting collection ID: {e}")
+
+    def check_for_download(self, filter_input: str):
+        if not self.google_download_service.is_gdrive_url(filter_input):
+            return
+
+        self.display_success('Starting download from Google Drive')
+
+        try:
+            self.google_download_service.download_files(filter_input)
+        except ValueError as e:
+            self.display_error(str(e))
+            return
+        except Exception as e:
+            self.log("Exception while downloading from Google Drive: " + traceback.format_exc(), logging.ERROR)
+            self.display_error(f"Unexpected download error: {str(e)}")
+            return
+
+        self.display_success("File(s) downloaded successfully")

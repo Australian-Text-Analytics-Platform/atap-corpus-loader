@@ -117,6 +117,11 @@ class FileSelectorWidget(AbstractWidget):
         self._set_button_status_on_operation(curr_loading=True)
         self.update_display()
         self._set_button_status_on_operation(curr_loading=False)
+        self._check_for_download()
+
+    def _check_for_download(self):
+        filter_input: str = self.filter_input.value
+        self.controller.check_for_download(filter_input)
 
     def select_all(self, *_):
         self._set_button_status_on_operation(curr_loading=True)
