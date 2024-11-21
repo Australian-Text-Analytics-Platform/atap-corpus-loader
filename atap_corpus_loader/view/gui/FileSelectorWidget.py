@@ -1,8 +1,10 @@
+import sys
 from fnmatch import fnmatch
 from typing import Callable
 
 import panel
 from panel import Row, Column
+from panel.pane import Markdown
 from panel.widgets import Button, MultiSelect, TextInput, Select, Checkbox
 
 from atap_corpus_loader.controller import Controller
@@ -11,7 +13,37 @@ from atap_corpus_loader.view import ViewWrapperWidget
 from atap_corpus_loader.view.gui import AbstractWidget
 
 
+class StdErrWrapper:
+    def __init__(self):
+        self.panel = Markdown(object="")
+        self.last_msg = ""
+        self.orig_stderr = sys.stderr
+
+    def __enter__(self):
+        sys.stderr = self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.clear()
+        sys.stderr = self.orig_stderr
+
+    def __panel__(self):
+        return self.panel
+
+    def write(self, std_msg):
+        if '\r' in std_msg:
+            self.panel.object = self.last_msg + str(std_msg) + '\n'
+        else:
+            self.last_msg = self.panel.object
+            self.panel.object = self.panel.object + str(std_msg) + '\n'
+
+    def clear(self):
+        self.panel.object = ""
+        self.last_msg = ""
+
+
 class FileSelectorWidget(AbstractWidget):
+    MAX_WIDTH: int = 1000
+
     @staticmethod
     def _get_short_path(long_path: str, threshold_len: int = 70):
         buffer_len: int = threshold_len // 2
@@ -50,6 +82,8 @@ class FileSelectorWidget(AbstractWidget):
 
         self.selector_widget = MultiSelect(size=10, sizing_mode='stretch_width')
 
+        self.stderr_wrapper = StdErrWrapper()
+
         self.panel = Column(
             Row(Column(
                 self.filter_row,
@@ -61,7 +95,10 @@ class FileSelectorWidget(AbstractWidget):
                     self.expand_archive_checkbox
                 )
             ),
-            Row(self.selector_widget))
+            Row(self.selector_widget),
+            self.stderr_wrapper,
+            max_width=self.MAX_WIDTH
+        )
 
         panel.state.add_periodic_callback(self.update_display, period=2000)
         self.update_display()
@@ -117,6 +154,13 @@ class FileSelectorWidget(AbstractWidget):
         self._set_button_status_on_operation(curr_loading=True)
         self.update_display()
         self._set_button_status_on_operation(curr_loading=False)
+        self._check_for_download()
+
+    def _check_for_download(self):
+        filter_input: str = self.filter_input.value
+        with self.stderr_wrapper:
+            self.controller.check_for_download(filter_input)
+        self.filter_input.value = ""
 
     def select_all(self, *_):
         self._set_button_status_on_operation(curr_loading=True)
