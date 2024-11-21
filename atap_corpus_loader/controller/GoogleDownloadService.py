@@ -1,14 +1,9 @@
-import asyncio
-import logging
-import traceback
 from concurrent.futures import ThreadPoolExecutor
 from os.path import normpath, sep
 from re import Pattern, compile, search
 
 import gdown
 from gdown.exceptions import FileURLRetrievalError, FolderContentsMaximumLimitError
-
-from atap_corpus_loader.controller import Controller
 
 
 class GoogleDownloadService:
@@ -37,10 +32,15 @@ class GoogleDownloadService:
         match = search(GoogleDownloadService.URL_PATTERN, gdrive_url)
         return bool(match is not None)
 
+    def _download_gdrive_file(self, gdrive_url: str):
+        gdown.download(url=gdrive_url, output=self.download_directory, fuzzy=True)
+
     def download_files(self, gdrive_url: str):
-        try:
-            gdown.download(url=gdrive_url, output=self.download_directory, fuzzy=True)
-        except FileURLRetrievalError:
-            raise ValueError("Failed to retrieve file url: Cannot retrieve the public link of the file.\nYou may need to change the permission to 'Anyone with the link', or have had many accesses.")
-        except FolderContentsMaximumLimitError as e:
-            raise ValueError(str(e))
+        with ThreadPoolExecutor() as executor:
+            future = executor.submit(self._download_gdrive_file, gdrive_url)
+            try:
+                future.result()
+            except FileURLRetrievalError:
+                raise ValueError("Failed to retrieve file url: Cannot retrieve the public link of the file.\nYou may need to change the permission to 'Anyone with the link', or have had many accesses.")
+            except FolderContentsMaximumLimitError as e:
+                raise ValueError(str(e))

@@ -490,12 +490,9 @@ class Controller:
 
         try:
             self.google_download_service.download_files(filter_input)
+            self.display_success("File(s) downloaded successfully")
         except ValueError as e:
             self.display_error(str(e))
-            return
         except Exception as e:
             self.log("Exception while downloading from Google Drive: " + traceback.format_exc(), logging.ERROR)
             self.display_error(f"Unexpected download error: {str(e)}")
-            return
-
-        self.display_success("File(s) downloaded successfully")
