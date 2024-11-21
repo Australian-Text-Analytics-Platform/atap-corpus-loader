@@ -482,17 +482,20 @@ class Controller:
         except Exception as e:
             self.display_error(f"Unexpected error while setting collection ID: {e}")
 
-    def check_for_download(self, filter_input: str):
+    def check_for_download(self, filter_input: str) -> bool:
         if not self.google_download_service.is_gdrive_url(filter_input):
-            return
+            return False
 
         self.display_success('Starting download from Google Drive')
 
         try:
             self.google_download_service.download_files(filter_input)
             self.display_success("File(s) downloaded successfully")
+            return True
         except ValueError as e:
             self.display_error(str(e))
+            return False
         except Exception as e:
             self.log("Exception while downloading from Google Drive: " + traceback.format_exc(), logging.ERROR)
             self.display_error(f"Unexpected download error: {str(e)}")
+            return False

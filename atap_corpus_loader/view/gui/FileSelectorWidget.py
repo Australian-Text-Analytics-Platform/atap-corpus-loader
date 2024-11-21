@@ -159,8 +159,9 @@ class FileSelectorWidget(AbstractWidget):
     def _check_for_download(self):
         filter_input: str = self.filter_input.value
         with self.stderr_wrapper:
-            self.controller.check_for_download(filter_input)
-        self.filter_input.value = ""
+            success = self.controller.check_for_download(filter_input)
+        if success:
+            self.filter_input.value = ""
 
     def select_all(self, *_):
         self._set_button_status_on_operation(curr_loading=True)
