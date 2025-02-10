@@ -7,8 +7,20 @@ from atap_corpus.corpus.corpus import DataFrameCorpus
 from pandas import DataFrame, ExcelWriter, Series
 from panel.widgets import Tqdm
 
+"""
+Some methods in this module utilise Tqdm from the panel library, which breaks the Model-View separation.
+This has been done out of necessity for a progress bar for particular operations.
+The panel Tqdm is a wrapper for the standard tqdm module and can be replaced if needed.
+"""
+
 
 class CorpusExportService:
+    """
+    A CorpusExportService object handles the conversion of a DataFrameCorpus object to a standard file type that an end user can interact with.
+    In order to add a new file type to the possible exports,
+    implement a static method that accepts a DataFrameCorpus object and a Tqdm object and returns a BytesIO containing the file data.
+    Additionally, add the mapping of the file type name to the callable export method to the export_type_mapping in the constructor.
+    """
     def __init__(self):
         self.export_type_mapping: dict[str, Callable] = {
             'csv': self.export_csv,
@@ -33,6 +45,17 @@ class CorpusExportService:
 
     @staticmethod
     def export_csv(corpus: DataFrameCorpus, tqdm_obj: Tqdm) -> BytesIO:
+        """
+        Accepts a DataFrameCorpus object and returns a CSV file as a BytesIO.
+        The format of the CSV file is such that each column is a metadata with one column being the document column.
+        Each row of the CSV file is a specific document and its associated metadata in the corpus.
+        :param corpus: the corpus object to be exported.
+        :type corpus: DataFrameCorpus
+        :param tqdm_obj: A panel Tqdm object that provides a progress indicator to the user.
+        :type tqdm_obj: panel.widgets.Tqdm
+        :return: The contents of the exported file in CSV format.
+        :rtype: BytesIO
+        """
         csv_object = BytesIO()
         if len(corpus) == 0:
             return csv_object
@@ -50,6 +73,18 @@ class CorpusExportService:
 
     @staticmethod
     def export_xlsx(corpus: DataFrameCorpus, tqdm_obj: Tqdm) -> BytesIO:
+        """
+        Accepts a DataFrameCorpus object and returns a XLSX file as a BytesIO.
+        The format of the XLSX file is such that each column is a metadata with one column being the document column.
+        Each row of the XLSX file is a specific document and its associated metadata in the corpus.
+        There is only one sheet in the XLSX file, with the default name (usually 'Sheet 1').
+        :param corpus: the corpus object to be exported.
+        :type corpus: DataFrameCorpus
+        :param tqdm_obj: A panel Tqdm object that provides a progress indicator to the user.
+        :type tqdm_obj: panel.widgets.Tqdm
+        :return: The contents of the exported file in XLSX format.
+        :rtype: BytesIO
+        """
         excel_object = BytesIO()
         if len(corpus) == 0:
             return excel_object
@@ -97,6 +132,18 @@ class CorpusExportService:
 
     @staticmethod
     def export_zip(corpus: DataFrameCorpus, tqdm_obj: Tqdm) -> BytesIO:
+        """
+        Accepts a DataFrameCorpus object and returns a zip file as a BytesIO.
+        The zip file contains no folder structure. Within the zip file there are a set of TXT files, each containing the contents of its respective document.
+        Additionally, there is a single CSV file named 'metadata.csv'.
+        The format of the CSV file is such that each column is a metadata for the documents, with a single column containing the filename of the respective document, called 'filename'.
+        :param corpus: the corpus object to be exported.
+        :type corpus: DataFrameCorpus
+        :param tqdm_obj: A panel Tqdm object that provides a progress indicator to the user.
+        :type tqdm_obj: panel.widgets.Tqdm
+        :return: The contents of the exported file in xlsx format.
+        :rtype: BytesIO
+        """
         zipped_object = BytesIO()
         if len(corpus) == 0:
             return zipped_object

@@ -175,10 +175,13 @@ class Controller:
             if (self.corpus_link_header is None) or (self.meta_link_header is None):
                 self.display_error("Cannot build without link headers set. Select a corpus header and a meta header as linking headers in the dropdowns")
                 return False
-
         if self.corpora.get(corpus_id) is not None:
             # Check for name uniqueness before build process
             self.display_error(f"Corpus with name '{corpus_id}' already exists. Select a different name")
+            return False
+        if self.text_header is None:
+            # Check that the text header has been set
+            self.display_error("No document label set. Select a document label from the dropdown.")
             return False
 
         self.build_tqdm.visible = True

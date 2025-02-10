@@ -13,6 +13,11 @@ from atap_corpus_loader.view.gui import AbstractWidget
 
 
 class CorpusInfoWidget(AbstractWidget):
+    """
+    A widget that displays summary information about the built corpus objects.
+    Only one corpus can be viewed at a time, selected using the panel Accordian object.
+    Additionally, a corpus can be renamed, deleted, or exported through this widget.
+    """
     def __init__(self, controller: Controller):
         super().__init__()
         self.controller: Controller = controller

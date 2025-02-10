@@ -6,6 +6,10 @@ from zipfile import ZipFile, BadZipFile
 
 
 class FileReference(ABC):
+    """
+    FileReference is an abstract class that provides methods for retrieving information about a file.
+    A pathlib implementation would be insufficient due to application-specific attributes/methods, especially with subclasses of FileReference.
+    """
     def __init__(self, path: str):
         self.path: str = path
         self.path_hash: int = hash(self.path)
@@ -127,6 +131,9 @@ class DiskFileReference(FileReference):
 
 
 class ZipFileReference(FileReference):
+    """
+    ZipFileReference refers to a zip file and provides an implementation of get_content_buffer that accounts for the zip format
+    """
     def __init__(self, zip_file: ZipFile, zip_file_path: str, internal_path: str):
         """
         :param zip_file: the ZipFile object corresponding to the zip file that holds this zipped file. This allows multiple zipped files to share the same ZipFile object
@@ -156,6 +163,10 @@ class ZipFileReference(FileReference):
 
 
 class RemoteFileReference(FileReference):
+    """
+    RemoteFileReference refers to a file held over a network.
+    The set_content_buffer methods provides a way for clients of this class to handle the retrieval of file contents from the network.
+    """
     def __init__(self, path: str):
         super().__init__(path)
         self.content_buffer: Optional[BytesIO] = None
