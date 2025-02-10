@@ -8,6 +8,8 @@ class AbstractWidget(ABC):
     """
     An abstract class for Panel GUI widgets. Provides methods to set widget visibility and update the display of all
     child widgets.
+    When update_displays is invoked, first the update_display method for the AbstractWidget object is invoked,
+    and then the update_displays method is invoked for each child in the order they exist in the 'children' attribute.
     """
     def __init__(self):
         self.panel: Panel = Row()

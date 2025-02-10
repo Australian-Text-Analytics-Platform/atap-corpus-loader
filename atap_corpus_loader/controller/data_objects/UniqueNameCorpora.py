@@ -12,7 +12,6 @@ class UniqueNameCorpora(BaseCorpora):
     Additionally, while stored within the Corpora, the rename method of the BaseCorpus objects is replaced with a rename method
     that ensures the new name is unique.
     """
-
     def __init__(self, logger_name: str, corpus: Optional[BaseCorpus | Iterable[BaseCorpus]] = None):
         super().__init__(corpus)
         logger = logging.getLogger(logger_name)

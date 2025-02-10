@@ -2,6 +2,9 @@ from typing import Optional
 
 
 class ViewCorpusInfo:
+    """
+    A dataclass that provides a corpus information summary to the view.
+    """
     DATA_WIDTH: int = 50
 
     def __init__(self, name: Optional[str], num_rows: int, parent_name: Optional[str],

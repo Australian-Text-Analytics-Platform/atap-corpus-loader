@@ -12,6 +12,12 @@ from atap_corpus_loader.controller.loader_service.FileLoadError import FileLoadE
 
 
 class OniLoaderService(LoaderService):
+    """
+    An implementation of the LoaderService that handles files on as provided by the Oni API, created by LDaCA.
+    Provides methods that handle the logic of loading files and building the DataFrameCorpus object from the loaded files,
+    as well as methods for accessing and interacting with the Oni API such as API key handling.
+    Maintains a reference to files loaded as corpus files and files loaded as metadata files.
+    """
     def __init__(self):
         super().__init__()
         self.providers: dict[str, str] = {"LDaCA": "https://data.ldaca.edu.au"}

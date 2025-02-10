@@ -91,6 +91,10 @@ class MetaEditorWidget(AbstractWidget):
                 checkbox.value = state
 
     def _set_text_header(self, text_header_name: Optional[str]):
+        if text_header_name is None:
+            self.text_header_dropdown.styles = {"border": "1px solid red"}
+        else:
+            self.text_header_dropdown.styles = {}
         self.controller.set_text_header(text_header_name)
         self.update_display()
 
@@ -193,7 +197,7 @@ class MetaEditorWidget(AbstractWidget):
         corpus_link_header: Optional[CorpusHeader] = self.controller.get_corpus_link_header()
         meta_link_header: Optional[CorpusHeader] = self.controller.get_meta_link_header()
 
-        self.text_header_dropdown.options = [h.name for h in corpus_headers]
+        self.text_header_dropdown.options = [None] + [h.name for h in corpus_headers]
         if text_header is not None:
             self.text_header_dropdown.value = text_header.name
 

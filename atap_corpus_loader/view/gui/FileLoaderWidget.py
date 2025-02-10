@@ -10,7 +10,11 @@ from atap_corpus_loader.view.gui.MetaEditorWidget import MetaEditorWidget
 
 
 class FileLoaderWidget(AbstractWidget):
-
+    """
+    A widget that forms a tab in the CorpusLoader, and handles most of the interactive components of the GUI.
+    The FileLoaderWidget handles loading files that are held locally on disk.
+    Holds the references to the FileSelectorWidget and the MetaEditorWidget, along with many panel interactive widgets.
+    """
     def __init__(self, view_handler: ViewWrapperWidget, controller: Controller, include_meta_loader: bool):
         super().__init__()
         self.view_handler: ViewWrapperWidget = view_handler

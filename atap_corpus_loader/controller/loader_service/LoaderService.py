@@ -19,6 +19,12 @@ The panel Tqdm is a wrapper for the standard tqdm module and can be replaced if 
 
 
 class LoaderService(ABC):
+    """
+    LoaderService is an abstract class whose implementations handle the loading of files and building of a corpus with those files.
+    Different implementations of this class are required as files can be accessed in different ways, e.g. via the file system or over a network.
+    Constructing a corpus consists of two stages: loading and building. During the loading stage, files can be added to the corpus or meta file list. The build stage finalises the corpus.
+    The corpus file list contains the 'document' data (the main text to be analysed) whereas the meta file list does not, and must be associated with the document data.
+    """
     def __init__(self):
         self.loaded_corpus_files: set[FileReference] = set()
         self.loaded_meta_files: set[FileReference] = set()

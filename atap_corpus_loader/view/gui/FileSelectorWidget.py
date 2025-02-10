@@ -14,6 +14,11 @@ from atap_corpus_loader.view.gui import AbstractWidget
 
 
 class StdErrWrapper:
+    """
+    The StdErrWrapper provides a way to show the user errors raised by internal function calls that would otherwise be captured and hidden by Panel.
+    The errors are displayed in a readable format that may assist the user to determine the issue.
+    The StdErrWrapper is used in the FileSelectorWidget to handle errors raised when attempting to download files from a network.
+    """
     def __init__(self):
         self.panel = Markdown(object="")
         self.last_msg = ""
@@ -42,6 +47,10 @@ class StdErrWrapper:
 
 
 class FileSelectorWidget(AbstractWidget):
+    """
+    Handles the interactive components when selecting files using the panel MultiSelect widget.
+    A user-specified wildcard filter controls which files are listed for selection.
+    """
     MAX_WIDTH: int = 1000
 
     @staticmethod

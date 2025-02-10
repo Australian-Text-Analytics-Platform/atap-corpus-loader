@@ -13,8 +13,8 @@ from atap_corpus_loader.controller.loader_service.LoaderService import LoaderSer
 
 class FileLoaderService(LoaderService):
     """
-    Provides methods that handle the logic of loading files and building the DataFrameCorpus object from the loaded
-    files.
+    An implementation of the LoaderService that handles files on disk.
+    Provides methods that handle the logic of loading files and building the DataFrameCorpus object from the loaded files.
     Maintains a reference to files loaded as corpus files and files loaded as metadata files.
     """
     def __init__(self, root_directory: str):

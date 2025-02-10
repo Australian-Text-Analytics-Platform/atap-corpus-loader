@@ -7,6 +7,10 @@ from gdown.exceptions import FileURLRetrievalError, FolderContentsMaximumLimitEr
 
 
 class GoogleDownloadService:
+    """
+    A GoogleDownloadService object provides methods for downloading publicly shared files from Google Drive using the gdown library.
+    The files will be written to the directory specified in the constructor.
+    """
     URL_PATTERN: Pattern = compile("https://drive.google.com/")
 
     def __init__(self, download_directory: str):
@@ -36,6 +40,13 @@ class GoogleDownloadService:
         gdown.download(url=gdrive_url, output=self.download_directory, fuzzy=True)
 
     def download_files(self, gdrive_url: str):
+        """
+        Downloads the Google Drive object specified in the argument.
+        A Thread Pool is used to ensure the (usually slow) download is not blocking for the calling code.
+        The method will raise a ValueError if the gdown download function raises a specific error.
+        :param gdrive_url: The publically sharable URL of the Google Drive object to be downloaded.
+        :type gdrive_url: str
+        """
         with ThreadPoolExecutor() as executor:
             future = executor.submit(self._download_gdrive_file, gdrive_url)
             try:
