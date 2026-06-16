@@ -27,11 +27,17 @@ class ViewWrapperWidget(AbstractWidget):
         if include_oni_loader:
             tab_components.append(("Oni Loader", self.oni_loader))
         tab_components.append(("Corpus Overview", self.corpus_display))
-        # Inactive tabs in the Panel "Fast" theme draw their 2px bottom border in
-        # currentColor (the dark body colour), which renders as a heavy black bar
-        # under the tab labels. Force inactive tab borders transparent so only the
-        # active tab keeps its accent-coloured underline.
-        tabs_stylesheet = ":host .bk-header .bk-tab:not(.bk-active) { border-color: transparent; }"
+        # Tab styling fixes for the Panel "Fast" theme:
+        #  - Inactive tabs draw their 2px bottom border in currentColor (the dark
+        #    body colour), which renders as a heavy black bar under the tab labels.
+        #    Force inactive tab borders transparent so only the active tab keeps its
+        #    accent-coloured underline.
+        #  - Add bottom padding so the active tab's underline sits a little lower,
+        #    away from the tab label text.
+        tabs_stylesheet = (
+            ":host .bk-header .bk-tab:not(.bk-active) { border-color: transparent; }"
+            ":host(.bk-above) .bk-header .bk-tab { padding-bottom: 0.75rem; }"
+        )
         self.panel = Tabs(*tab_components, dynamic=True, stylesheets=[tabs_stylesheet])
         self.panel.param.watch(self.set_load_service_type, parameter_names=['active'])
         self.corpus_info_idx: int = len(self.panel) - 1
