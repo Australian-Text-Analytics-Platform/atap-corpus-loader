@@ -32,16 +32,15 @@ class ViewWrapperWidget(AbstractWidget):
         #    body colour), which renders as a heavy black bar under the tab labels.
         #    Force inactive tab borders transparent so only the active tab keeps its
         #    accent-coloured underline.
-        #  - Add bottom padding so the active tab's underline sits a little lower,
-        #    away from the tab label text.
-        # Both rules use the plain ":host .bk-header .bk-tab" selector and
-        # !important. The ":host(.bk-above)" orientation qualifier was dropped
-        # because it did not match inside JupyterLab/Binder (the border rule, which
-        # never used it, applied there while the padding rule did not), so the
-        # underline spacing never took effect.
+        #  - Move the active tab's underline a little below the label text. Inside
+        #    JupyterLab the tab is box-sizing:border-box with its height locked, so
+        #    padding-bottom alone has no room to push the underline down; min-height
+        #    gives it that room. (Verified in JupyterLab/Binder; padding-bottom
+        #    alone worked only in a standalone render.)
         tabs_stylesheet = (
             ":host .bk-header .bk-tab:not(.bk-active) { border-color: transparent !important; }"
-            ":host .bk-header .bk-tab { padding-bottom: 0.75rem !important; }"
+            ":host .bk-header .bk-tab { min-height: 1.9rem !important;"
+            " padding-bottom: 0.4rem !important; box-sizing: border-box !important; }"
         )
         self.panel = Tabs(*tab_components, dynamic=True, stylesheets=[tabs_stylesheet])
         self.panel.param.watch(self.set_load_service_type, parameter_names=['active'])
