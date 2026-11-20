@@ -1,0 +1,6 @@
+{
+  "imports": ["atap_corpus_loader", "atap_corpus", "panel"],
+  "notebooks": [
+    {"path": "corpusloader.ipynb", "must_pass_cells": null, "timeout": 900}
+  ]
+}

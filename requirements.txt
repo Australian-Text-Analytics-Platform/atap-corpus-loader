@@ -1,0 +1,3 @@
+# Binder/Docker environment for the corpusloader.ipynb demo (not used by the
+# package build; see pyproject.toml for the library's own dependencies).
+atap-corpus-loader==1.8.8
